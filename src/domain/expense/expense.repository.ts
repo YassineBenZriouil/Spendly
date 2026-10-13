@@ -6,15 +6,25 @@ import type { Expense, PaymentMethod } from './expense.types';
 
 export type CurrencyTotal = { currencyCode: string; totalMinor: number };
 
+export type ExpenseFilter = {
+  /** Matched against title, note and category name (SQLite LIKE: case-insensitive for ASCII only). */
+  text?: string;
+  categoryId?: string;
+};
+
 /** Persistence boundary for expenses. Sync (later) plugs in behind this interface. */
 export type ExpenseRepository = {
   /** Idempotent: saving the same id twice keeps one record. */
   save(expense: Expense): Promise<void>;
+  /** One transaction and one change notification, for bulk inserts. */
+  saveMany(expenses: Expense[]): Promise<void>;
   update(expense: Expense): Promise<void>;
   remove(id: string): Promise<void>;
   get(id: string): Promise<Expense | null>;
   /** Newest first. */
   listBetween(range: IsoRange): Promise<Expense[]>;
+  /** Every matching expense, newest first. */
+  search(filter: ExpenseFilter): Promise<Expense[]>;
   /** Per currency: amounts in different currencies are never added together. */
   totalsBetween(range: IsoRange): Promise<CurrencyTotal[]>;
   /** Called after every successful write. Returns an unsubscribe function. */
@@ -67,6 +77,13 @@ function toParams(expense: Expense): SqlValue[] {
   ];
 }
 
+const INSERT_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+   ON CONFLICT (id) DO NOTHING`;
+
+/** Escapes LIKE wildcards (with `!`, see ESCAPE below) so user text matches literally. */
+const likePattern = (text: string) => `%${text.replace(/[!%_]/g, (char) => `!${char}`)}%`;
+
 export function createSqliteExpenseRepository(database: () => Promise<Db>): ExpenseRepository {
   const listeners = new Set<() => void>();
   const changed = () => listeners.forEach((listener) => listener());
@@ -74,12 +91,15 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
   return {
     async save(expense) {
       const db = await database();
-      await db.runAsync(
-        `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (id) DO NOTHING`,
-        toParams(expense),
-      );
+      await db.runAsync(INSERT_SQL, toParams(expense));
+      changed();
+    },
+
+    async saveMany(expenses) {
+      const db = await database();
+      await db.withExclusiveTransactionAsync(async (txn) => {
+        for (const expense of expenses) await txn.runAsync(INSERT_SQL, toParams(expense));
+      });
       changed();
     },
 
@@ -114,6 +134,30 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
       const rows = await db.getAllAsync<ExpenseRow>(
         'SELECT * FROM expenses WHERE occurred_at >= ? AND occurred_at < ? ORDER BY occurred_at DESC, created_at DESC',
         [start, end],
+      );
+      return rows.map(fromRow);
+    },
+
+    async search({ text, categoryId }) {
+      const db = await database();
+      const where: string[] = [];
+      const params: SqlValue[] = [];
+      const query = text?.trim();
+      if (query) {
+        const pattern = likePattern(query);
+        where.push(`(e.title LIKE ? ESCAPE '!' OR e.note LIKE ? ESCAPE '!' OR c.name LIKE ? ESCAPE '!')`);
+        params.push(pattern, pattern, pattern);
+      }
+      if (categoryId) {
+        where.push('e.category_id = ?');
+        params.push(categoryId);
+      }
+      // shortcut: loads every match into memory (fine for thousands of rows); page with LIMIT/OFFSET if histories get far bigger
+      const rows = await db.getAllAsync<ExpenseRow>(
+        `SELECT e.* FROM expenses e LEFT JOIN categories c ON c.id = e.category_id
+         ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+         ORDER BY e.occurred_at DESC, e.created_at DESC`,
+        params,
       );
       return rows.map(fromRow);
     },

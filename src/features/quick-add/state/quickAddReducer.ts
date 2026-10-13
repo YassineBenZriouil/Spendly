@@ -1,3 +1,5 @@
+import type { ExpenseDetails } from '@/domain/expense/expense.service';
+
 export type QuickAddPhase =
   | 'ready'
   | 'categorySelected'
@@ -10,6 +12,8 @@ export type QuickAddPhase =
 export type QuickAddDraft = {
   categoryId: string | null;
   amountMinor: number;
+  /** Optional title, note, date and payment method. Kept while the details panel is closed. */
+  details?: ExpenseDetails;
 };
 
 export type QuickAddState = {
@@ -24,6 +28,7 @@ export type QuickAddEvent =
   | { type: 'dragStarted' }
   | { type: 'dragEnded'; amountMinor: number }
   | { type: 'amountChanged'; amountMinor: number }
+  | { type: 'detailsChanged'; changes: ExpenseDetails }
   | { type: 'saveRequested' }
   | { type: 'saveSucceeded'; expenseId: string }
   | { type: 'saveFailed'; message: string }
@@ -77,6 +82,8 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
     case 'dragEnded':
     case 'amountChanged':
       return withDraft(state, { ...state.draft, amountMinor: event.amountMinor });
+    case 'detailsChanged':
+      return withDraft(state, { ...state.draft, details: { ...state.draft.details, ...event.changes } });
     case 'saveRequested':
       return canSave(state.draft) ? { ...state, phase: 'saving', error: null } : state;
     case 'savedAcknowledged':

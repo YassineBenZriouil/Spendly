@@ -75,4 +75,20 @@ describe('quickAddReducer', () => {
   it('returns to zero via amountChanged (reset)', () => {
     expect(run([{ type: 'amountChanged', amountMinor: 0 }], readyToSave).phase).toBe('categorySelected');
   });
+
+  it('merges details into the draft, keeps them through errors and clears them after saving', () => {
+    const withDetails = run(
+      [
+        { type: 'detailsChanged', changes: { title: 'Lunch' } },
+        { type: 'detailsChanged', changes: { paymentMethod: 'card' } },
+      ],
+      readyToSave,
+    );
+    expect(withDetails).toMatchObject({ phase: 'readyToSave', draft: { details: { title: 'Lunch', paymentMethod: 'card' } } });
+
+    const saving = quickAddReducer(withDetails, { type: 'saveRequested' });
+    expect(quickAddReducer(saving, { type: 'detailsChanged', changes: { title: 'x' } })).toBe(saving); // frozen while saving
+    expect(quickAddReducer(saving, { type: 'saveFailed', message: 'disk full' }).draft.details).toEqual({ title: 'Lunch', paymentMethod: 'card' });
+    expect(quickAddReducer(saving, { type: 'saveSucceeded', expenseId: 'e1' }).draft.details).toBeUndefined();
+  });
 });

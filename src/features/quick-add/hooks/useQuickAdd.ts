@@ -22,10 +22,10 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
   const savingRef = useRef(false);
 
   // Keep the unsaved draft on disk so it survives backgrounding and the app being killed
-  const { categoryId, amountMinor } = state.draft;
+  const { draft } = state;
   useEffect(() => {
-    saveDraft({ categoryId, amountMinor });
-  }, [categoryId, amountMinor]);
+    saveDraft(draft);
+  }, [draft]);
 
   useEffect(() => {
     if (state.phase !== 'saved') return;
@@ -40,12 +40,12 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
   }, [undoable]);
 
   const save = async () => {
-    const { categoryId, amountMinor } = state.draft;
+    const { categoryId, amountMinor, details } = state.draft;
     if (savingRef.current || !canSave(state.draft) || !categoryId) return;
     savingRef.current = true;
     dispatch({ type: 'saveRequested' });
     try {
-      const expense = createExpense({ amountMinor, currencyCode, categoryId });
+      const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId });
       await repository.save(expense);
       // The composer resets only now, after the record is stored
       dispatch({ type: 'saveSucceeded', expenseId: expense.id });

@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Keyboard, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -22,6 +23,7 @@ import type { ExpenseCategory } from '@/domain/category/category.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { getMoneyPattern } from '@/domain/money/money.pattern';
 import { useCategories } from '@/features/categories/hooks/useCategories';
+import { DetailsFields } from '@/features/expense-details/components/DetailsFields';
 import { haptics } from '@/haptics/haptics.service';
 import { loadPreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -53,7 +55,12 @@ export function QuickAddScreen() {
   const { state, dispatch, save, undo, undoable } = useQuickAdd(currencyCode);
   const { draft, phase } = state;
   const { stageRef, anchorRef, chips, show, hide, remove } = useCategoryMorph();
-  const [keypadOpen, setKeypadOpen] = useState(false);
+  /** What the bottom panel shows. Navigation-ish UI state, not part of the draft. */
+  const [panel, setPanel] = useState<'categories' | 'keypad' | 'details'>('categories');
+  const togglePanel = (next: 'keypad' | 'details') => {
+    Keyboard.dismiss();
+    setPanel((current) => (current === next ? 'categories' : next));
+  };
   const amount = useSharedValue(0);
   const busy = phase === 'saving';
 
@@ -79,6 +86,15 @@ export function QuickAddScreen() {
   useEffect(() => {
     if (draft.categoryId === null) hide();
   }, [draft.categoryId, hide]);
+
+  // Just saved: back to the grid for the next expense (adjusted during render, not in an effect)
+  const [previousPhase, setPreviousPhase] = useState(phase);
+  if (phase !== previousPhase) {
+    setPreviousPhase(phase);
+    if (phase === 'saved') setPanel('categories');
+  }
+
+  const hasDetails = Object.values(draft.details ?? {}).some(Boolean);
 
   const selected = allCategories.find((category) => category.id === draft.categoryId);
   const savedExpense = undoable
@@ -126,84 +142,105 @@ export function QuickAddScreen() {
         <IconButton icon="settings" variant="plain" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
       </View>
 
-      <View ref={stageRef} collapsable={false} style={styles.stage}>
-        <View
-          ref={anchorRef}
-          collapsable={false}
-          onLayout={onAnchorLayout}
-          accessible
-          accessibilityLabel={selected ? `Category: ${selected.name}` : 'No category selected'}
-          style={[styles.anchor, { borderColor: colors.borderSubtle }]}>
-          <Animated.Text style={[styles.placeholder, { color: colors.textSecondary }, placeholderStyle]}>
-            Choose a category
-          </Animated.Text>
+      {/* Only the details panel opens the keyboard: the stage shrinks (amount area first) to keep it in view */}
+      <KeyboardAvoidingView behavior="padding" style={styles.stage}>
+        <View ref={stageRef} collapsable={false} style={styles.stage}>
+          <View
+            ref={anchorRef}
+            collapsable={false}
+            onLayout={onAnchorLayout}
+            accessible
+            accessibilityLabel={selected ? `Category: ${selected.name}` : 'No category selected'}
+            style={[styles.anchor, { borderColor: colors.borderSubtle }]}>
+            <Animated.Text style={[styles.placeholder, { color: colors.textSecondary }, placeholderStyle]}>
+              Choose a category
+            </Animated.Text>
+          </View>
+
+          <AmountSurface
+            amount={amount}
+            pulse={pulse}
+            gesture={gesture}
+            amountMinor={draft.amountMinor}
+            currencyCode={currencyCode}
+            pattern={pattern}
+            onIncrement={() => setAmount(draft.amountMinor + config.stepMinor)}
+            onDecrement={() => setAmount(draft.amountMinor - config.stepMinor)}
+          />
+
+          <View style={styles.controls}>
+            <IconButton
+              icon="minus"
+              accessibilityLabel="Decrease amount"
+              disabled={busy || draft.amountMinor === 0}
+              onPress={() => setAmount(draft.amountMinor - config.stepMinor)}
+            />
+            <IconButton
+              icon={panel === 'keypad' ? 'close' : 'keypad'}
+              accessibilityLabel={panel === 'keypad' ? 'Close keypad' : 'Type amount with keypad'}
+              disabled={busy}
+              onPress={() => togglePanel('keypad')}
+            />
+            <IconButton
+              icon={panel === 'details' ? 'close' : 'details'}
+              accessibilityLabel={
+                panel === 'details' ? 'Close details' : hasDetails ? 'Edit details (added)' : 'Add details'
+              }
+              disabled={busy}
+              onPress={() => togglePanel('details')}
+            />
+            <IconButton
+              icon="reset"
+              accessibilityLabel="Reset amount to zero"
+              disabled={busy || draft.amountMinor === 0}
+              onPress={() => setAmount(0)}
+            />
+            <IconButton
+              icon="plus"
+              accessibilityLabel="Increase amount"
+              disabled={busy || draft.amountMinor >= config.maxAmountMinor}
+              onPress={() => setAmount(draft.amountMinor + config.stepMinor)}
+            />
+          </View>
+
+          <View style={styles.panel}>
+            {panel === 'keypad' ? (
+              <Animated.View key="keypad" entering={panelEnter} exiting={panelExit} style={styles.panelLayer}>
+                <Keypad
+                  amountMinor={draft.amountMinor}
+                  pattern={pattern}
+                  maxAmountMinor={config.maxAmountMinor}
+                  onChange={setAmount}
+                />
+              </Animated.View>
+            ) : panel === 'details' ? (
+              <Animated.View key="details" entering={panelEnter} exiting={panelExit} style={styles.detailsLayer}>
+                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                  <DetailsFields
+                    details={draft.details ?? {}}
+                    onChange={(changes) => dispatch({ type: 'detailsChanged', changes })}
+                    dateResettable
+                  />
+                </ScrollView>
+              </Animated.View>
+            ) : (
+              <Animated.View key="categories" entering={panelEnter} exiting={panelExit} style={styles.panelLayer}>
+                <CategoryGrid categories={categories} selectedId={draft.categoryId} onSelect={selectCategory} />
+              </Animated.View>
+            )}
+          </View>
+
+          {chips.map((chip) => (
+            <MorphChip
+              key={chip.key}
+              chip={chip}
+              stageRef={stageRef}
+              anchorRef={anchorRef}
+              onGone={remove}
+            />
+          ))}
         </View>
-
-        <AmountSurface
-          amount={amount}
-          pulse={pulse}
-          gesture={gesture}
-          amountMinor={draft.amountMinor}
-          currencyCode={currencyCode}
-          pattern={pattern}
-          onIncrement={() => setAmount(draft.amountMinor + config.stepMinor)}
-          onDecrement={() => setAmount(draft.amountMinor - config.stepMinor)}
-        />
-
-        <View style={styles.controls}>
-          <IconButton
-            icon="minus"
-            accessibilityLabel="Decrease amount"
-            disabled={busy || draft.amountMinor === 0}
-            onPress={() => setAmount(draft.amountMinor - config.stepMinor)}
-          />
-          <IconButton
-            icon={keypadOpen ? 'close' : 'keypad'}
-            accessibilityLabel={keypadOpen ? 'Close keypad' : 'Type amount with keypad'}
-            disabled={busy}
-            onPress={() => setKeypadOpen((open) => !open)}
-          />
-          <IconButton
-            icon="reset"
-            accessibilityLabel="Reset amount to zero"
-            disabled={busy || draft.amountMinor === 0}
-            onPress={() => setAmount(0)}
-          />
-          <IconButton
-            icon="plus"
-            accessibilityLabel="Increase amount"
-            disabled={busy || draft.amountMinor >= config.maxAmountMinor}
-            onPress={() => setAmount(draft.amountMinor + config.stepMinor)}
-          />
-        </View>
-
-        <View style={styles.panel}>
-          {keypadOpen ? (
-            <Animated.View key="keypad" entering={panelEnter} exiting={panelExit} style={styles.panelLayer}>
-              <Keypad
-                amountMinor={draft.amountMinor}
-                pattern={pattern}
-                maxAmountMinor={config.maxAmountMinor}
-                onChange={setAmount}
-              />
-            </Animated.View>
-          ) : (
-            <Animated.View key="categories" entering={panelEnter} exiting={panelExit} style={styles.panelLayer}>
-              <CategoryGrid categories={categories} selectedId={draft.categoryId} onSelect={selectCategory} />
-            </Animated.View>
-          )}
-        </View>
-
-        {chips.map((chip) => (
-          <MorphChip
-            key={chip.key}
-            chip={chip}
-            stageRef={stageRef}
-            anchorRef={anchorRef}
-            onGone={remove}
-          />
-        ))}
-      </View>
+      </KeyboardAvoidingView>
 
       {phase === 'error' && (
         <Animated.View
@@ -222,7 +259,10 @@ export function QuickAddScreen() {
         <SaveAction
           phase={phase}
           canSave={canSave(draft) && !busy}
-          onSave={save}
+          onSave={() => {
+            Keyboard.dismiss();
+            save();
+          }}
           undoLabel={savedExpense}
           onUndo={undo}
         />

@@ -48,3 +48,29 @@ describe('updateExpense', () => {
     expect(() => updateExpense(original, { occurredAt: 'not a date' })).toThrow();
   });
 });
+
+describe('expense details', () => {
+  it('keeps given details, trimmed, and drops blank ones', () => {
+    const expense = createExpense({
+      ...valid,
+      title: '  Café  ',
+      note: '   ',
+      paymentMethod: 'card',
+      occurredAt: '2026-10-12T18:30:00.000Z',
+    });
+    expect(expense).toMatchObject({ title: 'Café', paymentMethod: 'card', occurredAt: '2026-10-12T18:30:00.000Z' });
+    expect(expense).not.toHaveProperty('note');
+  });
+
+  it('clears a field when an edit sets it to undefined or blank', () => {
+    const original = createExpense({ ...valid, title: 'Lunch', note: 'with Sam', paymentMethod: 'cash' });
+    const edited = updateExpense(original, { title: '', note: undefined, paymentMethod: undefined });
+    expect(edited).not.toHaveProperty('title');
+    expect(edited).not.toHaveProperty('note');
+    expect(edited).not.toHaveProperty('paymentMethod');
+  });
+
+  it('rejects an invalid date', () => {
+    expect(() => createExpense({ ...valid, occurredAt: 'yesterday' })).toThrow('Date is invalid');
+  });
+});

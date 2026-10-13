@@ -1,27 +1,46 @@
 import { createId } from '@/utils/ids';
 
-import type { Expense } from './expense.types';
+import type { Expense, PaymentMethod } from './expense.types';
 
-export type NewExpense = Pick<Expense, 'amountMinor' | 'currencyCode' | 'categoryId'>;
+/** Optional context. `occurredAt` missing means "now" (stamped at save time). */
+export type ExpenseDetails = Partial<Pick<Expense, 'title' | 'note' | 'occurredAt' | 'paymentMethod'>>;
 
-export function validateNewExpense({ amountMinor, currencyCode, categoryId }: NewExpense): string | null {
+export type NewExpense = Pick<Expense, 'amountMinor' | 'currencyCode' | 'categoryId'> & ExpenseDetails;
+
+export const PaymentMethods: PaymentMethod[] = ['cash', 'card', 'transfer', 'other'];
+
+export function validateNewExpense({ amountMinor, currencyCode, categoryId, occurredAt }: NewExpense): string | null {
   if (!Number.isInteger(amountMinor) || amountMinor <= 0) return 'Amount must be a positive whole number of minor units';
   if (!/^[A-Z]{3}$/.test(currencyCode)) return 'Currency must be an ISO 4217 code';
   if (!categoryId) return 'Category is required';
+  if (occurredAt !== undefined && Number.isNaN(Date.parse(occurredAt))) return 'Date is invalid';
   return null;
+}
+
+/** Trims text and drops empty optional fields, so records never hold meaningless "" values. */
+function withCleanDetails(expense: Expense): Expense {
+  const { title, note, paymentMethod, ...rest } = expense;
+  const cleanTitle = title?.trim();
+  const cleanNote = note?.trim();
+  return {
+    ...rest,
+    ...(cleanTitle ? { title: cleanTitle } : {}),
+    ...(cleanNote ? { note: cleanNote } : {}),
+    ...(paymentMethod && PaymentMethods.includes(paymentMethod) ? { paymentMethod } : {}),
+  };
 }
 
 export function createExpense(input: NewExpense, now = new Date()): Expense {
   const error = validateNewExpense(input);
   if (error) throw new Error(error);
   const timestamp = now.toISOString();
-  return {
+  return withCleanDetails({
     id: createId(),
     ...input,
-    occurredAt: timestamp,
+    occurredAt: input.occurredAt ? new Date(input.occurredAt).toISOString() : timestamp,
     createdAt: timestamp,
     updatedAt: timestamp,
-  };
+  });
 }
 
 export type ExpenseChanges = Partial<
@@ -33,6 +52,5 @@ export function updateExpense(existing: Expense, changes: ExpenseChanges, now = 
   const next: Expense = { ...existing, ...changes, updatedAt: now.toISOString() };
   const error = validateNewExpense(next);
   if (error) throw new Error(error);
-  if (Number.isNaN(Date.parse(next.occurredAt))) throw new Error('Date is invalid');
-  return next;
+  return withCleanDetails({ ...next, occurredAt: new Date(next.occurredAt).toISOString() });
 }

@@ -87,4 +87,31 @@ describe('SQLite expense repository', () => {
     await expect(repository.save(at('2026-10-13T12:00:00.000Z', 100, 'EUR', 'missing'))).rejects.toThrow();
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it('searches title, note and category name literally, newest first, with a category filter', async () => {
+    const repository = await setup();
+    const lunch = { ...at('2026-10-13T12:00:00.000Z'), title: 'Lunch 100%' };
+    const taxi = { ...at('2026-10-13T13:00:00.000Z', 500, 'EUR', 'transport'), note: 'taxi to lunch' };
+    const plain = at('2026-10-13T14:00:00.000Z', 700, 'EUR', 'groceries');
+    await repository.saveMany([lunch, taxi, plain]);
+
+    expect((await repository.search({})).map((e) => e.id)).toEqual([plain.id, taxi.id, lunch.id]);
+    expect((await repository.search({ text: 'LUNCH' })).map((e) => e.id)).toEqual([taxi.id, lunch.id]);
+    expect((await repository.search({ text: 'groc' })).map((e) => e.id)).toEqual([plain.id]);
+    expect((await repository.search({ text: '0%' })).map((e) => e.id)).toEqual([lunch.id]);
+    expect(await repository.search({ text: '_' })).toEqual([]);
+    expect((await repository.search({ text: 'lunch', categoryId: 'transport' })).map((e) => e.id)).toEqual([taxi.id]);
+  });
+
+  it('saves many in one transaction with a single notification', async () => {
+    const repository = await setup();
+    const listener = jest.fn();
+    repository.subscribe(listener);
+    const good = at('2026-10-13T12:00:00.000Z');
+    await expect(repository.saveMany([good, at('2026-10-13T12:00:00.000Z', 100, 'EUR', 'missing')])).rejects.toThrow();
+    expect(await repository.get(good.id)).toBeNull(); // rolled back
+    await repository.saveMany([good, at('2026-10-13T13:00:00.000Z')]);
+    expect(await repository.search({})).toHaveLength(2);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
 });

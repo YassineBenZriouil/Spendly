@@ -17,6 +17,10 @@ const icons = {
   dragHint: { ios: 'arrow.up.arrow.down', android: 'swap_vert', web: 'swap_vert' },
   close: { ios: 'xmark', android: 'close', web: 'close' },
   error: { ios: 'exclamationmark.circle', android: 'error', web: 'error' },
+  details: { ios: 'square.and.pencil', android: 'edit_note', web: 'edit_note' },
+  search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
+  delete: { ios: 'trash', android: 'delete', web: 'delete' },
+  calendar: { ios: 'calendar', android: 'calendar_today', web: 'calendar_today' },
 
   // Category icons (keys match CategoryIcon)
   food: { ios: 'fork.knife', android: 'restaurant', web: 'restaurant' },
