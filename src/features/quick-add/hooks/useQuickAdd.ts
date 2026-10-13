@@ -7,8 +7,9 @@ import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { haptics } from '@/haptics/haptics.service';
 import { getPreferences, updatePreferences } from '@/storage/preferences/preferences';
+import { createId } from '@/utils/ids';
 
-import { loadDraft, saveDraft } from '../state/draftStorage';
+import { loadDraft, loadPendingExpenseId, saveDraft } from '../state/draftStorage';
 import { canSave, initialQuickAddState, quickAddReducer, restoreDraft } from '../state/quickAddReducer';
 
 /** How long "Saved" shows on the button. The next expense can start during it. */
@@ -26,6 +27,7 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
       : initial;
   });
   const [undoable, setUndoable] = useState<Expense | null>(null);
+  const [pendingOnLaunch] = useState(loadPendingExpenseId);
   // Synchronous guard: two taps in the same frame both see the old reducer state
   const savingRef = useRef(false);
 
@@ -34,6 +36,17 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
   useEffect(() => {
     saveDraft(draft);
   }, [draft]);
+
+  // Killed mid-save last time? If that expense made it to the database, the recovered draft is stale
+  useEffect(() => {
+    if (!pendingOnLaunch) return;
+    repository
+      .get(pendingOnLaunch)
+      .then((stored) => stored && dispatch({ type: 'draftDiscarded' }))
+      .catch(() => {
+        // Can't tell: keep the draft, the user decides
+      });
+  }, [pendingOnLaunch, repository]);
 
   useEffect(() => {
     if (state.phase !== 'saved') return;
@@ -53,7 +66,10 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
     savingRef.current = true;
     dispatch({ type: 'saveRequested' });
     try {
-      const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId });
+      const id = createId();
+      // Written before the database so a kill between the two can be detected on the next launch
+      saveDraft(state.draft, id);
+      const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId }, new Date(), id);
       await repository.save(expense);
       // The composer resets only now, after the record is stored
       updatePreferences({ lastUsedCategoryId: categoryId });

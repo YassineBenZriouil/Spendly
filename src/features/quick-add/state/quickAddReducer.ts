@@ -33,7 +33,9 @@ export type QuickAddEvent =
   /** `keepCategoryId`: the "Last used" preference keeps the category selected for the next expense. */
   | { type: 'saveSucceeded'; expenseId: string; keepCategoryId?: string }
   | { type: 'saveFailed'; message: string }
-  | { type: 'savedAcknowledged' };
+  | { type: 'savedAcknowledged' }
+  /** The recovered draft turned out to be already saved (app was killed right after storing it). */
+  | { type: 'draftDiscarded' };
 
 const emptyDraft: QuickAddDraft = { categoryId: null, amountMinor: 0 };
 
@@ -88,6 +90,8 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
       return withDraft(state, { ...state.draft, details: { ...state.draft.details, ...event.changes } });
     case 'saveRequested':
       return canSave(state.draft) ? { ...state, phase: 'saving', error: null } : state;
+    case 'draftDiscarded':
+      return initialQuickAddState;
     case 'savedAcknowledged':
       return state.phase === 'saved' ? { ...state, phase: restingPhase(state.draft) } : state;
     default:

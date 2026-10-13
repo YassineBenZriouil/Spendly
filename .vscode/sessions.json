@@ -1,0 +1,27 @@
+{
+  "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v11/terminal-keeper.json",
+  "theme": "tribe",
+  "active": "default",
+  "activateOnStartup": true,
+  "keepExistingTerminals": false,
+  "sessions": {
+    "default": [
+      {
+        "name": "Claude",
+        "autoExecuteCommands": true,
+        "commands": ["claude"]
+      },
+      {
+        "name": "Expo",
+        "autoExecuteCommands": true,
+        "commands": ["npx expo start"]
+      }
+    ],
+    "saved-session": [
+      {
+        "name": "connect",
+        "commands": [""]
+      }
+    ]
+  }
+}

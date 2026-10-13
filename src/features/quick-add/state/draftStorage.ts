@@ -12,19 +12,38 @@ export function loadDraft(): QuickAddDraft | null {
   try {
     const raw = Storage.getItemSync(KEY);
     if (!raw) return null;
-    const draft: unknown = JSON.parse(raw);
-    return isDraft(draft) ? draft : null;
+    const stored: unknown = JSON.parse(raw);
+    if (!isDraft(stored)) return null;
+    // The pending-save marker is storage bookkeeping, not part of the draft
+    const { categoryId, amountMinor, details } = stored;
+    return { categoryId, amountMinor, ...(details ? { details } : {}) };
   } catch {
     return null;
   }
 }
 
-export function saveDraft(draft: QuickAddDraft) {
+/**
+ * `pendingExpenseId`: the id a save in progress is writing under. If the app dies after the database write but
+ * before the draft is cleared, the next launch finds that expense already stored and drops the stale draft
+ * instead of offering it again (which would save a duplicate).
+ */
+export function saveDraft(draft: QuickAddDraft, pendingExpenseId?: string) {
   try {
     if (isEmpty(draft)) Storage.removeItemSync(KEY);
-    else Storage.setItemSync(KEY, JSON.stringify(draft));
+    else Storage.setItemSync(KEY, JSON.stringify({ ...draft, pendingExpenseId }));
   } catch {
     // Draft recovery is best effort; never block entry because of it
+  }
+}
+
+/** Id of a save that was in progress when the draft was last written, if any. */
+export function loadPendingExpenseId(): string | undefined {
+  try {
+    const raw = Storage.getItemSync(KEY);
+    const pending: unknown = raw ? JSON.parse(raw)?.pendingExpenseId : undefined;
+    return typeof pending === 'string' ? pending : undefined;
+  } catch {
+    return undefined;
   }
 }
 

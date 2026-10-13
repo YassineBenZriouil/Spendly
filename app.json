@@ -1,19 +1,27 @@
 {
   "expo": {
     "name": "Spendly",
-    "slug": "App",
+    "slug": "spendly",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "spendly",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.yassinebenzriouil.spendly",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "monochromeImage": "./assets/images/adaptive-icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.yassinebenzriouil.spendly"
     },
     "web": {
       "output": "static",
@@ -26,7 +34,11 @@
         {
           "backgroundColor": "#FFFFFF",
           "image": "./assets/logo.png",
-          "imageWidth": 200
+          "imageWidth": 200,
+          "dark": {
+            "image": "./assets/logo-dark.png",
+            "backgroundColor": "#11130F"
+          }
         }
       ],
       "expo-sqlite",

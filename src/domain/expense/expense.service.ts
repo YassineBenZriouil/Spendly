@@ -30,12 +30,13 @@ function withCleanDetails(expense: Expense): Expense {
   };
 }
 
-export function createExpense(input: NewExpense, now = new Date()): Expense {
+/** `id` can be chosen up front so a save interrupted by the app being killed can be recognised later. */
+export function createExpense(input: NewExpense, now = new Date(), id = createId()): Expense {
   const error = validateNewExpense(input);
   if (error) throw new Error(error);
   const timestamp = now.toISOString();
   return withCleanDetails({
-    id: createId(),
+    id,
     ...input,
     occurredAt: input.occurredAt ? new Date(input.occurredAt).toISOString() : timestamp,
     createdAt: timestamp,

@@ -47,8 +47,11 @@ export function MorphChip({ chip, stageRef, anchorRef, onGone }: MorphChipProps)
   const presence = useSharedValue(1);
   const { tileRef, key, state } = chip;
 
-  // Measure once on the UI thread, then fly tile -> anchor
+  // Measure once on the UI thread, then fly tile -> anchor.
+  // Only while active: re-running for a leaving chip (e.g. reduced motion toggled mid-flight) would cancel its
+  // exit and strand it at the anchor as an orphan overlay.
   useEffect(() => {
+    if (state !== 'active') return;
     scheduleOnUI(() => {
       'worklet';
       const stage = measure(stageRef);
@@ -59,7 +62,7 @@ export function MorphChip({ chip, stageRef, anchorRef, onGone }: MorphChipProps)
       from.set(tile ? relativeTo(tile, stage) : relativeTo(anchor, stage));
       progress.set(withTiming(1, reducedMotion ? ReducedTiming : MorphTiming));
     });
-  }, [stageRef, anchorRef, tileRef, from, to, progress, reducedMotion]);
+  }, [state, stageRef, anchorRef, tileRef, from, to, progress, reducedMotion]);
 
   useEffect(() => {
     const gone = (finished?: boolean) => {

@@ -91,4 +91,10 @@ describe('quickAddReducer', () => {
     expect(quickAddReducer(saving, { type: 'saveFailed', message: 'disk full' }).draft.details).toEqual({ title: 'Lunch', paymentMethod: 'card' });
     expect(quickAddReducer(saving, { type: 'saveSucceeded', expenseId: 'e1' }).draft.details).toBeUndefined();
   });
+
+  it('drops a recovered draft that was already saved, but never mid-save', () => {
+    expect(quickAddReducer(readyToSave, { type: 'draftDiscarded' })).toEqual(initialQuickAddState);
+    const saving = quickAddReducer(readyToSave, { type: 'saveRequested' });
+    expect(quickAddReducer(saving, { type: 'draftDiscarded' })).toBe(saving);
+  });
 });
