@@ -30,7 +30,8 @@ export type QuickAddEvent =
   | { type: 'amountChanged'; amountMinor: number }
   | { type: 'detailsChanged'; changes: ExpenseDetails }
   | { type: 'saveRequested' }
-  | { type: 'saveSucceeded'; expenseId: string }
+  /** `keepCategoryId`: the "Last used" preference keeps the category selected for the next expense. */
+  | { type: 'saveSucceeded'; expenseId: string; keepCategoryId?: string }
   | { type: 'saveFailed'; message: string }
   | { type: 'savedAcknowledged' };
 
@@ -66,7 +67,8 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
   // While saving, the draft is frozen: only the save outcome is accepted (prevents double saves and lost edits)
   if (state.phase === 'saving') {
     if (event.type === 'saveSucceeded') {
-      return { phase: 'saved', draft: emptyDraft, lastSavedId: event.expenseId, error: null };
+      const draft = event.keepCategoryId ? { ...emptyDraft, categoryId: event.keepCategoryId } : emptyDraft;
+      return { phase: 'saved', draft, lastSavedId: event.expenseId, error: null };
     }
     if (event.type === 'saveFailed') {
       return { ...state, phase: 'error', error: event.message };

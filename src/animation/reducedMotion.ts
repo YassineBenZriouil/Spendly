@@ -1,6 +1,10 @@
 import { useReducedMotion as useSystemReducedMotion } from 'react-native-reanimated';
 
-/** Single entry point for "should we shrink motion?". Phase 4 adds the System / On / Off preference here. */
+import { usePreferences } from '@/storage/preferences/preferences';
+
+/** Single entry point for "should we shrink motion?": the Settings choice, or the system setting when it's "System". */
 export function useReducedMotion() {
-  return useSystemReducedMotion();
+  const system = useSystemReducedMotion();
+  const { reducedMotion } = usePreferences();
+  return reducedMotion === 'system' ? system : reducedMotion === 'on';
 }

@@ -25,7 +25,7 @@ import { getMoneyPattern } from '@/domain/money/money.pattern';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { DetailsFields } from '@/features/expense-details/components/DetailsFields';
 import { haptics } from '@/haptics/haptics.service';
-import { loadPreferences } from '@/storage/preferences/preferences';
+import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { AmountSurface } from '../../components/AmountSurface';
@@ -44,13 +44,12 @@ import { styles } from './styles';
 export function QuickAddScreen() {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
-  // shortcut: read once per render; Phase 4's Settings screen makes currency changeable
-  const currencyCode = loadPreferences().currencyCode;
+  const { currencyCode, dragSensitivity, amountIncrement } = usePreferences();
   const allCategories = useCategories();
   const categories = allCategories.filter((category) => category.isVisible);
   const todayTotals = useTodayTotal();
   const pattern = getMoneyPattern(currencyCode);
-  const config = dragConfigFor(currencyCode);
+  const config = dragConfigFor(currencyCode, { sensitivity: dragSensitivity, increment: amountIncrement });
 
   const { state, dispatch, save, undo, undoable } = useQuickAdd(currencyCode);
   const { draft, phase } = state;
@@ -225,7 +224,12 @@ export function QuickAddScreen() {
               </Animated.View>
             ) : (
               <Animated.View key="categories" entering={panelEnter} exiting={panelExit} style={styles.panelLayer}>
-                <CategoryGrid categories={categories} selectedId={draft.categoryId} onSelect={selectCategory} />
+                <CategoryGrid
+                  categories={categories}
+                  selectedId={draft.categoryId}
+                  onSelect={selectCategory}
+                  onLongPress={() => router.push('/categories')}
+                />
               </Animated.View>
             )}
           </View>

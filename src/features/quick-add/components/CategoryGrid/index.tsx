@@ -12,9 +12,11 @@ type CategoryGridProps = {
   categories: ExpenseCategory[];
   selectedId: string | null;
   onSelect: (category: ExpenseCategory, tileRef: AnimatedRef<View>) => void;
+  /** Optional shortcut (e.g. to category management). Never required for basic use. */
+  onLongPress?: () => void;
 };
 
-export function CategoryGrid({ categories, selectedId, onSelect }: CategoryGridProps) {
+export function CategoryGrid({ categories, selectedId, onSelect, onLongPress }: CategoryGridProps) {
   const selectedIndex = categories.findIndex((category) => category.id === selectedId);
   const rows: ExpenseCategory[][] = [];
   for (let i = 0; i < categories.length; i += COLUMNS) rows.push(categories.slice(i, i + COLUMNS));
@@ -34,6 +36,7 @@ export function CategoryGrid({ categories, selectedId, onSelect }: CategoryGridP
                 dimmed={selectedIndex !== -1 && category.id !== selectedId}
                 staggerIndex={selectedIndex === -1 ? 0 : Math.abs(index - selectedIndex)}
                 onSelect={onSelect}
+                onLongPress={onLongPress}
               />
             );
           })}

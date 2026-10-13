@@ -33,6 +33,23 @@ const icons = {
   home: { ios: 'house', android: 'home', web: 'home' },
   travel: { ios: 'airplane', android: 'flight', web: 'flight' },
   other: { ios: 'square.grid.2x2', android: 'category', web: 'category' },
+  coffee: { ios: 'cup.and.saucer', android: 'local_cafe', web: 'local_cafe' },
+  gift: { ios: 'gift', android: 'redeem', web: 'redeem' },
+  pets: { ios: 'pawprint', android: 'pets', web: 'pets' },
+  education: { ios: 'book', android: 'school', web: 'school' },
+  fitness: { ios: 'figure.run', android: 'fitness_center', web: 'fitness_center' },
+  fuel: { ios: 'fuelpump', android: 'local_gas_station', web: 'local_gas_station' },
+  phone: { ios: 'iphone', android: 'smartphone', web: 'smartphone' },
+  beauty: { ios: 'sparkles', android: 'spa', web: 'spa' },
+  savings: { ios: 'banknote', android: 'savings', web: 'savings' },
+  music: { ios: 'music.note', android: 'music_note', web: 'music_note' },
+  work: { ios: 'briefcase', android: 'work', web: 'work' },
+
+  // Settings and category management
+  chevronRight: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
+  arrowUp: { ios: 'arrow.up', android: 'arrow_upward', web: 'arrow_upward' },
+  arrowDown: { ios: 'arrow.down', android: 'arrow_downward', web: 'arrow_downward' },
+  hidden: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
 } as const;
 
 export type IconName = keyof typeof icons;

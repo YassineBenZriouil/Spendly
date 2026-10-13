@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
 
-// shortcut: always on; Phase 4 wires the Settings "Haptics" toggle in here
-const enabled = true;
+import { getPreferences } from '@/storage/preferences/preferences';
+
+const enabled = () => getPreferences().hapticsEnabled;
 
 const ignore = () => {};
 
@@ -9,14 +10,14 @@ const ignore = () => {};
 export const haptics = {
   /** Amount crossing a meaningful threshold while dragging. */
   tick() {
-    if (enabled) Haptics.selectionAsync().catch(ignore);
+    if (enabled()) Haptics.selectionAsync().catch(ignore);
   },
   /** Category picked. */
   select() {
-    if (enabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(ignore);
+    if (enabled()) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(ignore);
   },
   /** Expense saved. */
   success() {
-    if (enabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(ignore);
+    if (enabled()) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(ignore);
   },
 };

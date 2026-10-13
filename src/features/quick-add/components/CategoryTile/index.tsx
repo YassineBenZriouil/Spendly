@@ -30,9 +30,18 @@ type CategoryTileProps = {
   /** Distance (in tiles) from the selected tile, for the stagger. */
   staggerIndex: number;
   onSelect: (category: ExpenseCategory, tileRef: AnimatedRef<View>) => void;
+  onLongPress?: () => void;
 };
 
-export function CategoryTile({ category, index, selected, dimmed, staggerIndex, onSelect }: CategoryTileProps) {
+export function CategoryTile({
+  category,
+  index,
+  selected,
+  dimmed,
+  staggerIndex,
+  onSelect,
+  onLongPress,
+}: CategoryTileProps) {
   const { colors, categoryColors } = useTheme();
   const reducedMotion = useReducedMotion();
   const tileRef = useAnimatedRef<View>();
@@ -72,7 +81,9 @@ export function CategoryTile({ category, index, selected, dimmed, staggerIndex, 
         accessibilityRole="radio"
         accessibilityLabel={category.name}
         accessibilityState={{ checked: selected }}
+        accessibilityHint={onLongPress ? 'Long press to manage categories' : undefined}
         onPress={() => onSelect(category, tileRef)}
+        onLongPress={onLongPress}
         onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
         onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>
         <Animated.View

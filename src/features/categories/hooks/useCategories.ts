@@ -4,20 +4,28 @@ import { BuiltInCategories } from '@/domain/category/builtInCategories';
 import { categoryRepository } from '@/domain/category/category.repository';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 
-/** Categories from the database. Starts with the built-ins (which are what's seeded) so there's no empty flash. */
+/**
+ * Categories from the database, refreshed after every category write.
+ * Starts with the built-ins (which are what's seeded) so there's no empty flash.
+ */
 export function useCategories() {
   const [categories, setCategories] = useState<ExpenseCategory[]>(BuiltInCategories);
 
   useEffect(() => {
     let active = true;
-    categoryRepository
-      .list()
-      .then((stored) => active && setCategories(stored))
-      .catch(() => {
-        // Keep the built-ins: quick capture must keep working even if the read fails
-      });
+    const refresh = () => {
+      categoryRepository
+        .list()
+        .then((stored) => active && setCategories(stored))
+        .catch(() => {
+          // Keep what we have: quick capture must keep working even if the read fails
+        });
+    };
+    refresh();
+    const unsubscribe = categoryRepository.subscribe(refresh);
     return () => {
       active = false;
+      unsubscribe();
     };
   }, []);
 

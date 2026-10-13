@@ -1,4 +1,5 @@
 import { currencyExponent } from '@/domain/money/money.format';
+import type { AmountIncrement, DragSensitivity } from '@/storage/preferences/preferences';
 
 export type DragConfig = {
   /** Finger travel (pt) for the first step; later steps need less travel (see `curve`). */
@@ -9,15 +10,25 @@ export type DragConfig = {
   maxAmountMinor: number;
 };
 
-export function dragConfigFor(currencyCode: string): DragConfig {
+/** Finger travel per step: more travel = finer control. */
+const PIXELS_PER_STEP: Record<DragSensitivity, number> = { precise: 14, balanced: 9, fast: 6 };
+
+/** The smallest drag step: one major unit; zero-decimal currencies (JPY, KRW) have small units, so 10. */
+export function baseStepMinor(currencyCode: string): number {
   const exponent = currencyExponent(currencyCode);
-  const unit = Math.pow(10, exponent);
+  return exponent === 0 ? 10 : Math.pow(10, exponent);
+}
+
+export function dragConfigFor(
+  currencyCode: string,
+  { sensitivity = 'balanced', increment = 1 }: { sensitivity?: DragSensitivity; increment?: AmountIncrement } = {},
+): DragConfig {
+  const exponent = currencyExponent(currencyCode);
   return {
-    pixelsPerStep: 9,
+    pixelsPerStep: PIXELS_PER_STEP[sensitivity],
     curve: 1.6,
-    // One major unit per step; zero-decimal currencies (JPY, KRW) have small units, so 10 per step
-    stepMinor: exponent === 0 ? 10 : unit,
-    maxAmountMinor: exponent === 0 ? 10_000_000 : 100_000 * unit,
+    stepMinor: baseStepMinor(currencyCode) * increment,
+    maxAmountMinor: exponent === 0 ? 10_000_000 : 100_000 * Math.pow(10, exponent),
   };
 }
 

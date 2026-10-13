@@ -8,6 +8,14 @@ describe('dragConfigFor', () => {
     expect(dragConfigFor('JPY').stepMinor).toBe(10);
     expect(dragConfigFor('KWD').stepMinor).toBe(1000);
   });
+
+  it('applies the increment and sensitivity preferences', () => {
+    expect(dragConfigFor('USD', { increment: 5 }).stepMinor).toBe(500);
+    expect(dragConfigFor('JPY', { increment: 50 }).stepMinor).toBe(500);
+    const precise = dragConfigFor('USD', { sensitivity: 'precise' });
+    const fast = dragConfigFor('USD', { sensitivity: 'fast' });
+    expect(amountFromDrag(0, -100, precise)).toBeLessThan(amountFromDrag(0, -100, fast));
+  });
 });
 
 describe('amountFromDrag', () => {

@@ -4,6 +4,7 @@ import { expenseRepository, type ExpenseRepository } from '@/domain/expense/expe
 import { createExpense } from '@/domain/expense/expense.service';
 import type { Expense } from '@/domain/expense/expense.types';
 import { haptics } from '@/haptics/haptics.service';
+import { getPreferences, updatePreferences } from '@/storage/preferences/preferences';
 
 import { loadDraft, saveDraft } from '../state/draftStorage';
 import { canSave, initialQuickAddState, quickAddReducer, restoreDraft } from '../state/quickAddReducer';
@@ -15,7 +16,12 @@ const UNDO_WINDOW_MS = 5000;
 export function useQuickAdd(currencyCode: string, repository: ExpenseRepository = expenseRepository) {
   const [state, dispatch] = useReducer(quickAddReducer, initialQuickAddState, (initial) => {
     const draft = loadDraft();
-    return draft ? restoreDraft(draft) : initial;
+    if (draft) return restoreDraft(draft);
+    // "Last used" default: start with the previous category already selected
+    const { defaultCategoryMode, lastUsedCategoryId } = getPreferences();
+    return defaultCategoryMode === 'lastUsed' && lastUsedCategoryId
+      ? restoreDraft({ categoryId: lastUsedCategoryId, amountMinor: 0 })
+      : initial;
   });
   const [undoable, setUndoable] = useState<Expense | null>(null);
   // Synchronous guard: two taps in the same frame both see the old reducer state
@@ -48,7 +54,9 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
       const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId });
       await repository.save(expense);
       // The composer resets only now, after the record is stored
-      dispatch({ type: 'saveSucceeded', expenseId: expense.id });
+      updatePreferences({ lastUsedCategoryId: categoryId });
+      const keepCategoryId = getPreferences().defaultCategoryMode === 'lastUsed' ? categoryId : undefined;
+      dispatch({ type: 'saveSucceeded', expenseId: expense.id, keepCategoryId });
       setUndoable(expense);
       haptics.success();
     } catch (error) {

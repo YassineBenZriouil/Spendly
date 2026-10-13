@@ -1,7 +1,7 @@
-import { createContext, use, useState, type ReactNode } from 'react';
+import { createContext, use, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { loadPreferences, savePreferences } from '@/storage/preferences/preferences';
+import { updatePreferences, usePreferences } from '@/storage/preferences/preferences';
 
 import { CategoryColors, Colors, type ColorScheme } from './tokens';
 
@@ -18,11 +18,8 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>(() => loadPreferences().theme);
-  const setPreference = (next: ThemePreference) => {
-    setPreferenceState(next);
-    savePreferences({ theme: next });
-  };
+  const preference = usePreferences().theme;
+  const setPreference = (theme: ThemePreference) => updatePreferences({ theme });
   const system = useColorScheme();
   const scheme: ColorScheme =
     preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;

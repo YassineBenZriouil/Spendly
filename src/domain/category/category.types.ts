@@ -1,16 +1,31 @@
 import type { CategoryColorToken } from '@/theme/tokens';
 
-export type CategoryIcon =
-  | 'food'
-  | 'transport'
-  | 'groceries'
-  | 'shopping'
-  | 'bills'
-  | 'health'
-  | 'entertainment'
-  | 'home'
-  | 'travel'
-  | 'other';
+/** Icons a category can use (built-ins first). Keys must exist in the `Icon` component's map. */
+export const CategoryIcons = [
+  'food',
+  'transport',
+  'groceries',
+  'shopping',
+  'bills',
+  'health',
+  'entertainment',
+  'home',
+  'travel',
+  'other',
+  'coffee',
+  'gift',
+  'pets',
+  'education',
+  'fitness',
+  'fuel',
+  'phone',
+  'beauty',
+  'savings',
+  'music',
+  'work',
+] as const;
+
+export type CategoryIcon = (typeof CategoryIcons)[number];
 
 export type ExpenseCategory = {
   id: string;
