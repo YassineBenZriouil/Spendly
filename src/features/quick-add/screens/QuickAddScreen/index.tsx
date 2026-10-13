@@ -27,6 +27,7 @@ import { DetailsFields } from '@/features/expense-details/components/DetailsFiel
 import { haptics } from '@/haptics/haptics.service';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 
 import { AmountSurface } from '../../components/AmountSurface';
 import { CategoryGrid } from '../../components/CategoryGrid';
@@ -151,7 +152,7 @@ export function QuickAddScreen() {
             accessible
             accessibilityLabel={selected ? `Category: ${selected.name}` : 'No category selected'}
             style={[styles.anchor, { borderColor: colors.borderSubtle }]}>
-            <Animated.Text style={[styles.placeholder, { color: colors.textSecondary }, placeholderStyle]}>
+            <Animated.Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.placeholder, { color: colors.textSecondary }, placeholderStyle]}>
               Choose a category
             </Animated.Text>
           </View>

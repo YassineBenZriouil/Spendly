@@ -165,6 +165,12 @@ export function SettingsScreen() {
           </Section>
 
           <Section title="About">
+            <ListRow
+              icon="dragHint"
+              label="Replay introduction"
+              caption="The 3-step practice from the first launch"
+              onPress={() => router.push('/onboarding')}
+            />
             <Text style={[styles.note, { color: colors.textSecondary }]}>
               Spendly keeps everything on this device. There is no account, nothing is uploaded, and nothing is
               tracked.

@@ -82,6 +82,12 @@ export const Spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as cons
 
 export const Radius = { sm: 8, md: 12, lg: 20, xl: 28, pill: 999 } as const;
 
+/**
+ * Largest system font scale for text inside fixed-size controls (tab bar, tiles, keys, fixed-height rows),
+ * so the largest accessibility sizes enlarge text without clipping it. Free-flowing text is never capped.
+ */
+export const FontScaleCap = { tight: 1.3, control: 1.5 } as const;
+
 /** Minimum touch target: 44pt on iOS, 48dp on Android. */
 export const MinTouchTarget = 48;
 

@@ -15,7 +15,7 @@ import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration, MorphTiming, ReducedTiming } from '@/animation/tokens';
 import { Icon } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
-import { Radius } from '@/theme/tokens';
+import { FontScaleCap, Radius } from '@/theme/tokens';
 
 import type { MorphChipModel } from '../../hooks/useCategoryMorph';
 import { styles } from './styles';
@@ -104,7 +104,7 @@ export function MorphChip({ chip, stageRef, anchorRef, onGone }: MorphChipProps)
       style={[styles.chip, { backgroundColor: categoryColors[chip.category.colorToken] }, chipStyle]}>
       <Animated.View style={[styles.content, contentStyle]}>
         <Icon name={chip.category.icon} color={colors.background} size={18} />
-        <Animated.Text numberOfLines={1} style={[styles.label, { color: colors.background }]}>
+        <Animated.Text maxFontSizeMultiplier={FontScaleCap.tight} numberOfLines={1} style={[styles.label, { color: colors.background }]}>
           {chip.category.name}
         </Animated.Text>
       </Animated.View>

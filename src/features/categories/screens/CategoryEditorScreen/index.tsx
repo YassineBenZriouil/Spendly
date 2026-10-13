@@ -35,6 +35,9 @@ const fade = {
   exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
 };
 
+/** "fitness" -> "Fitness": icon and color keys read aloud as words. */
+const readable = (key: string) => key.charAt(0).toUpperCase() + key.slice(1);
+
 /** Add (`id` = "new") or edit a category: name, icon, color, visibility. */
 export function CategoryEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -124,7 +127,7 @@ export function CategoryEditorScreen() {
             {CategoryIcons.map((icon) => (
               <Swatch
                 key={icon}
-                accessibilityLabel={icon}
+                accessibilityLabel={`${readable(icon)} icon`}
                 selected={form.icon === icon}
                 onPress={() => setForm({ ...form, icon })}>
                 <Icon name={icon} color={tint} size={20} />
@@ -137,7 +140,7 @@ export function CategoryEditorScreen() {
             {(Object.keys(categoryColors) as CategoryColorToken[]).map((token) => (
               <Swatch
                 key={token}
-                accessibilityLabel={token}
+                accessibilityLabel={`${readable(token)} color`}
                 color={categoryColors[token]}
                 selected={form.colorToken === token}
                 onPress={() => setForm({ ...form, colorToken: token })}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { TextInput, View, type TextInputProps } from 'react-native';
+import { TextInput, useWindowDimensions, View, type TextInputProps } from 'react-native';
 import { GestureDetector, type PanGesture } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
@@ -17,7 +17,7 @@ import { Icon } from '@/components/Icon';
 import { formatMoney } from '@/domain/money/money.format';
 import { formatWithPattern, type MoneyPattern } from '@/domain/money/money.pattern';
 import { useTheme } from '@/theme/ThemeProvider';
-import { Typography } from '@/theme/tokens';
+import { FontScaleCap, Typography } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -52,6 +52,8 @@ export function AmountSurface({
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const width = useSharedValue(0);
+  // Large accessibility text renders the amount bigger: include it when shrinking long amounts to fit
+  const fontScale = Math.min(useWindowDimensions().fontScale, FontScaleCap.control);
   const hintVisible = useSharedValue(amountMinor === 0 ? 1 : 0);
 
   // Keypad, +/-, reset and save change the draft: count the displayed amount to it.
@@ -70,7 +72,7 @@ export function AmountSurface({
 
   const amountStyle = useAnimatedStyle(() => {
     const text = formatWithPattern(Math.round(amount.get()), pattern);
-    const natural = text.length * Typography.amount.fontSize * CHAR_WIDTH_RATIO;
+    const natural = text.length * Typography.amount.fontSize * fontScale * CHAR_WIDTH_RATIO;
     const fit = width.get() > 0 ? Math.min(1, width.get() / natural) : 1;
     return { transform: [{ scale: fit * pulse.get() }] };
   });
@@ -98,6 +100,7 @@ export function AmountSurface({
         <Animated.View style={amountStyle}>
           <AnimatedTextInput
             editable={false}
+            maxFontSizeMultiplier={FontScaleCap.control}
             pointerEvents="none"
             underlineColorAndroid="transparent"
             defaultValue={formatWithPattern(amountMinor, pattern)}

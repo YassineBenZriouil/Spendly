@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -73,6 +73,7 @@ export function ActivityScreen() {
     try {
       // Same id and timestamps: the record comes back exactly as it was
       await expenseRepository.save(deleted);
+      AccessibilityInfo.announceForAccessibility('Expense restored');
     } catch {
       recentlyDeleted.set(deleted);
     }

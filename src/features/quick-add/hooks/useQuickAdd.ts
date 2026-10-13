@@ -1,8 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { AccessibilityInfo } from 'react-native';
 
 import { expenseRepository, type ExpenseRepository } from '@/domain/expense/expense.repository';
 import { createExpense } from '@/domain/expense/expense.service';
 import type { Expense } from '@/domain/expense/expense.types';
+import { formatMoney } from '@/domain/money/money.format';
 import { haptics } from '@/haptics/haptics.service';
 import { getPreferences, updatePreferences } from '@/storage/preferences/preferences';
 
@@ -59,8 +61,11 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
       dispatch({ type: 'saveSucceeded', expenseId: expense.id, keepCategoryId });
       setUndoable(expense);
       haptics.success();
+      // iOS has no live regions: say it out loud for VoiceOver
+      AccessibilityInfo.announceForAccessibility(`Saved ${formatMoney(amountMinor, currencyCode)}. Undo is available.`);
     } catch (error) {
       dispatch({ type: 'saveFailed', message: error instanceof Error ? error.message : 'Unknown error' });
+      AccessibilityInfo.announceForAccessibility("Couldn't save. Your entry is still here.");
     } finally {
       savingRef.current = false;
     }
@@ -71,6 +76,7 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
     setUndoable(null);
     try {
       await repository.remove(undoable.id);
+      AccessibilityInfo.announceForAccessibility('Expense removed');
     } catch {
       setUndoable(undoable);
     }

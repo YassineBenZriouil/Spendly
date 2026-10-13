@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Keyboard, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Keyboard, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
@@ -128,6 +128,7 @@ export function ExpenseDetailsScreen() {
     Keyboard.dismiss();
     run(async () => {
       await expenseRepository.update(updateExpense(expense, changes));
+      AccessibilityInfo.announceForAccessibility('Changes saved');
       router.back();
     }, "Couldn't save changes. Your edits are still here.");
   };
@@ -143,6 +144,7 @@ export function ExpenseDetailsScreen() {
           run(async () => {
             await expenseRepository.remove(expense.id);
             recentlyDeleted.set(expense);
+            AccessibilityInfo.announceForAccessibility('Expense deleted. Undo is available in Activity.');
             router.back();
           }, "Couldn't delete. Try again."),
       },

@@ -16,6 +16,7 @@ import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
 import { deviceLocale, formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 import { formatDay } from '@/utils/dateFormat';
 
 import { PLOT_HEIGHT, styles } from './styles';
@@ -95,7 +96,7 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
 
       <View style={styles.labels}>
         {days.map((day, index) => (
-          <Text key={index} style={[styles.label, { color: colors.textSecondary }]}>
+          <Text maxFontSizeMultiplier={FontScaleCap.control} key={index} style={[styles.label, { color: colors.textSecondary }]}>
             {kind === 'week' ? weekday.format(day.day) : [1, 8, 15, 22, 29].includes(day.day.getDate()) ? day.day.getDate() : ''}
           </Text>
         ))}

@@ -18,6 +18,7 @@ import { settleTo } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 
 import type { QuickAddPhase } from '../../state/quickAddReducer';
 import { styles } from './styles';
@@ -87,7 +88,7 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
             {/* Keyed so each label change cross-fades instead of snapping */}
             <Animated.View key={label} {...fade} style={styles.labelLayer}>
               {phase === 'saved' && <Icon name="check" color={colors.surface} size={20} />}
-              <Animated.Text style={[styles.label, textStyle]}>{label}</Animated.Text>
+              <Animated.Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.label, textStyle]}>{label}</Animated.Text>
             </Animated.View>
           </Animated.View>
         </Pressable>

@@ -15,6 +15,7 @@ import { useReducedMotion } from '@/animation/reducedMotion';
 import { ReducedTiming, Springs } from '@/animation/tokens';
 import { settleTo } from '@/animation/transitions';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -142,7 +143,7 @@ function TabItem({ label, focused, icon, onPress, onLongPress }: TabItemProps) {
       style={styles.item}>
       <Animated.View style={[styles.itemContent, itemStyle]}>
         <Animated.View style={iconStyle}>{icon}</Animated.View>
-        <Animated.Text style={[styles.label, labelStyle]}>{label}</Animated.Text>
+        <Animated.Text maxFontSizeMultiplier={FontScaleCap.tight} style={[styles.label, labelStyle]}>{label}</Animated.Text>
       </Animated.View>
     </Pressable>
   );

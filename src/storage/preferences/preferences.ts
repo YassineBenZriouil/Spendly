@@ -17,6 +17,8 @@ export type AppPreferences = {
   lastUsedCategoryId?: string;
   dragSensitivity: DragSensitivity;
   amountIncrement: AmountIncrement;
+  /** The first-launch introduction has been shown (it can be replayed from Settings). */
+  onboardingSeen: boolean;
 };
 
 const KEY = 'preferences';
@@ -30,6 +32,7 @@ function defaults(): AppPreferences {
     defaultCategoryMode: 'none',
     dragSensitivity: 'balanced',
     amountIncrement: 1,
+    onboardingSeen: false,
   };
 }
 
@@ -42,6 +45,7 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   lastUsedCategoryId: (v) => typeof v === 'string',
   dragSensitivity: (v) => v === 'precise' || v === 'balanced' || v === 'fast',
   amountIncrement: (v) => v === 1 || v === 5 || v === 10 || v === 50,
+  onboardingSeen: (v) => typeof v === 'boolean',
 };
 
 /** Only what the user changed is stored; everything else falls back to defaults (e.g. device currency). */

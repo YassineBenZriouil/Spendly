@@ -51,6 +51,7 @@ function ThemedNavigation() {
         <Stack.Screen name="categories/index" options={{ title: 'Categories' }} />
         <Stack.Screen name="categories/[id]" options={{ title: 'Category' }} />
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
       </Stack>
       <ThemeFade />
       {/* Settings override: Reanimated's own default (springs, layout animations) follows the choice too.

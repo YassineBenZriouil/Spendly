@@ -1,13 +1,20 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { Easing } from 'react-native';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration } from '@/animation/tokens';
 import { AnimatedTabBar } from '@/components/AnimatedTabBar';
 import { Icon } from '@/components/Icon';
+import { getPreferences } from '@/storage/preferences/preferences';
 
 export default function TabLayout() {
   const reducedMotion = useReducedMotion();
+
+  // First launch: the short interactive introduction, once (Settings can replay it)
+  useEffect(() => {
+    if (!getPreferences().onboardingSeen) router.push('/onboarding');
+  }, []);
 
   return (
     <Tabs

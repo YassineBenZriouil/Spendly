@@ -18,6 +18,7 @@ import { settleTo } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -91,6 +92,7 @@ export function CategoryTile({
           style={[styles.tile, { backgroundColor: colors.surfaceSecondary }, tileStyle]}>
           <Icon name={category.icon} color={tint} size={24} />
           <Animated.Text
+            maxFontSizeMultiplier={FontScaleCap.tight}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.75}

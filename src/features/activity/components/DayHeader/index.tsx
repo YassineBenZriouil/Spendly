@@ -5,6 +5,7 @@ import { ReducedTiming } from '@/animation/tokens';
 import type { CurrencyTotal } from '@/domain/expense/expense.repository';
 import { formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 import { formatDay } from '@/utils/dateFormat';
 
 import { styles } from './styles';
@@ -29,13 +30,14 @@ export function DayHeader({ day, totals }: DayHeaderProps) {
 
   return (
     <View accessible accessibilityRole="header" accessibilityLabel={`${label}, total ${total}`} style={styles.header}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
       {/* Keyed so a changed daily total cross-fades; no fade when the header merely scrolls into view */}
       <LayoutAnimationConfig skipEntering>
         <View style={styles.totalSlot}>
           <Animated.Text
             key={total}
             {...fade}
+            maxFontSizeMultiplier={FontScaleCap.control}
             numberOfLines={1}
             style={[styles.total, { color: colors.textSecondary }]}>
             {total}

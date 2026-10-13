@@ -1,4 +1,4 @@
-import { formatDay, localDaysAgo } from '../dateFormat';
+import { formatDay, formatMonth, formatTime, localDaysAgo } from '../dateFormat';
 
 jest.mock('expo-localization', () => ({ getLocales: () => [{ languageTag: 'en-US' }] }));
 
@@ -20,5 +20,15 @@ describe('formatDay', () => {
     // Nov 1 2026 is 25 hours long in New York
     expect(localDaysAgo(new Date('2026-11-01T12:00:00.000Z'), new Date('2026-11-02T12:00:00.000Z'))).toBe(1);
     expect(localDaysAgo(new Date('2026-03-08T12:00:00.000Z'), new Date('2026-03-09T12:00:00.000Z'))).toBe(1);
+  });
+});
+
+describe('locale-aware formats', () => {
+  it('follows the device locale for day names, month names and 12/24-hour time', () => {
+    const date = new Date('2026-10-10T19:05:00.000Z'); // Sat Oct 10, 15:05 local
+    expect(formatTime(date, 'en-US')).toBe('3:05 PM');
+    expect(formatTime(date, 'de-DE')).toBe('15:05');
+    expect(formatDay(date, now, 'fr-FR')).toBe('sam. 10 oct.');
+    expect(formatMonth(date, 'de-DE')).toBe('Oktober 2026');
   });
 });

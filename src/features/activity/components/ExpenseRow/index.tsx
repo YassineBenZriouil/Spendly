@@ -8,6 +8,7 @@ import type { ExpenseCategory } from '@/domain/category/category.types';
 import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 import { formatTime } from '@/utils/dateFormat';
 
 import { styles } from './styles';
@@ -48,14 +49,14 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
           <Icon name={category?.icon ?? 'other'} color={tint} size={20} />
         </View>
         <View style={styles.text}>
-          <Text numberOfLines={1} style={[styles.title, { color: colors.textPrimary }]}>
+          <Text maxFontSizeMultiplier={FontScaleCap.control} numberOfLines={1} style={[styles.title, { color: colors.textPrimary }]}>
             {expense.title ?? categoryName}
           </Text>
-          <Text numberOfLines={1} style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text maxFontSizeMultiplier={FontScaleCap.control} numberOfLines={1} style={[styles.subtitle, { color: colors.textSecondary }]}>
             {expense.title ? `${categoryName} · ${time}` : time}
           </Text>
         </View>
-        <Text numberOfLines={1} style={[styles.amount, { color: colors.textPrimary }]}>
+        <Text maxFontSizeMultiplier={FontScaleCap.control} numberOfLines={1} style={[styles.amount, { color: colors.textPrimary }]}>
           {amount}
         </Text>
       </Animated.View>

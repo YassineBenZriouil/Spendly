@@ -13,6 +13,7 @@ import { Icon } from '@/components/Icon';
 import { applyKeypadKey, inputToMinor, minorToInput, type KeypadKey } from '@/domain/money/money.parse';
 import type { MoneyPattern } from '@/domain/money/money.pattern';
 import { useTheme } from '@/theme/ThemeProvider';
+import { FontScaleCap } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -91,7 +92,7 @@ function Key({ keyName, pattern, onPress }: { keyName: KeypadKey; pattern: Money
         {label === null ? (
           <Icon name="backspace" color={colors.textPrimary} size={22} />
         ) : (
-          <Animated.Text style={[styles.keyLabel, { color: colors.textPrimary }]}>{label}</Animated.Text>
+          <Animated.Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.keyLabel, { color: colors.textPrimary }]}>{label}</Animated.Text>
         )}
       </Animated.View>
     </Pressable>
