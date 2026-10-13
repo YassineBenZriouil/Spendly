@@ -54,7 +54,7 @@ export function MorphChip({ chip, stageRef, anchorRef, onGone }: MorphChipProps)
       const stage = measure(stageRef);
       const anchor = measure(anchorRef);
       if (!stage || !anchor) return;
-      const tile = measure(tileRef);
+      const tile = tileRef ? measure(tileRef) : null;
       to.set(relativeTo(anchor, stage));
       from.set(tile ? relativeTo(tile, stage) : relativeTo(anchor, stage));
       progress.set(withTiming(1, reducedMotion ? ReducedTiming : MorphTiming));

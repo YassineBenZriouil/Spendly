@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -18,11 +18,12 @@ import { settleTo } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
-import { BuiltInCategories } from '@/domain/category/builtInCategories';
 import type { ExpenseCategory } from '@/domain/category/category.types';
-import { deviceCurrency, formatMoney } from '@/domain/money/money.format';
+import { formatMoney } from '@/domain/money/money.format';
 import { getMoneyPattern } from '@/domain/money/money.pattern';
+import { useCategories } from '@/features/categories/hooks/useCategories';
 import { haptics } from '@/haptics/haptics.service';
+import { loadPreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { AmountSurface } from '../../components/AmountSurface';
@@ -33,17 +34,19 @@ import { SaveAction } from '../../components/SaveAction';
 import { useAmountDrag } from '../../hooks/useAmountDrag';
 import { useCategoryMorph } from '../../hooks/useCategoryMorph';
 import { useQuickAdd } from '../../hooks/useQuickAdd';
+import { useTodayTotal } from '../../hooks/useTodayTotal';
 import { canSave } from '../../state/quickAddReducer';
 import { clampAmount, dragConfigFor } from '../../utils/dragMapping';
 import { styles } from './styles';
 
-// shortcut: built-ins only; Phase 2 loads categories (incl. custom/hidden) from the database
-const categories = BuiltInCategories.filter((category) => category.isVisible);
-
 export function QuickAddScreen() {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
-  const currencyCode = deviceCurrency();
+  // shortcut: read once per render; Phase 4's Settings screen makes currency changeable
+  const currencyCode = loadPreferences().currencyCode;
+  const allCategories = useCategories();
+  const categories = allCategories.filter((category) => category.isVisible);
+  const todayTotals = useTodayTotal();
   const pattern = getMoneyPattern(currencyCode);
   const config = dragConfigFor(currencyCode);
 
@@ -77,10 +80,23 @@ export function QuickAddScreen() {
     if (draft.categoryId === null) hide();
   }, [draft.categoryId, hide]);
 
-  const selected = categories.find((category) => category.id === draft.categoryId);
+  const selected = allCategories.find((category) => category.id === draft.categoryId);
   const savedExpense = undoable
-    ? `${formatMoney(undoable.amountMinor, undoable.currencyCode)}, ${categories.find((c) => c.id === undoable.categoryId)?.name ?? ''}`
+    ? `${formatMoney(undoable.amountMinor, undoable.currencyCode)}, ${allCategories.find((c) => c.id === undoable.categoryId)?.name ?? ''}`
     : null;
+
+  // A draft recovered on launch has no tapped tile: show its chip once the anchor can be measured
+  const restorePending = useRef(draft.categoryId !== null);
+  const onAnchorLayout = () => {
+    if (!restorePending.current) return;
+    restorePending.current = false;
+    if (selected && chips.length === 0) show(selected, null);
+  };
+
+  const todayLabel =
+    todayTotals.length > 0
+      ? `Today · ${todayTotals.map((total) => formatMoney(total.totalMinor, total.currencyCode)).join(' + ')}`
+      : 'Today';
 
   const placeholderVisible = useSharedValue(selected ? 0 : 1);
   useEffect(() => {
@@ -98,7 +114,15 @@ export function QuickAddScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={[styles.date, { color: colors.textSecondary }]}>Today</Text>
+        {/* Keyed so a new total cross-fades in */}
+        <Animated.Text
+          key={todayLabel}
+          entering={panelEnter}
+          exiting={FadeOut.duration(ReducedTiming.duration)}
+          accessibilityLabel={todayLabel.replace(' · ', ', spent ')}
+          style={[styles.date, { color: colors.textSecondary }]}>
+          {todayLabel}
+        </Animated.Text>
         <IconButton icon="settings" variant="plain" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
       </View>
 
@@ -106,6 +130,7 @@ export function QuickAddScreen() {
         <View
           ref={anchorRef}
           collapsable={false}
+          onLayout={onAnchorLayout}
           accessible
           accessibilityLabel={selected ? `Category: ${selected.name}` : 'No category selected'}
           style={[styles.anchor, { borderColor: colors.borderSubtle }]}>

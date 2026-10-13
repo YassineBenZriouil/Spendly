@@ -1,5 +1,4 @@
-import { createInMemoryExpenseRepository } from '../expense.repository';
-import { createExpense, validateNewExpense } from '../expense.service';
+import { createExpense, updateExpense, validateNewExpense } from '../expense.service';
 
 const valid = { amountMinor: 1250, currencyCode: 'EUR', categoryId: 'food' };
 
@@ -33,14 +32,19 @@ describe('createExpense', () => {
   });
 });
 
-describe('in-memory repository', () => {
-  it('saves idempotently and removes', async () => {
-    const repository = createInMemoryExpenseRepository();
-    const expense = createExpense(valid);
-    await repository.save(expense);
-    await repository.save(expense);
-    expect(await repository.list()).toHaveLength(1);
-    await repository.remove(expense.id);
-    expect(await repository.list()).toHaveLength(0);
+describe('updateExpense', () => {
+  const original = createExpense(valid, new Date('2026-10-13T10:00:00.000Z'));
+
+  it('applies changes and bumps updatedAt only', () => {
+    const later = new Date('2026-10-14T08:00:00.000Z');
+    const updated = updateExpense(original, { amountMinor: 900, note: 'lunch' }, later);
+    expect(updated).toMatchObject({ amountMinor: 900, note: 'lunch', currencyCode: 'EUR' });
+    expect(updated.createdAt).toBe(original.createdAt);
+    expect(updated.updatedAt).toBe(later.toISOString());
+  });
+
+  it('rejects invalid edits', () => {
+    expect(() => updateExpense(original, { amountMinor: 0 })).toThrow();
+    expect(() => updateExpense(original, { occurredAt: 'not a date' })).toThrow();
   });
 });

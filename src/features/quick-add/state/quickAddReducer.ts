@@ -48,6 +48,11 @@ function restingPhase(draft: QuickAddDraft): QuickAddPhase {
   return draft.categoryId ? 'categorySelected' : 'ready';
 }
 
+/** State to start from when an unsaved draft was recovered from storage. */
+export function restoreDraft(draft: QuickAddDraft): QuickAddState {
+  return { ...initialQuickAddState, draft, phase: restingPhase(draft) };
+}
+
 function withDraft(state: QuickAddState, draft: QuickAddDraft): QuickAddState {
   return { ...state, draft, phase: restingPhase(draft), error: null };
 }

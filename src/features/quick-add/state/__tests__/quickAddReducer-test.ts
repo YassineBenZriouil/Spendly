@@ -1,6 +1,7 @@
 import {
   initialQuickAddState,
   quickAddReducer,
+  restoreDraft,
   type QuickAddEvent,
   type QuickAddState,
 } from '../quickAddReducer';
@@ -63,6 +64,12 @@ describe('quickAddReducer', () => {
     const next = quickAddReducer(saved, { type: 'selectCategory', categoryId: 'bills' });
     expect(next.phase).toBe('categorySelected');
     expect(quickAddReducer(next, { type: 'savedAcknowledged' })).toBe(next);
+  });
+
+  it('restores a recovered draft into the matching phase', () => {
+    expect(restoreDraft({ categoryId: 'food', amountMinor: 1250 }).phase).toBe('readyToSave');
+    expect(restoreDraft({ categoryId: 'food', amountMinor: 0 }).phase).toBe('categorySelected');
+    expect(restoreDraft({ categoryId: null, amountMinor: 300 }).phase).toBe('ready');
   });
 
   it('returns to zero via amountChanged (reset)', () => {

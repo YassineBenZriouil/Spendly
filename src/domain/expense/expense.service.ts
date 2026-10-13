@@ -23,3 +23,16 @@ export function createExpense(input: NewExpense, now = new Date()): Expense {
     updatedAt: timestamp,
   };
 }
+
+export type ExpenseChanges = Partial<
+  Pick<Expense, 'amountMinor' | 'categoryId' | 'title' | 'note' | 'occurredAt' | 'paymentMethod'>
+>;
+
+/** Applies edits to a stored expense. Currency is never changed: history keeps its own currency. */
+export function updateExpense(existing: Expense, changes: ExpenseChanges, now = new Date()): Expense {
+  const next: Expense = { ...existing, ...changes, updatedAt: now.toISOString() };
+  const error = validateNewExpense(next);
+  if (error) throw new Error(error);
+  if (Number.isNaN(Date.parse(next.occurredAt))) throw new Error('Date is invalid');
+  return next;
+}

@@ -5,17 +5,27 @@ import { createExpense } from '@/domain/expense/expense.service';
 import type { Expense } from '@/domain/expense/expense.types';
 import { haptics } from '@/haptics/haptics.service';
 
-import { canSave, initialQuickAddState, quickAddReducer } from '../state/quickAddReducer';
+import { loadDraft, saveDraft } from '../state/draftStorage';
+import { canSave, initialQuickAddState, quickAddReducer, restoreDraft } from '../state/quickAddReducer';
 
 /** How long "Saved" shows on the button. The next expense can start during it. */
 const SAVED_CONFIRMATION_MS = 1200;
 const UNDO_WINDOW_MS = 5000;
 
 export function useQuickAdd(currencyCode: string, repository: ExpenseRepository = expenseRepository) {
-  const [state, dispatch] = useReducer(quickAddReducer, initialQuickAddState);
+  const [state, dispatch] = useReducer(quickAddReducer, initialQuickAddState, (initial) => {
+    const draft = loadDraft();
+    return draft ? restoreDraft(draft) : initial;
+  });
   const [undoable, setUndoable] = useState<Expense | null>(null);
   // Synchronous guard: two taps in the same frame both see the old reducer state
   const savingRef = useRef(false);
+
+  // Keep the unsaved draft on disk so it survives backgrounding and the app being killed
+  const { categoryId, amountMinor } = state.draft;
+  useEffect(() => {
+    saveDraft({ categoryId, amountMinor });
+  }, [categoryId, amountMinor]);
 
   useEffect(() => {
     if (state.phase !== 'saved') return;

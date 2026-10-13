@@ -15,7 +15,8 @@ export type MorphChipState = 'active' | 'replaced' | 'returning';
 export type MorphChipModel = {
   key: string;
   category: ExpenseCategory;
-  tileRef: AnimatedRef<View>;
+  /** null: no source tile (draft restored on launch), the chip appears at the anchor. */
+  tileRef: AnimatedRef<View> | null;
   state: MorphChipState;
 };
 
@@ -28,7 +29,7 @@ export function useCategoryMorph() {
   const anchorRef = useAnimatedRef<View>();
   const [chips, setChips] = useState<MorphChipModel[]>([]);
 
-  const show = (category: ExpenseCategory, tileRef: AnimatedRef<View>) => {
+  const show = (category: ExpenseCategory, tileRef: AnimatedRef<View> | null) => {
     const key = createId();
     setChips((current) => [
       ...current.map((chip) => (chip.state === 'active' ? { ...chip, state: 'replaced' as const } : chip)),

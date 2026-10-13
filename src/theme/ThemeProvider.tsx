@@ -1,6 +1,8 @@
 import { createContext, use, useState, type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { loadPreferences, savePreferences } from '@/storage/preferences/preferences';
+
 import { CategoryColors, Colors, type ColorScheme } from './tokens';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -16,8 +18,11 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // shortcut: preference lives in memory, persisted with the other settings in Phase 4
-  const [preference, setPreference] = useState<ThemePreference>('system');
+  const [preference, setPreferenceState] = useState<ThemePreference>(() => loadPreferences().theme);
+  const setPreference = (next: ThemePreference) => {
+    setPreferenceState(next);
+    savePreferences({ theme: next });
+  };
   const system = useColorScheme();
   const scheme: ColorScheme =
     preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
