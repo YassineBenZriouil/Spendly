@@ -1,11 +1,10 @@
 import { getLocales } from 'expo-localization';
 
-/** Number of minor-unit digits for a currency (JPY 0, EUR 2, KWD 3), from the platform's Intl data. */
+/** Number of minor-unit digits for a currency (JPY 0, EUR 2, KWD 3), read from how `Intl` formats 1 ("$1.00"). */
 export function currencyExponent(currencyCode: string): number {
-  return (
-    new Intl.NumberFormat('en', { style: 'currency', currency: currencyCode }).resolvedOptions()
-      .maximumFractionDigits ?? 2
-  );
+  // Only `format`: Hermes on iOS lacks some Intl APIs (formatToParts) and options
+  const one = new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(1);
+  return one.match(/1\.(\d+)/)?.[1].length ?? 0;
 }
 
 /** Formats integer minor units, e.g. (1250, 'EUR', 'fr-FR') -> "12,50 €". */

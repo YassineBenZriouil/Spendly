@@ -1,4 +1,4 @@
-import { ReduceMotion, type WithSpringConfig, type WithTimingConfig } from 'react-native-reanimated';
+import { Easing, ReduceMotion, type WithSpringConfig, type WithTimingConfig } from 'react-native-reanimated';
 
 /** Durations in ms. Starting values from IDENTITY.md §4 — tune on device. */
 export const Duration = {
@@ -7,6 +7,12 @@ export const Duration = {
   standard: 270,
   morph: 380,
 } as const;
+
+/** Signature category -> composer morph and its reverse. */
+export const MorphTiming = {
+  duration: Duration.morph,
+  easing: Easing.bezier(0.2, 0, 0, 1),
+} satisfies WithTimingConfig;
 
 /** Delay between items in a staggered group (e.g. category grid). */
 export const Stagger = 30;

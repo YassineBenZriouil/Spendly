@@ -7,6 +7,28 @@ const icons = {
   activity: { ios: 'list.bullet', android: 'list', web: 'list' },
   insights: { ios: 'chart.bar', android: 'bar_chart', web: 'bar_chart' },
   settings: { ios: 'gearshape', android: 'settings', web: 'settings' },
+
+  plus: { ios: 'plus', android: 'add', web: 'add' },
+  minus: { ios: 'minus', android: 'remove', web: 'remove' },
+  keypad: { ios: 'number', android: 'dialpad', web: 'dialpad' },
+  reset: { ios: 'arrow.counterclockwise', android: 'restart_alt', web: 'restart_alt' },
+  backspace: { ios: 'delete.left', android: 'backspace', web: 'backspace' },
+  check: { ios: 'checkmark', android: 'check', web: 'check' },
+  dragHint: { ios: 'arrow.up.arrow.down', android: 'swap_vert', web: 'swap_vert' },
+  close: { ios: 'xmark', android: 'close', web: 'close' },
+  error: { ios: 'exclamationmark.circle', android: 'error', web: 'error' },
+
+  // Category icons (keys match CategoryIcon)
+  food: { ios: 'fork.knife', android: 'restaurant', web: 'restaurant' },
+  transport: { ios: 'car', android: 'directions_car', web: 'directions_car' },
+  groceries: { ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' },
+  shopping: { ios: 'bag', android: 'shopping_bag', web: 'shopping_bag' },
+  bills: { ios: 'doc.text', android: 'receipt_long', web: 'receipt_long' },
+  health: { ios: 'heart', android: 'favorite', web: 'favorite' },
+  entertainment: { ios: 'film', android: 'movie', web: 'movie' },
+  home: { ios: 'house', android: 'home', web: 'home' },
+  travel: { ios: 'airplane', android: 'flight', web: 'flight' },
+  other: { ios: 'square.grid.2x2', android: 'category', web: 'category' },
 } as const;
 
 export type IconName = keyof typeof icons;
