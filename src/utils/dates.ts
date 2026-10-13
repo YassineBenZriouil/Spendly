@@ -16,3 +16,19 @@ export function localDayRange(date: Date): IsoRange {
   const start = startOfLocalDay(date);
   return { start: start.toISOString(), end: addLocalDays(start, 1).toISOString() };
 }
+
+/** First day of `date`'s local month. */
+export function startOfLocalMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+/** First day of the month `months` away from `date`'s month. */
+export function addLocalMonths(date: Date, months: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1);
+}
+
+/** Local midnight starting `date`'s week. `firstWeekday`: 1 = Sunday … 7 = Saturday (expo-localization's numbering). */
+export function startOfLocalWeek(date: Date, firstWeekday: number): Date {
+  const back = (date.getDay() - (firstWeekday - 1) + 7) % 7;
+  return addLocalDays(date, -back);
+}

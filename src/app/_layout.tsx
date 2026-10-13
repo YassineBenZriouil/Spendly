@@ -47,6 +47,7 @@ function ThemedNavigation() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
         <Stack.Screen name="settings/currency" options={{ title: 'Currency' }} />
+        <Stack.Screen name="settings/export" options={{ title: 'Export' }} />
         <Stack.Screen name="categories/index" options={{ title: 'Categories' }} />
         <Stack.Screen name="categories/[id]" options={{ title: 'Category' }} />
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />

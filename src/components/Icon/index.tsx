@@ -46,7 +46,9 @@ const icons = {
   work: { ios: 'briefcase', android: 'work', web: 'work' },
 
   // Settings and category management
+  chevronLeft: { ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' },
   chevronRight: { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' },
+  export: { ios: 'square.and.arrow.up', android: 'ios_share', web: 'ios_share' },
   arrowUp: { ios: 'arrow.up', android: 'arrow_upward', web: 'arrow_upward' },
   arrowDown: { ios: 'arrow.down', android: 'arrow_downward', web: 'arrow_downward' },
   hidden: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },

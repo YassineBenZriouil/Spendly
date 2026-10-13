@@ -152,13 +152,16 @@ export function SettingsScreen() {
           </Section>
 
           <Section title="Data">
+            <ListRow
+              icon="export"
+              label="Export to CSV"
+              caption="Pick a date range and share the file"
+              onPress={() => router.push('/settings/export')}
+            />
             <View style={styles.dataRow}>
-              <Button label="Export data" variant="secondary" disabled accessibilityHint="Coming in a later update" />
               <Button label="Sync data" variant="secondary" disabled accessibilityHint="Coming soon" />
             </View>
-            <Text style={[styles.note, { color: colors.textSecondary }]}>
-              Export arrives in a later update. Sync is coming soon.
-            </Text>
+            <Text style={[styles.note, { color: colors.textSecondary }]}>Sync is coming soon.</Text>
           </Section>
 
           <Section title="About">

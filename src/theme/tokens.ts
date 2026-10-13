@@ -15,6 +15,8 @@ const light = {
   success: '#267A4B',
   danger: '#C43D37',
   overlay: '#17191466',
+  /** Single-series chart marks: >= 3:1 against surface (checked with the dataviz validator). */
+  chart: '#5A7A22',
 };
 
 export type ThemeColors = typeof light;
@@ -32,6 +34,7 @@ const dark: ThemeColors = {
   success: '#7AD9A0',
   danger: '#FF817A',
   overlay: '#00000099',
+  chart: '#C8F169',
 };
 
 export const Colors: Record<ColorScheme, ThemeColors> = { light, dark };
