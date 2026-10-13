@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "App",
+    "name": "Spendly",
     "slug": "App",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "app",
+    "scheme": "spendly",
     "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
@@ -28,7 +28,9 @@
           "image": "./assets/logo.png",
           "imageWidth": 200
         }
-      ]
+      ],
+      "expo-sqlite",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
