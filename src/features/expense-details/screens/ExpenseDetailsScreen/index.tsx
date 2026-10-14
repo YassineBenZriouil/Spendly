@@ -14,7 +14,7 @@ import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { expenseRepository } from '@/domain/expense/expense.repository';
 import { againFrom, type ExpenseDetails, updateExpense } from '@/domain/expense/expense.service';
-import type { Expense } from '@/domain/expense/expense.types';
+import type { EntryKind, Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { getMoneyPattern } from '@/domain/money/money.pattern';
 import { recurrenceRepository } from '@/domain/recurrence/recurrence.repository';
@@ -32,11 +32,12 @@ import { writeFailureMessage } from '@/storage/database/errors';
 import { DetailsFields } from '../../components/DetailsFields';
 import { styles } from './styles';
 
-type Form = { amountMinor: number; categoryId: string; details: ExpenseDetails };
+type Form = { amountMinor: number; categoryId: string; kind: EntryKind; details: ExpenseDetails };
 
-const toForm = ({ amountMinor, categoryId, title, note, occurredAt, paymentMethod }: Expense): Form => ({
+const toForm = ({ amountMinor, categoryId, kind, title, note, occurredAt, paymentMethod }: Expense): Form => ({
   amountMinor,
   categoryId,
+  kind: kind ?? 'expense',
   details: { title, note, occurredAt, paymentMethod },
 });
 
@@ -100,6 +101,7 @@ export function ExpenseDetailsScreen() {
   const changes = {
     amountMinor: form.amountMinor,
     categoryId: form.categoryId,
+    kind: form.kind,
     title: form.details.title,
     note: form.details.note,
     occurredAt: form.details.occurredAt,
@@ -110,6 +112,7 @@ export function ExpenseDetailsScreen() {
   const fieldsChanged =
     form.amountMinor !== original.amountMinor ||
     form.categoryId !== original.categoryId ||
+    form.kind !== original.kind ||
     (['title', 'note', 'occurredAt', 'paymentMethod'] as const).some(
       (key) => (form.details[key] ?? '').toString().trim() !== (original.details[key] ?? ''),
     );
@@ -235,6 +238,8 @@ export function ExpenseDetailsScreen() {
               onChange={(detailChanges) => setForm({ ...form, details: { ...form.details, ...detailChanges } })}
               repeat={repeat}
               onRepeatChange={rule === undefined ? undefined : setRepeat}
+              kind={form.kind}
+              onKindChange={(kind) => setForm({ ...form, kind })}
             />
 
             {error && (

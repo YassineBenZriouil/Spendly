@@ -133,6 +133,16 @@ describe('quickAddReducer', () => {
     expect(saved.draft).not.toHaveProperty('repeat');
   });
 
+  it('switches to income and back, and starts the next entry as an expense', () => {
+    const income = run([{ type: 'kindChanged', kind: 'income' }], readyToSave);
+    expect(income.draft.kind).toBe('income');
+    expect(run([{ type: 'kindChanged', kind: 'expense' }], income).draft).not.toHaveProperty('kind');
+    const saved = run([{ type: 'saveRequested' }, { type: 'saveSucceeded', expenseId: 'e1' }], income);
+    expect(saved.draft).not.toHaveProperty('kind');
+    // Choosing Income counts as touching the draft
+    expect(run([{ type: 'kindChanged', kind: 'income' }, { type: 'categoryPreset', categoryId: 'food' }]).draft.categoryId).toBeNull();
+  });
+
   it('a draft with only Repeat set is not untouched (no preselection over it)', () => {
     const state = run([{ type: 'repeatChanged', repeat: 'weekly' }, { type: 'categoryPreset', categoryId: 'food' }]);
     expect(state.draft.categoryId).toBeNull();

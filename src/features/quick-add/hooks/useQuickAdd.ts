@@ -102,7 +102,7 @@ export function useQuickAdd(
   }, [state.phase]);
 
   const save = async () => {
-    const { categoryId, amountMinor, details, repeat } = state.draft;
+    const { categoryId, amountMinor, details, repeat, kind } = state.draft;
     if (savingRef.current || !canSave(state.draft) || !categoryId) return;
     savingRef.current = true;
     dispatch({ type: 'saveRequested' });
@@ -110,7 +110,7 @@ export function useQuickAdd(
       const id = createId();
       // Written before the database so a kill between the two can be detected on the next launch
       saveDraft(state.draft, id);
-      const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId }, new Date(), id);
+      const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId, kind }, new Date(), id);
       if (repeat) {
         // The expense and its rule are stored together, or not at all
         await recurrences.saveRepeating(expense, repeat);

@@ -26,6 +26,21 @@ describe('groupByDay', () => {
     expect(items[4]).toMatchObject({ key: '2026-10-12T04:00:00.000Z', totals: [{ currencyCode: 'EUR', totalMinor: 100 }] });
   });
 
+  it('lists income but leaves it out of the day totals', () => {
+    const income = (iso: string, amountMinor: number, currencyCode = 'EUR') =>
+      createExpense({ amountMinor, currencyCode, categoryId: 'food', occurredAt: iso, kind: 'income' });
+    const items = groupByDay([
+      income('2026-10-13T16:00:00.000Z', 5000),
+      at('2026-10-13T15:00:00.000Z', 900, 'USD'),
+      income('2026-10-12T15:00:00.000Z', 700, 'USD'),
+    ]);
+
+    expect(items.map((item) => item.type)).toEqual(['day', 'expense', 'expense', 'day', 'expense']);
+    expect(items[0]).toMatchObject({ totals: [{ currencyCode: 'USD', totalMinor: 900 }] });
+    // Only income that day: zero spending, not an empty total
+    expect(items[3]).toMatchObject({ totals: [{ currencyCode: 'USD', totalMinor: 0 }] });
+  });
+
   it('returns nothing for no expenses', () => {
     expect(groupByDay([])).toEqual([]);
   });

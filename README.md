@@ -56,7 +56,8 @@ Everything you've recorded, newest first.
 - **Search** by title, note or category name.
 - **Filter** by category with one tap.
 - **Again:** swipe an expense to the side and tap **Again** to add the same expense (category, amount and title) dated now, with Undo. Also on the edit screen, and as a screen-reader action.
-- **Tap any expense to edit it:** amount, category, title, note, date and time, payment method. Everything can be changed.
+- **Income:** switch an entry to **Income** in its details. Income rows show a "+" and the word "Income", and never count as spending.
+- **Tap any expense to edit it:** amount, category, title, note, date and time, payment method, expense or income. Everything can be changed.
 - **Delete** asks you to confirm, then gives you **Undo** for 5 seconds anyway. Saved changes get an Undo too, which puts back the previous version.
 - Deleted expenses are kept out of sight for 30 days before they're removed for good.
 - Stays smooth even with thousands of expenses.
@@ -91,6 +92,8 @@ A quick, honest look at where your money goes.
 - **Spending by category**, with each category's share of the total and whether it's up, down or about usual (always in words, not just color). Tap a category to see its expenses.
 - **Your most frequent category** shows up as a highlight when one category clearly dominates.
 - **Multiple currencies?** Totals are kept separate per currency and never converted. Pick which currency to look at.
+- **Net:** if you logged income in the period, a Net card shows income minus spending, in words ("Left over" or "Spent more than you earned"). No income, no card.
+- **Budgets** (Settings → Budget): an overall monthly amount and optional amounts per category, in your main currency. In month view, a thin bar with words ("€120 left of €500") sits under the total and on budgeted categories. Never a popup.
 
 ---
 
@@ -142,7 +145,7 @@ Every setting applies instantly and is remembered.
 **Settings → Export to CSV** turns your expenses into a spreadsheet file.
 
 - Choose a range: **This month, Last 3 months, This year** or **All time**.
-- The file includes the date, time, amount, currency, category, title, note, payment method and an exact timestamp.
+- The file includes the date, time, amount, currency, category, title, note, payment method, an exact timestamp and the type (Expense or Income).
 - It opens your phone's share sheet, so you can save it to Files, send it to yourself or open it in Excel, Numbers or Google Sheets.
 - Anything you typed is exported as plain text, so it can never act as a formula inside a spreadsheet.
 

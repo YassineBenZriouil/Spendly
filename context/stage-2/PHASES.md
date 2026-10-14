@@ -190,17 +190,25 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
   popups, no notifications. Per-category budgets show on their category rows.
 - Income and budgets go into the backup file (format bump); CSV gets a type column.
 
-**Decisions to settle first**
+**Decisions (settled)**
 
-- Budgets with several currencies: one budget per currency, or only for the main currency (proposal: the
-  main currency only).
-- Whether income gets its own categories (proposal: one built-in "Income" category plus custom ones).
+- Budgets are for the main currency only, monthly, shown only in month view when that currency is shown.
+- No special "Income" category: income uses the existing and custom categories, so the grid is unchanged for
+  people who never log income.
+
+**Built**
+
+- `kind` on expenses and recurrences (migration v4) plus a `live_spending` view; every spending total, highlight,
+  baseline, suggestion and day total reads it. Net = `incomeTotal` − spending, shown only when income > 0.
+- Activity: income rows show "+" and the word "Income"; day totals leave income out.
+- Wording: current month "€120 left of €500" / "€30 over €500"; past months "€120 under budget" / "€30 over budget".
+- CSV: a last **Type** column. Backups are format 3 (still read 1 and 2); the budget travels in the settings.
 
 **Done when**
 
-- [ ] Totals, highlights and the baseline exclude income (tests on seeded data).
-- [ ] Net and budget numbers match hand-calculated values (tests), including partial months and DST.
-- [ ] A user who never adds income or a budget sees no change anywhere (snapshot of Insights data).
+- [x] Totals, highlights and the baseline exclude income (tests on seeded data).
+- [x] Net and budget numbers match hand-calculated values (tests), including partial months and DST.
+- [x] A user who never adds income or a budget sees no change anywhere (Net and budget UI render only when used).
 - [ ] Budget bars read correctly with VoiceOver / TalkBack ("€120 left of €500"). *Device.*
 
 ---

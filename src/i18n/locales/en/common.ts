@@ -7,6 +7,7 @@ export const common = {
   'common.tab.insights': 'Insights',
   'common.screen.settings': 'Settings',
   'common.screen.currency': 'Currency',
+  'common.screen.budget': "Budget",
   'common.screen.export': 'Export',
   'common.screen.categories': 'Categories',
   'common.screen.category': 'Category',

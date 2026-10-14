@@ -97,7 +97,7 @@ export function QuickAddScreen() {
     if (phase === 'saved') setPanel('categories');
   }
 
-  const hasDetails = Object.values(draft.details ?? {}).some(Boolean) || draft.repeat !== undefined;
+  const hasDetails = Object.values(draft.details ?? {}).some(Boolean) || draft.repeat !== undefined || draft.kind !== undefined;
 
   const selected = allCategories.find((category) => category.id === draft.categoryId);
   const savedExpense = undoable
@@ -257,6 +257,8 @@ export function QuickAddScreen() {
                     dateResettable
                     repeat={draft.repeat ?? null}
                     onRepeatChange={(repeat) => dispatch({ type: 'repeatChanged', repeat })}
+                    kind={draft.kind ?? 'expense'}
+                    onKindChange={(kind) => dispatch({ type: 'kindChanged', kind })}
                   />
                 </ScrollView>
               </Animated.View>

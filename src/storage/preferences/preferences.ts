@@ -1,6 +1,7 @@
 import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
+import { parseBudget, type Budget } from '@/domain/budget/budget';
 import { deviceCurrency } from '@/domain/money/money.format';
 import { t } from '@/i18n';
 import { isStorageFull } from '@/storage/database/errors';
@@ -19,6 +20,8 @@ export type AppPreferences = {
   theme: 'system' | 'light' | 'dark';
   /** Accent of the Color style. */
   accent: AccentName;
+  /** Monthly budget (overall and / or per category), shown only in Insights. Absent: no budget. */
+  budget?: Budget;
   hapticsEnabled: boolean;
   reducedMotion: 'system' | 'on' | 'off';
   dragSensitivity: DragSensitivity;
@@ -48,6 +51,7 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   themeStyle: (v) => v === 'mono' || v === 'color',
   theme: (v) => v === 'system' || v === 'light' || v === 'dark',
   accent: (v) => AccentNames.includes(v as AccentName),
+  budget: (v) => parseBudget(v) !== null,
   hapticsEnabled: (v) => typeof v === 'boolean',
   reducedMotion: (v) => v === 'system' || v === 'on' || v === 'off',
   dragSensitivity: (v) => v === 'precise' || v === 'balanced' || v === 'fast',
@@ -107,7 +111,8 @@ export function getPreferences(): AppPreferences {
 let saveError: string | null = null;
 
 /** Persists and applies immediately: every `usePreferences()` re-renders. */
-export function updatePreferences(changes: Partial<AppPreferences>) {
+/** Applies `changes` at once; returns false when they could not be stored (the reason is in `usePreferencesSaveError`). */
+export function updatePreferences(changes: Partial<AppPreferences>): boolean {
   current = { ...getPreferences(), ...changes };
   try {
     Storage.setItemSync(KEY, JSON.stringify({ ...readStored(), ...changes }));
@@ -119,6 +124,7 @@ export function updatePreferences(changes: Partial<AppPreferences>) {
       : t('settings.saveError.generic');
   }
   listeners.forEach((listener) => listener());
+  return saveError === null;
 }
 
 const getSaveError = () => saveError;

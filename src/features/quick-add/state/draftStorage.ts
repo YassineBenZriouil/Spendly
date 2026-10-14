@@ -16,8 +16,14 @@ export function loadDraft(): QuickAddDraft | null {
     const stored: unknown = JSON.parse(raw);
     if (!isDraft(stored)) return null;
     // The pending-save marker is storage bookkeeping, not part of the draft
-    const { categoryId, amountMinor, details, repeat } = stored;
-    return { categoryId, amountMinor, ...(details ? { details } : {}), ...(repeat ? { repeat } : {}) };
+    const { categoryId, amountMinor, details, repeat, kind } = stored;
+    return {
+      categoryId,
+      amountMinor,
+      ...(details ? { details } : {}),
+      ...(repeat ? { repeat } : {}),
+      ...(kind === 'income' ? { kind } : {}),
+    };
   } catch {
     return null;
   }
@@ -48,16 +54,17 @@ export function loadPendingExpenseId(): string | undefined {
   }
 }
 
-function isEmpty({ categoryId, amountMinor, details = {}, repeat }: QuickAddDraft) {
-  return categoryId === null && amountMinor === 0 && !repeat && Object.values(details).every((value) => !value);
+function isEmpty({ categoryId, amountMinor, details = {}, repeat, kind }: QuickAddDraft) {
+  return categoryId === null && amountMinor === 0 && !repeat && !kind && Object.values(details).every((value) => !value);
 }
 
 const optionalString = (value: unknown) => value === undefined || typeof value === 'string';
 
 function isDraft(value: unknown): value is QuickAddDraft {
   if (!value || typeof value !== 'object') return false;
-  const { categoryId, amountMinor, details, repeat } = value as Record<string, unknown>;
+  const { categoryId, amountMinor, details, repeat, kind } = value as Record<string, unknown>;
   return (
+    (kind === undefined || kind === 'income') &&
     (repeat === undefined || Frequencies.includes(repeat as Frequency)) &&
     (categoryId === null || typeof categoryId === 'string') &&
     typeof amountMinor === 'number' &&

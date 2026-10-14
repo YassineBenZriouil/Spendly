@@ -164,6 +164,15 @@ export function SettingsScreen() {
               value={currencyCode}
               onPress={() => router.push('/settings/currency')}
             />
+            <ListRow
+              icon="insights"
+              label={t('settings.budget.label')}
+              caption={t('settings.budget.caption')}
+              value={preferences.budget?.currencyCode === currencyCode && preferences.budget.monthlyMinor
+                ? formatMoney(preferences.budget.monthlyMinor, currencyCode)
+                : undefined}
+              onPress={() => router.push('/settings/budget')}
+            />
             <Setting label={t('settings.dragSensitivity.label')}>
               <OptionGroup<DragSensitivity>
                 accessibilityLabel={t('settings.dragSensitivity.label')}

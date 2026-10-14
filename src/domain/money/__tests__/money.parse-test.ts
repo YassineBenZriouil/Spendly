@@ -1,4 +1,4 @@
-import { applyKeypadKey, inputToMinor, minorToInput, type KeypadKey } from '../money.parse';
+import { applyKeypadKey, inputToMinor, minorToInput, parseTypedAmount, type KeypadKey } from '../money.parse';
 
 const type = (keys: KeypadKey[], exponent = 2) =>
   keys.reduce((input, key) => applyKeypadKey(input, key, exponent), '');
@@ -43,3 +43,25 @@ describe('inputToMinor / minorToInput', () => {
     expect(minorToInput(500, 0)).toBe('500');
   });
 });
+
+describe('parseTypedAmount', () => {
+  it.each([
+    ['12.50', 2, 1250],
+    ['12,50', 2, 1250],
+    ['12,5', 2, 1250],
+    ['1 234,50', 2, 123450],
+    ['1,234.50', 2, 123450],
+    ['1.234,50', 2, 123450],
+    ['1,234', 2, 123400],
+    ['500', 0, 500],
+    ['1.500', 0, 1500],
+    ['0,99', 2, 99],
+  ])('%s (exponent %s) -> %s', (text, exponent, minor) => {
+    expect(parseTypedAmount(text, exponent)).toBe(minor);
+  });
+
+  it.each(['', 'abc', '0', '12.5.x', '-5'])('rejects %p', (text) => {
+    expect(parseTypedAmount(text, 2)).toBeNull();
+  });
+});
+

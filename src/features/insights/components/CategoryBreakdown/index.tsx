@@ -12,6 +12,7 @@ import { ReducedTiming } from '@/animation/tokens';
 import { fade, settleTo, useLayoutTransition } from '@/animation/transitions';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
+import { budgetProgress, type BudgetProgress } from '@/domain/budget/budget';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { changeVsUsual, type Change } from '@/domain/insights/highlights';
 import type { CategorySpend } from '@/domain/insights/insights.repository';
@@ -19,6 +20,7 @@ import { formatMoney } from '@/domain/money/money.format';
 import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 
+import { BudgetBar, budgetText } from '../BudgetBar';
 import { styles } from './styles';
 
 type CategoryBreakdownProps = {
@@ -30,13 +32,26 @@ type CategoryBreakdownProps = {
   usual: Map<string, number> | null;
   minimumMinor: number;
   onPressCategory: (categoryId: string) => void;
+  /** Monthly budgets by category id, in this currency (month view only). */
+  budgets?: Record<string, number>;
+  isCurrent: boolean;
 };
 
 /**
  * Spending by category as one series: bars share one ink color (identity is the labelled icon, not the bar),
  * longest = largest category. Every row is labelled, so this list doubles as the data table.
  */
-export function CategoryBreakdown({ items, categories, totalMinor, currencyCode, usual, minimumMinor, onPressCategory }: CategoryBreakdownProps) {
+export function CategoryBreakdown({
+  items,
+  categories,
+  totalMinor,
+  currencyCode,
+  usual,
+  minimumMinor,
+  onPressCategory,
+  budgets,
+  isCurrent,
+}: CategoryBreakdownProps) {
   const byId = new Map(categories.map((category) => [category.id, category]));
   const max = items[0]?.totalMinor ?? 0;
   const layout = useLayoutTransition();
@@ -56,6 +71,8 @@ export function CategoryBreakdown({ items, categories, totalMinor, currencyCode,
             currencyCode={currencyCode}
             change={usual ? changeVsUsual(item.totalMinor, usual.get(item.categoryId) ?? 0, minimumMinor) : null}
             onPress={() => onPressCategory(item.categoryId)}
+            budget={budgets?.[item.categoryId] ? budgetProgress(item.totalMinor, budgets[item.categoryId]) : null}
+            isCurrent={isCurrent}
           />
         </Animated.View>
       ))}
@@ -72,9 +89,11 @@ type CategoryRowProps = {
   /** Compared with usual; null when there is no usual to compare with. */
   change: Change | null;
   onPress: () => void;
+  budget: BudgetProgress | null;
+  isCurrent: boolean;
 };
 
-function CategoryRow({ item, category, ratio, share, currencyCode, change, onPress }: CategoryRowProps) {
+function CategoryRow({ item, category, ratio, share, currencyCode, change, onPress, budget, isCurrent }: CategoryRowProps) {
   const { colors, categoryColors } = useTheme();
   const reducedMotion = useReducedMotion();
   const trackWidth = useSharedValue(0);
@@ -101,15 +120,14 @@ function CategoryRow({ item, category, ratio, share, currencyCode, change, onPre
   const count = t('common.expenseCount', { count: item.count });
   // Direction in words plus an arrow, never by color alone
   const changeText = change ? t(`insights.category.change.${change.direction}`, { percent: change.percent }) : null;
+  const label = changeText
+    ? t('insights.category.labelWithChange', { name, amount, share, count, change: changeText })
+    : t('insights.category.label', { name, amount, share, count });
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={
-        changeText
-          ? t('insights.category.labelWithChange', { name, amount, share, count, change: changeText })
-          : t('insights.category.label', { name, amount, share, count })
-      }
+      accessibilityLabel={budget ? t('insights.category.labelWithBudget', { label, budget: budgetText(budget, currencyCode, isCurrent) }) : label}
       accessibilityHint={t('insights.showExpensesHint')}
       onPress={onPress}
       style={styles.row}>
@@ -138,6 +156,11 @@ function CategoryRow({ item, category, ratio, share, currencyCode, change, onPre
             )}
             <Text style={[styles.change, { color: colors.textSecondary }]}>{changeText}</Text>
           </View>
+        )}
+        {budget && (
+          <Animated.View entering={fade.entering} exiting={fade.exiting}>
+            <BudgetBar progress={budget} currencyCode={currencyCode} isCurrent={isCurrent} />
+          </Animated.View>
         )}
       </View>
     </Pressable>

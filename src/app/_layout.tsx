@@ -66,6 +66,7 @@ function ThemedNavigation() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings/index" options={{ title: t('common.screen.settings') }} />
         <Stack.Screen name="settings/currency" options={{ title: t('common.screen.currency') }} />
+        <Stack.Screen name="settings/budget" options={{ title: t('common.screen.budget') }} />
         <Stack.Screen name="settings/export" options={{ title: t('common.screen.export') }} />
         <Stack.Screen name="categories/index" options={{ title: t('common.screen.categories') }} />
         <Stack.Screen name="categories/[id]" options={{ title: t('common.screen.category') }} />

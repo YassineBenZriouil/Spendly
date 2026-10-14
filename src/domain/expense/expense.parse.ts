@@ -24,6 +24,7 @@ export function parseExpense(value: unknown): Expense | null {
     isOptionalText(v.title) &&
     isOptionalText(v.note) &&
     (v.paymentMethod === undefined || PaymentMethods.includes(v.paymentMethod as PaymentMethod)) &&
+    (v.kind === undefined || v.kind === 'expense' || v.kind === 'income') &&
     isIsoDate(v.occurredAt) &&
     isIsoDate(v.createdAt) &&
     isIsoDate(v.updatedAt);
@@ -36,6 +37,7 @@ export function parseExpense(value: unknown): Expense | null {
     ...(v.title ? { title: v.title as string } : {}),
     ...(v.note ? { note: v.note as string } : {}),
     ...(v.paymentMethod ? { paymentMethod: v.paymentMethod as PaymentMethod } : {}),
+    ...(v.kind === 'income' ? { kind: 'income' as const } : {}),
     occurredAt: v.occurredAt as string,
     createdAt: v.createdAt as string,
     updatedAt: v.updatedAt as string,

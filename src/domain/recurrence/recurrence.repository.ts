@@ -1,6 +1,6 @@
 import { expenseParams, INSERT_EXPENSE_SQL } from '@/domain/expense/expense.repository';
 import { createExpense } from '@/domain/expense/expense.service';
-import type { Expense, PaymentMethod } from '@/domain/expense/expense.types';
+import type { EntryKind, Expense, PaymentMethod } from '@/domain/expense/expense.types';
 import { getDatabase } from '@/storage/database/connection';
 import type { Db, SqlValue } from '@/storage/database/db.types';
 import { createId } from '@/utils/ids';
@@ -22,6 +22,7 @@ type RecurrenceRow = {
   title: string | null;
   note: string | null;
   payment_method: PaymentMethod | null;
+  kind: EntryKind;
   active: number;
   created_at: string;
   updated_at: string;
@@ -48,6 +49,7 @@ function fromRow(row: RecurrenceRow): Recurrence {
       ...(row.title ? { title: row.title } : {}),
       ...(row.note ? { note: row.note } : {}),
       ...(row.payment_method ? { paymentMethod: row.payment_method } : {}),
+      ...(row.kind === 'income' ? { kind: 'income' as const } : {}),
     },
     active: row.active === 1,
     createdAt: row.created_at,
@@ -57,8 +59,8 @@ function fromRow(row: RecurrenceRow): Recurrence {
 
 /** Insert that skips an id already present (also used by backup restore). */
 export const INSERT_RECURRENCE_SQL = `INSERT INTO recurrences (id, source_expense_id, frequency, anchor_at, amount_minor, currency_code,
-     category_id, title, note, payment_method, active, created_at, updated_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     category_id, title, note, payment_method, active, created_at, updated_at, kind)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    ON CONFLICT (id) DO NOTHING`;
 
 export function recurrenceParams(recurrence: Recurrence): SqlValue[] {
@@ -77,6 +79,7 @@ export function recurrenceParams(recurrence: Recurrence): SqlValue[] {
     recurrence.active ? 1 : 0,
     recurrence.createdAt,
     recurrence.updatedAt,
+    template.kind ?? 'expense',
   ];
 }
 
@@ -90,7 +93,7 @@ export function occurrenceParams(handled: HandledOccurrence): SqlValue[] {
 
 /** A new rule repeating `expense` from its own date and time. */
 export function recurrenceFrom(expense: Expense, frequency: Frequency, now = new Date()): Recurrence {
-  const { amountMinor, currencyCode, categoryId, title, note, paymentMethod } = expense;
+  const { amountMinor, currencyCode, categoryId, title, note, paymentMethod, kind } = expense;
   return {
     id: createId(),
     sourceExpenseId: expense.id,
@@ -103,6 +106,7 @@ export function recurrenceFrom(expense: Expense, frequency: Frequency, now = new
       ...(title ? { title } : {}),
       ...(note ? { note } : {}),
       ...(paymentMethod ? { paymentMethod } : {}),
+      ...(kind ? { kind } : {}),
     },
     active: true,
     createdAt: now.toISOString(),

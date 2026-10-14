@@ -108,6 +108,18 @@ export const migrations: Migration[] = [
       `);
     },
   },
+  {
+    // Income (Stage 2 Phase 3): an entry is an expense (default) or income. Spending totals, Insights and budgets read
+    // `live_spending`, so income can never be counted as spending by a query that forgets to filter it.
+    version: 4,
+    async up(txn) {
+      await txn.execAsync(`
+        ALTER TABLE expenses ADD COLUMN kind TEXT NOT NULL DEFAULT 'expense' CHECK (kind IN ('expense', 'income'));
+        ALTER TABLE recurrences ADD COLUMN kind TEXT NOT NULL DEFAULT 'expense' CHECK (kind IN ('expense', 'income'));
+        CREATE VIEW live_spending AS SELECT * FROM live_expenses WHERE kind = 'expense';
+      `);
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1].version;

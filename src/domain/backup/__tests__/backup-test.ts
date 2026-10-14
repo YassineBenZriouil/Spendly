@@ -168,6 +168,12 @@ describe('backup format 2: repeating expenses', () => {
     expect(pendingIndexes).not.toContain(second.index);
   });
 
+  it('still reads format 2 files (before income)', async () => {
+    const file = { ...JSON.parse(await backupFromFirstPhone()), format: 2 };
+    const result = parseBackup(JSON.stringify(file));
+    expect(result.ok && result.backup.expenses).toHaveLength(2);
+  });
+
   it('still reads format 1 files (no repeating expenses)', async () => {
     const file = { ...JSON.parse(await backupFromFirstPhone()), format: 1 };
     delete file.recurrences;
@@ -189,3 +195,21 @@ describe('backup format 2: repeating expenses', () => {
   });
 });
 
+
+describe('backup format 3: income and budgets', () => {
+  it('keeps income as income and carries the budget in the settings', async () => {
+    const first = await phone();
+    const salary = createExpense({ amountMinor: 250000, currencyCode: 'EUR', categoryId: 'other', kind: 'income' });
+    await first.expenses.save(salary);
+    const budget = { currencyCode: 'EUR', monthlyMinor: 80000, byCategory: { food: 30000 } };
+    const backup = parsed(
+      JSON.stringify(createBackup({ expenses: await first.expenses.search({}), categories: await first.categories.list(), preferences: { budget } })),
+    );
+    expect(backup.format).toBe(3);
+    expect(backup.preferences.budget).toEqual(budget);
+
+    const second = await phone();
+    await restoreBackup(second.db, backup);
+    expect((await second.expenses.get(salary.id))?.kind).toBe('income');
+  });
+});

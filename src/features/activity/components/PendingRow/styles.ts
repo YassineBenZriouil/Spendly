@@ -27,6 +27,11 @@ export const styles = StyleSheet.create({
   },
   title: Typography.label,
   subtitle: Typography.caption,
+  // Sits right before the amount (the row's gap would split "+" from the number)
+  sign: {
+    ...Typography.label,
+    marginRight: -Spacing.sm,
+  },
   actions: {
     flexDirection: 'row',
   },

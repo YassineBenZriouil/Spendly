@@ -4,7 +4,7 @@ export const Frequencies = ['daily', 'weekly', 'monthly', 'yearly'] as const;
 export type Frequency = (typeof Frequencies)[number];
 
 /** What each occurrence is created from: copied from the expense the rule started with. */
-export type RecurrenceTemplate = Pick<Expense, 'amountMinor' | 'currencyCode' | 'categoryId' | 'title' | 'note' | 'paymentMethod'>;
+export type RecurrenceTemplate = Pick<Expense, 'amountMinor' | 'currencyCode' | 'categoryId' | 'title' | 'note' | 'paymentMethod' | 'kind'>;
 
 /**
  * A repeating expense. Occurrence 0 is the expense it started from; occurrences 1, 2, … are due at

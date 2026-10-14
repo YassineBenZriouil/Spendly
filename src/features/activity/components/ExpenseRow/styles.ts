@@ -25,4 +25,9 @@ export const styles = StyleSheet.create({
   },
   title: Typography.label,
   subtitle: Typography.caption,
+  amount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sign: Typography.label,
 });

@@ -7,6 +7,7 @@ export const common: Translation<typeof english> = {
   'common.tab.insights': 'الإحصاءات',
   'common.screen.settings': 'الإعدادات',
   'common.screen.currency': 'العملة',
+  'common.screen.budget': "الميزانية",
   'common.screen.export': 'تصدير',
   'common.screen.categories': 'الفئات',
   'common.screen.category': 'الفئة',

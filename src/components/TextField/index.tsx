@@ -14,7 +14,7 @@ import { styles } from './styles';
 
 type TextFieldProps = Pick<
   TextInputProps,
-  'value' | 'onChangeText' | 'placeholder' | 'maxLength' | 'returnKeyType' | 'autoCapitalize'
+  'value' | 'onChangeText' | 'placeholder' | 'maxLength' | 'returnKeyType' | 'autoCapitalize' | 'keyboardType'
 > & {
   /** Required: placeholders are not labels. */
   accessibilityLabel: string;

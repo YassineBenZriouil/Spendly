@@ -1,8 +1,8 @@
 import { Pressable, Text, View } from 'react-native';
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { interpolateColor, LayoutAnimationConfig, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { settleTo } from '@/animation/transitions';
+import { fade, settleTo } from '@/animation/transitions';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
@@ -32,7 +32,11 @@ export function ExpenseRow({ expense, category, onPress, onAgain }: ExpenseRowPr
 
   const categoryName = category?.name ?? t('activity.row.unknownCategory');
   const time = formatTime(new Date(expense.occurredAt));
-  const amount = formatMoney(expense.amountMinor, expense.currencyCode);
+  const income = expense.kind === 'income';
+  const money = formatMoney(expense.amountMinor, expense.currencyCode);
+  // Income says so in words and with a "+", not by color alone
+  const amount = income ? t('activity.row.incomeAmount', { amount: money }) : money;
+  const subtitleCategory = income ? t('activity.row.incomeCategory', { category: categoryName }) : categoryName;
   const tint = category ? categoryColors[category.colorToken] : colors.textSecondary;
 
   const rowStyle = useAnimatedStyle(() => ({
@@ -63,10 +67,24 @@ export function ExpenseRow({ expense, category, onPress, onAgain }: ExpenseRowPr
             {expense.title ?? categoryName}
           </Text>
           <Text maxFontSizeMultiplier={FontScaleCap.control} numberOfLines={1} style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {expense.title ? t('activity.row.subtitle', { category: categoryName, time }) : time}
+            {expense.title || income ? t('activity.row.subtitle', { category: expense.title ? subtitleCategory : t('activity.row.income'), time }) : time}
           </Text>
         </View>
-        <AnimatedNumber value={expense.amountMinor} currencyCode={expense.currencyCode} size="label" accessible={false} />
+        {/* The "+" fades when an entry becomes income, but not when the row scrolls into view */}
+        <LayoutAnimationConfig skipEntering>
+          <View style={styles.amount}>
+            {income && (
+              <Animated.Text
+                entering={fade.entering}
+                exiting={fade.exiting}
+                maxFontSizeMultiplier={FontScaleCap.control}
+                style={[styles.sign, { color: colors.textPrimary }]}>
+                {t('activity.row.incomeSign')}
+              </Animated.Text>
+            )}
+            <AnimatedNumber value={expense.amountMinor} currencyCode={expense.currencyCode} size="label" accessible={false} />
+          </View>
+        </LayoutAnimationConfig>
       </Animated.View>
     </Pressable>
   );

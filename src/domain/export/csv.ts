@@ -14,6 +14,8 @@ export const CsvFields = [
   t('exportCsv.column.note'),
   t('exportCsv.column.paymentMethod'),
   t('exportCsv.column.occurredAt'),
+  // Last, so spreadsheets built on earlier exports keep their columns
+  t('exportCsv.column.type'),
 ];
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -51,6 +53,7 @@ export function expensesToCsv(expenses: Expense[], categories: ExpenseCategory[]
         cell(expense.note ?? '', true),
         expense.paymentMethod ?? '',
         expense.occurredAt,
+        cell(t(expense.kind === 'income' ? 'exportCsv.type.income' : 'exportCsv.type.expense')),
       ].join(',');
     });
   return `﻿${[CsvFields.map((field) => cell(field)).join(','), ...rows].join('\r\n')}\r\n`;

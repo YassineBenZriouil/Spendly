@@ -109,12 +109,55 @@ describe('migrate', () => {
     // The new tables exist, start empty and accept a rule for the old expense
     expect(await db.getAllAsync('SELECT * FROM recurrences', [])).toEqual([]);
     await db.runAsync(
-      `INSERT INTO recurrences VALUES ('r1', 'e1', 'monthly', '2026-07-01T13:00:00.000Z', 450000, 'MAD', 'home',
-        'Rent', NULL, NULL, 1, 'x', 'x')`,
+      // Columns named: later migrations add columns to this table
+      `INSERT INTO recurrences (id, source_expense_id, frequency, anchor_at, amount_minor, currency_code, category_id,
+        title, note, payment_method, active, created_at, updated_at)
+       VALUES ('r1', 'e1', 'monthly', '2026-07-01T13:00:00.000Z', 450000, 'MAD', 'home', 'Rent', NULL, NULL, 1, 'x', 'x')`,
       [],
     );
-    await db.runAsync(`INSERT INTO recurrence_occurrences VALUES ('r1', 1, 'skipped', NULL, 'x')`, []);
-    await expect(db.runAsync(`INSERT INTO recurrence_occurrences VALUES ('r1', 1, 'confirmed', NULL, 'x')`, [])).rejects.toThrow();
+    const occurrence = `INSERT INTO recurrence_occurrences (recurrence_id, occurrence, outcome, expense_id, handled_at)
+      VALUES ('r1', 1, ?, NULL, 'x')`;
+    await db.runAsync(occurrence, ['skipped']);
+    await expect(db.runAsync(occurrence, ['confirmed'])).rejects.toThrow();
+  });
+
+  it('upgrades a database created by v3 (frozen schema snapshot) to income without losing data', async () => {
+    // Snapshot of what version 3 shipped. Never update it.
+    const db = createTestDatabase();
+    await db.execAsync(`
+      CREATE TABLE categories (
+        id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, icon TEXT NOT NULL, color_token TEXT NOT NULL,
+        is_built_in INTEGER NOT NULL, is_visible INTEGER NOT NULL, sort_order INTEGER NOT NULL, created_at TEXT NOT NULL
+      );
+      CREATE TABLE expenses (
+        id TEXT PRIMARY KEY NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+        currency_code TEXT NOT NULL, category_id TEXT NOT NULL REFERENCES categories (id),
+        title TEXT, note TEXT, occurred_at TEXT NOT NULL, payment_method TEXT,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT
+      );
+      CREATE VIEW live_expenses AS SELECT * FROM expenses WHERE deleted_at IS NULL;
+      CREATE TABLE recurrences (
+        id TEXT PRIMARY KEY NOT NULL, source_expense_id TEXT NOT NULL, frequency TEXT NOT NULL, anchor_at TEXT NOT NULL,
+        amount_minor INTEGER NOT NULL, currency_code TEXT NOT NULL, category_id TEXT NOT NULL REFERENCES categories (id),
+        title TEXT, note TEXT, payment_method TEXT, active INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      );
+      CREATE TABLE recurrence_occurrences (
+        recurrence_id TEXT NOT NULL REFERENCES recurrences (id), occurrence INTEGER NOT NULL, outcome TEXT NOT NULL,
+        expense_id TEXT, handled_at TEXT NOT NULL, PRIMARY KEY (recurrence_id, occurrence)
+      );
+      INSERT INTO categories VALUES ('food', 'Food', 'food', 'coral', 1, 1, 0, '2026-01-01T00:00:00.000Z');
+      INSERT INTO expenses VALUES ('e1', 1200, 'EUR', 'food', NULL, NULL, '2026-10-01T12:00:00.000Z', NULL,
+        '2026-10-01T12:00:00.000Z', '2026-10-01T12:00:00.000Z', NULL);
+      PRAGMA user_version = 3;
+    `);
+
+    await migrate(db);
+
+    expect(await version(db)).toBe(LATEST_VERSION);
+    // Existing entries are expenses, and count as spending
+    expect(await db.getAllAsync('SELECT id, kind FROM live_expenses', [])).toEqual([{ id: 'e1', kind: 'expense' }]);
+    expect(await db.getAllAsync('SELECT id FROM live_spending', [])).toEqual([{ id: 'e1' }]);
+    await expect(db.runAsync("UPDATE expenses SET kind = 'gift' WHERE id = 'e1'", [])).rejects.toThrow();
   });
 
   it('rolls a failing migration back completely and retries it on the next launch', async () => {

@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { OptionGroup } from '@/components/OptionGroup';
 import { TextField } from '@/components/TextField';
 import type { ExpenseDetails } from '@/domain/expense/expense.service';
+import type { EntryKind } from '@/domain/expense/expense.types';
 import type { Frequency } from '@/domain/recurrence/recurrence.types';
 import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -19,15 +20,37 @@ type DetailsFieldsProps = {
   /** Repeat choice; the picker shows only when `onRepeatChange` is given. */
   repeat?: Frequency | null;
   onRepeatChange?: (repeat: Frequency | null) => void;
+  /** Expense or income; the toggle shows only when `onKindChange` is given. */
+  kind?: EntryKind;
+  onKindChange?: (kind: EntryKind) => void;
 };
 
 type RepeatOption = Frequency | 'none';
 
 /** Optional context for an expense: shared by Quick Add's details panel and the edit screen. */
-export function DetailsFields({ details, onChange, dateResettable = false, repeat, onRepeatChange }: DetailsFieldsProps) {
+export function DetailsFields({
+  details,
+  onChange,
+  dateResettable = false,
+  repeat,
+  onRepeatChange,
+  kind = 'expense',
+  onKindChange,
+}: DetailsFieldsProps) {
   const { colors } = useTheme();
   return (
     <View style={styles.fields}>
+      {onKindChange && (
+        <OptionGroup<EntryKind>
+          accessibilityLabel={t('expense.kind.label')}
+          options={[
+            { value: 'expense', label: t('expense.kind.expense') },
+            { value: 'income', label: t('expense.kind.income') },
+          ]}
+          value={kind}
+          onChange={onKindChange}
+        />
+      )}
       <TextField
         accessibilityLabel={t('expense.field.title')}
         placeholder={t('expense.field.title')}

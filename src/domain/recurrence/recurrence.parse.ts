@@ -23,7 +23,7 @@ export function parseRecurrence(value: unknown): Recurrence | null {
   // The template has the same rules as an expense's fields
   const template = parseExpense({ ...(v.template as object), id: v.id, occurredAt: v.anchorAt, createdAt: v.createdAt, updatedAt: v.updatedAt });
   if (!template) return null;
-  const { amountMinor, currencyCode, categoryId, title, note, paymentMethod } = template;
+  const { amountMinor, currencyCode, categoryId, title, note, paymentMethod, kind } = template;
   return {
     id: v.id,
     sourceExpenseId: v.sourceExpenseId,
@@ -36,6 +36,7 @@ export function parseRecurrence(value: unknown): Recurrence | null {
       ...(title ? { title } : {}),
       ...(note ? { note } : {}),
       ...(paymentMethod ? { paymentMethod } : {}),
+      ...(kind ? { kind } : {}),
     },
     active: v.active,
     createdAt: template.createdAt,

@@ -44,4 +44,7 @@ export const exportCsv: Translation<typeof english> = {
   'exportCsv.column.note': 'ملاحظة',
   'exportCsv.column.paymentMethod': 'طريقة الدفع',
   'exportCsv.column.occurredAt': 'وقت الحدوث (UTC)',
+  'exportCsv.column.type': "النوع",
+  'exportCsv.type.expense': "مصروف",
+  'exportCsv.type.income': "دخل",
 };

@@ -8,8 +8,8 @@ import type { HandledOccurrence, Recurrence } from '@/domain/recurrence/recurren
 import { t } from '@/i18n';
 
 /** Bump when the file layout changes; older apps then refuse newer files instead of misreading them. */
-export const BACKUP_FORMAT = 2;
-/** Oldest file layout this version still reads (1: before repeating expenses). */
+export const BACKUP_FORMAT = 3;
+/** Oldest file layout this version still reads (1: before repeating expenses, 2: before income and budgets). */
 const OLDEST_FORMAT = 1;
 
 /** Everything needed to rebuild Spendly on another phone. No backend: the user keeps and moves this file. */

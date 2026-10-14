@@ -30,4 +30,7 @@ export const exportCsv = {
   'exportCsv.column.note': 'Note',
   'exportCsv.column.paymentMethod': 'Payment method',
   'exportCsv.column.occurredAt': 'Occurred at (UTC)',
+  'exportCsv.column.type': "Type",
+  'exportCsv.type.expense': "Expense",
+  'exportCsv.type.income': "Income",
 } as const satisfies Record<`exportCsv.${string}`, Message>;

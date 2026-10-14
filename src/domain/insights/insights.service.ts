@@ -32,6 +32,8 @@ export type Insights = {
   baseline: PeriodSpend[];
   /** Smallest change in this currency worth mentioning (see `highlights.ts`). */
   minimumMinor: number;
+  /** Income in this currency during the period: Net is shown only when it is above 0. */
+  incomeMinor: number;
 };
 
 /**
@@ -81,10 +83,11 @@ export async function loadInsights(
   const current = totals.find((total) => total.currencyCode === currencyCode);
 
   const comparison = comparisonRange(period, now, firstWeekday);
-  const [byCategory, daily, previous] = await Promise.all([
+  const [byCategory, daily, previous, incomeMinor] = await Promise.all([
     repository.byCategory(periodRange(period), currencyCode),
     repository.daily(period.days.map(dayRange), currencyCode),
     repository.totalsByCurrency(comparison),
+    repository.incomeTotal(periodRange(period), currencyCode),
   ]);
 
   const firstDay = firstAt ? startOfLocalDay(new Date(firstAt)) : null;
@@ -116,5 +119,6 @@ export async function loadInsights(
     isCurrent: offset === 0,
     baseline,
     minimumMinor: notableMinimumMinor(currencyCode),
+    incomeMinor,
   };
 }

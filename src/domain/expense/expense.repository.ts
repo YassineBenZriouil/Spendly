@@ -2,7 +2,7 @@ import { getDatabase } from '@/storage/database/connection';
 import type { Db, SqlValue } from '@/storage/database/db.types';
 import type { IsoRange } from '@/utils/dates';
 
-import type { Expense, PaymentMethod } from './expense.types';
+import type { EntryKind, Expense, PaymentMethod } from './expense.types';
 
 export type CurrencyTotal = { currencyCode: string; totalMinor: number };
 
@@ -58,6 +58,7 @@ type ExpenseRow = {
   note: string | null;
   occurred_at: string;
   payment_method: PaymentMethod | null;
+  kind: EntryKind;
   created_at: string;
   updated_at: string;
 };
@@ -72,6 +73,7 @@ function fromRow(row: ExpenseRow): Expense {
     ...(row.title ? { title: row.title } : {}),
     ...(row.note ? { note: row.note } : {}),
     ...(row.payment_method ? { paymentMethod: row.payment_method } : {}),
+    ...(row.kind === 'income' ? { kind: 'income' as const } : {}),
     occurredAt: row.occurred_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -92,12 +94,13 @@ export function expenseParams(expense: Expense): SqlValue[] {
     expense.paymentMethod ?? null,
     expense.createdAt,
     expense.updatedAt,
+    expense.kind ?? 'expense',
   ];
 }
 
 /** Insert that skips an id already present: saves are idempotent (also used by backup restore). */
-export const INSERT_EXPENSE_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+export const INSERT_EXPENSE_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at, kind)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    ON CONFLICT (id) DO NOTHING`;
 
 /** Escapes LIKE wildcards (with `!`, see ESCAPE below) so user text matches literally. */
@@ -128,7 +131,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
       const result = await db.runAsync(
         `UPDATE expenses
          SET amount_minor = ?, currency_code = ?, category_id = ?, title = ?, note = ?,
-             occurred_at = ?, payment_method = ?, created_at = ?, updated_at = ?
+             occurred_at = ?, payment_method = ?, created_at = ?, updated_at = ?, kind = ?
          WHERE id = ? AND deleted_at IS NULL`,
         [...rest, id],
       );
@@ -195,7 +198,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
     async totalsBetween({ start, end }) {
       const db = await database();
       const rows = await db.getAllAsync<{ currency_code: string; total_minor: number }>(
-        `SELECT currency_code, SUM(amount_minor) AS total_minor FROM live_expenses
+        `SELECT currency_code, SUM(amount_minor) AS total_minor FROM live_spending
          WHERE occurred_at >= ? AND occurred_at < ?
          GROUP BY currency_code ORDER BY total_minor DESC`,
         [start, end],
@@ -206,7 +209,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
     async amountSuggestions(categoryId, currencyCode, since) {
       const db = await database();
       const rows = await db.getAllAsync<{ amount_minor: number; uses: number }>(
-        `SELECT amount_minor, COUNT(*) AS uses FROM live_expenses
+        `SELECT amount_minor, COUNT(*) AS uses FROM live_spending
          WHERE category_id = ? AND currency_code = ? AND occurred_at >= ?
          GROUP BY amount_minor
          ORDER BY uses DESC, MAX(occurred_at) DESC, amount_minor ASC`,
@@ -220,7 +223,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
     async categoryTimes(since) {
       const db = await database();
       const rows = await db.getAllAsync<{ category_id: string; occurred_at: string }>(
-        'SELECT category_id, occurred_at FROM live_expenses WHERE occurred_at >= ?',
+        'SELECT category_id, occurred_at FROM live_spending WHERE occurred_at >= ?',
         [since],
       );
       return rows.map((row) => ({ categoryId: row.category_id, occurredAt: row.occurred_at }));

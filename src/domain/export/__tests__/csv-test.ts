@@ -34,11 +34,16 @@ describe('CSV export', () => {
     const csv = expensesToCsv([later, earlier], BuiltInCategories);
     expect(csv.startsWith('﻿')).toBe(true);
     expect(csv.slice(1).split('\r\n')).toEqual([
-      'Date,Time,Amount,Currency,Category,Title,Note,Payment method,Occurred at (UTC)',
-      '2026-10-12,10:05,500,JPY,Transport,,,,2026-10-12T14:05:00.000Z',
-      '2026-10-13,23:30,12.50,EUR,Food,"Lunch, with ""Sam""","line one\nline two",card,2026-10-14T03:30:00.000Z',
+      'Date,Time,Amount,Currency,Category,Title,Note,Payment method,Occurred at (UTC),Type',
+      '2026-10-12,10:05,500,JPY,Transport,,,,2026-10-12T14:05:00.000Z,Expense',
+      '2026-10-13,23:30,12.50,EUR,Food,"Lunch, with ""Sam""","line one\nline two",card,2026-10-14T03:30:00.000Z,Expense',
       '',
     ]);
+  });
+
+  it('marks income in the Type column', () => {
+    const salary = createExpense({ amountMinor: 200000, currencyCode: 'EUR', categoryId: 'other', kind: 'income' });
+    expect(expensesToCsv([salary], BuiltInCategories).split('\r\n')[1]).toMatch(/,Income$/);
   });
 
   it('neutralises text that a spreadsheet would run as a formula', () => {

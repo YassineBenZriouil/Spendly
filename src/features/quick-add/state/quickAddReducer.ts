@@ -1,4 +1,5 @@
 import type { ExpenseDetails } from '@/domain/expense/expense.service';
+import type { EntryKind } from '@/domain/expense/expense.types';
 import type { Frequency } from '@/domain/recurrence/recurrence.types';
 
 export type QuickAddPhase =
@@ -17,6 +18,8 @@ export type QuickAddDraft = {
   details?: ExpenseDetails;
   /** Repeat this expense (a rule is started when it is saved). */
   repeat?: Frequency;
+  /** Only set for income (absent: an expense). */
+  kind?: 'income';
 };
 
 export type QuickAddState = {
@@ -33,6 +36,7 @@ export type QuickAddEvent =
   | { type: 'amountChanged'; amountMinor: number }
   | { type: 'detailsChanged'; changes: ExpenseDetails }
   | { type: 'repeatChanged'; repeat: Frequency | null }
+  | { type: 'kindChanged'; kind: EntryKind }
   | { type: 'saveRequested' }
   | { type: 'saveSucceeded'; expenseId: string }
   | { type: 'saveFailed'; message: string }
@@ -56,8 +60,8 @@ export function canSave(draft: QuickAddDraft) {
 }
 
 /** Nothing chosen or typed yet. */
-export function isUntouched({ categoryId, amountMinor, details = {}, repeat }: QuickAddDraft) {
-  return categoryId === null && amountMinor === 0 && !repeat && !Object.values(details).some(Boolean);
+export function isUntouched({ categoryId, amountMinor, details = {}, repeat, kind }: QuickAddDraft) {
+  return categoryId === null && amountMinor === 0 && !repeat && !kind && !Object.values(details).some(Boolean);
 }
 
 /** The resting phase a draft implies once nothing is in progress. */
@@ -97,6 +101,10 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
       return withDraft(state, { ...state.draft, amountMinor: event.amountMinor });
     case 'detailsChanged':
       return withDraft(state, { ...state.draft, details: { ...state.draft.details, ...event.changes } });
+    case 'kindChanged': {
+      const { kind: _previous, ...draft } = state.draft;
+      return withDraft(state, event.kind === 'income' ? { ...draft, kind: 'income' } : draft);
+    }
     case 'repeatChanged': {
       const { repeat: _previous, ...draft } = state.draft;
       return withDraft(state, event.repeat ? { ...draft, repeat: event.repeat } : draft);

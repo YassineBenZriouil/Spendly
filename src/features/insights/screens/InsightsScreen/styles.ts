@@ -62,6 +62,10 @@ export const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   note: Typography.caption,
+  net: {
+    gap: Spacing.xs,
+  },
+  netState: Typography.label,
   highlights: {
     gap: Spacing.md,
   },

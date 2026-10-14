@@ -15,7 +15,7 @@ type Entry = { at: string; day: Date; pending: boolean; order: number; item: Act
 
 /**
  * Flattens newest-first expenses (and due occurrences) into local-day headers, with per-currency totals of the
- * expenses only, followed by their rows. On each day, pending occurrences come first.
+ * spending only (income is listed but not counted), followed by their rows. On each day, pending occurrences come first.
  */
 export function groupByDay(expenses: Expense[], pending: Occurrence[] = []): ActivityItem[] {
   const entries: Entry[] = [
@@ -54,10 +54,20 @@ export function groupByDay(expenses: Expense[], pending: Occurrence[] = []): Act
     if (entry.item.type === 'expense') {
       const { expense } = entry.item;
       const total = header.totals.find((t) => t.currencyCode === expense.currencyCode);
-      if (total) total.totalMinor += expense.amountMinor;
-      else header.totals.push({ currencyCode: expense.currencyCode, totalMinor: expense.amountMinor });
+      if (expense.kind !== 'income') {
+        if (total) total.totalMinor += expense.amountMinor;
+        else header.totals.push({ currencyCode: expense.currencyCode, totalMinor: expense.amountMinor });
+      }
     }
     items.push(entry.item);
+  }
+  // A day with only income shows zero spending, in the currency of its first entry
+  let day = null as DayItem | null;
+  for (const item of items) {
+    if (item.type === 'day') day = item;
+    else if (item.type === 'expense' && day?.totals.length === 0) {
+      day.totals.push({ currencyCode: item.expense.currencyCode, totalMinor: 0 });
+    }
   }
   return items;
 }

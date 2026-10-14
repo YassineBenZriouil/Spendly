@@ -10,6 +10,7 @@ import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { OptionGroup } from '@/components/OptionGroup';
 import { Screen } from '@/components/Screen';
+import { budgetProgress, type Budget } from '@/domain/budget/budget';
 import { buildHighlights, MIN_BASELINE_PERIODS, usualByCategory, type Highlight, type HighlightKind } from '@/domain/insights/highlights';
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
@@ -22,6 +23,7 @@ import { addLocalDays } from '@/utils/dates';
 import { formatDayRange, formatMonth } from '@/utils/dateFormat';
 import { EdgeToEdge } from '@/theme/tokens';
 
+import { BudgetBar, budgetText } from '../../components/BudgetBar';
 import { CategoryBreakdown } from '../../components/CategoryBreakdown';
 import { TrendChart } from '../../components/TrendChart';
 import { useInsights } from '../../hooks/useInsights';
@@ -86,7 +88,12 @@ export function InsightsScreen() {
         ),
       };
     }
-    return { key: 'content', node: <InsightsContent insights={insights} kind={kind} offset={offset} categories={categories} /> };
+    // Budgets are monthly and in one currency: shown only for a month in that currency
+    const budget = kind === 'month' && preferences.budget?.currencyCode === insights.currencyCode ? preferences.budget : null;
+    return {
+      key: 'content',
+      node: <InsightsContent insights={insights} kind={kind} offset={offset} categories={categories} budget={budget} />,
+    };
   })();
 
   return (
@@ -154,12 +161,15 @@ type InsightsContentProps = {
   kind: PeriodKind;
   offset: number;
   categories: ReturnType<typeof useCategories>;
+  budget: Budget | null;
 };
 
-function InsightsContent({ insights, kind, offset, categories }: InsightsContentProps) {
+function InsightsContent({ insights, kind, offset, categories, budget }: InsightsContentProps) {
   const { colors } = useTheme();
-  const { currencyCode, totalMinor, previousTotalMinor } = insights;
-  const total = totalMinor > 0 ? formatMoney(totalMinor, currencyCode) : t('insights.nothingSpent');
+  const { currencyCode, totalMinor, previousTotalMinor, incomeMinor } = insights;
+  const overall = budget?.monthlyMinor ? budgetProgress(totalMinor, budget.monthlyMinor) : null;
+  const spentText = totalMinor > 0 ? formatMoney(totalMinor, currencyCode) : t('insights.nothingSpent');
+  const total = overall ? t('insights.total.labelWithBudget', { total: spentText, budget: budgetText(overall, currencyCode, insights.isCurrent) }) : spentText;
   const nameOf = (categoryId: string) => categories.find((c) => c.id === categoryId)?.name ?? t('insights.unknownCategory');
   const weekday = new Intl.DateTimeFormat(deviceLocale(), { weekday: 'long' });
   const highlights = buildHighlights({
@@ -221,7 +231,18 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
           kind={kind}
           against={offset === 0 ? 'sameDays' : 'before'}
         />
+        {overall && (
+          <Animated.View entering={fade.entering}>
+            <BudgetBar progress={overall} currencyCode={currencyCode} isCurrent={insights.isCurrent} />
+          </Animated.View>
+        )}
       </Card>
+
+      {incomeMinor > 0 && (
+        <Animated.View entering={fade.entering} exiting={fade.exiting}>
+          <NetCard incomeMinor={incomeMinor} spentMinor={totalMinor} currencyCode={currencyCode} />
+        </Animated.View>
+      )}
 
       <Card>
         <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.daily')}</Text>
@@ -247,6 +268,8 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
             usual={usual}
             minimumMinor={insights.minimumMinor}
             onPressCategory={openCategory}
+            budgets={budget?.byCategory}
+            isCurrent={insights.isCurrent}
           />
         ) : (
           // In flow (the card sizes to it), so it fades in rather than cross-fading over the breakdown
@@ -319,6 +342,32 @@ function Comparison({ totalMinor, previousTotalMinor, currencyCode, kind, agains
       )}
       <Text style={[styles.note, { color: colors.textSecondary }]}>{text}</Text>
     </Animated.View>
+  );
+}
+
+/** Income minus spending; whether it is ahead or behind is said in words, not by a sign or color alone. */
+function NetCard({ incomeMinor, spentMinor, currencyCode }: { incomeMinor: number; spentMinor: number; currencyCode: string }) {
+  const { colors } = useTheme();
+  const netMinor = incomeMinor - spentMinor;
+  const state = t(netMinor >= 0 ? 'insights.net.ahead' : 'insights.net.behind');
+  const summary = t('insights.net.summary', {
+    income: formatMoney(incomeMinor, currencyCode),
+    spent: formatMoney(spentMinor, currencyCode),
+  });
+  return (
+    <Card>
+      <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.net')}</Text>
+      <View
+        accessible
+        accessibilityLabel={t('insights.net.label', { amount: formatMoney(Math.abs(netMinor), currencyCode), state, summary })}
+        style={styles.net}>
+        <AnimatedNumber value={Math.abs(netMinor)} currencyCode={currencyCode} size="display" accessible={false} />
+        <Animated.Text key={state} entering={fade.entering} style={[styles.netState, { color: colors.textPrimary }]}>
+          {state}
+        </Animated.Text>
+        <Text style={[styles.note, { color: colors.textSecondary }]}>{summary}</Text>
+      </View>
+    </Card>
   );
 }
 

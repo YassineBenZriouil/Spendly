@@ -30,7 +30,9 @@ export function PendingRow({ occurrence, category, onConfirm, onSkip, onMore }: 
   const { colors } = useTheme();
   const { template } = occurrence;
   const name = template.title ?? category?.name ?? t('activity.row.unknownCategory');
-  const amount = formatMoney(template.amountMinor, template.currencyCode);
+  const income = template.kind === 'income';
+  const money = formatMoney(template.amountMinor, template.currencyCode);
+  const amount = income ? t('activity.row.incomeAmount', { amount: money }) : money;
   const frequency = t(`expense.repeat.${occurrence.frequency}` as MessageKey);
   const due = t('activity.pending.due', { day: formatDay(new Date(occurrence.dueAt)), frequency });
 
@@ -63,6 +65,11 @@ export function PendingRow({ occurrence, category, onConfirm, onSkip, onMore }: 
           {due}
         </Text>
       </View>
+      {income && (
+        <Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.sign, { color: colors.textSecondary }]}>
+          {t('activity.row.incomeSign')}
+        </Text>
+      )}
       <AnimatedNumber
         value={template.amountMinor}
         currencyCode={template.currencyCode}

@@ -15,12 +15,12 @@ const SUNDAY = 1;
 // Wednesday Oct 14 2026, 12:00 local
 const now = new Date('2026-10-14T16:00:00.000Z');
 
-async function setup(expenses: [iso: string, amountMinor: number, categoryId: string, currencyCode?: string][]) {
+async function setup(expenses: [iso: string, amountMinor: number, categoryId: string, currencyCode?: string, kind?: 'income'][]) {
   const db = createTestDatabase();
   await migrate(db);
   await createSqliteExpenseRepository(async () => db).saveMany(
-    expenses.map(([occurredAt, amountMinor, categoryId, currencyCode = 'EUR']) =>
-      createExpense({ amountMinor, categoryId, currencyCode, occurredAt }),
+    expenses.map(([occurredAt, amountMinor, categoryId, currencyCode = 'EUR', kind]) =>
+      createExpense({ amountMinor, categoryId, currencyCode, occurredAt, kind }),
     ),
   );
   return createSqliteInsightsRepository(async () => db);
@@ -97,6 +97,19 @@ describe('loadInsights', () => {
     const base = { kind: 'week' as const, offset: 0, firstWeekday: MONDAY, now };
     expect((await loadInsights(repository, { ...base, preferredCurrency: 'EUR' })).totalMinor).toBe(300);
     expect((await loadInsights(repository, { ...base, preferredCurrency: 'GBP' })).currencyCode).toBe('USD');
+  });
+
+  it('keeps income out of spending and totals it separately for Net', async () => {
+    const repository = await setup([
+      ['2026-10-13T15:00:00.000Z', 1200, 'food'],
+      ['2026-10-13T16:00:00.000Z', 250000, 'other', 'EUR', 'income'],
+      ['2026-10-13T17:00:00.000Z', 9000, 'other', 'USD', 'income'],
+    ]);
+    const insights = await loadInsights(repository, { kind: 'week', offset: 0, preferredCurrency: 'EUR', firstWeekday: MONDAY, now });
+    expect(insights.totalMinor).toBe(1200);
+    expect(insights.byCategory.map((c) => c.categoryId)).toEqual(['food']);
+    expect(insights.currencies).toEqual(['EUR']);
+    expect(insights.incomeMinor).toBe(250000);
   });
 
   it('tells zero spending apart from no data', async () => {
