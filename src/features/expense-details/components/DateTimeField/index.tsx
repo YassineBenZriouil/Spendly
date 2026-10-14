@@ -1,8 +1,8 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Platform, Pressable, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
+import { fade } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -16,11 +16,6 @@ type DateTimeFieldProps = {
   onChange: (iso: string | undefined) => void;
   /** Offer a "back to now" button while a custom time is set. */
   resettable?: boolean;
-};
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
 };
 
 /** When the expense happened. Future times can't be picked. */

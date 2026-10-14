@@ -9,12 +9,6 @@ export const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   note: Typography.caption,
-  list: {
-    gap: Spacing.xs,
-  },
-  moves: {
-    flexDirection: 'row',
-  },
   actions: {
     gap: Spacing.sm,
     marginTop: Spacing.md,

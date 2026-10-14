@@ -1,46 +1,167 @@
-# Welcome to your Expo app 👋
+# Spendly
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Log an expense in two seconds: tap a category, drag the amount, save.**
 
-## Get started
+Spendly is a small, fast expense tracker that lives entirely on your phone. No account, no sign-up, no internet needed. Open it, record what you spent, and get on with your day.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Adding an expense
 
-2. Start the app
+Spendly opens straight onto the Add screen, so you're always one tap away from logging something.
 
-   ```bash
-   npx expo start
-   ```
+1. **Tap a category.** The category flies up into place above the amount, so you can see what you picked. You'll feel a light tap.
+2. **Set the amount.** Drag the number **up to increase** it and down to decrease it. Small movements make small changes; a quicker drag moves faster. The amount snaps to clean steps, and you'll feel a soft tick as it passes each one.
+3. **Tap Save.** You'll feel a short confirmation buzz, the button briefly says **Saved**, and you can start the next expense right away.
 
-In the output, you'll find options to open the app in a
+Prefer not to drag? You don't have to:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **− and +** buttons step the amount down and up.
+- The **keypad** button opens a number pad to type the amount.
+- The **reset** button sets the amount back to zero.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**Made a mistake?** An **Undo** button appears for 5 seconds after every save.
 
-### Other setup steps
+**Today's total** is always shown at the top of the screen. If you've spent in more than one currency today, each one is shown.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### Optional details
 
-## Learn more
+Tap the **details** button to add more, only if you want to:
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Title or merchant** (e.g. "Corner café")
+- **Note**
+- **Date and time.** Defaults to now. You can pick an earlier moment, but never the future, and reset it back to now with one tap.
+- **Payment method:** Cash, Card, Transfer or Other
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Your category and amount stay visible while you fill these in, and closing the panel keeps what you typed. Empty fields simply aren't saved.
 
-## Join the community
+### Your entry is never lost
 
-Join our community of developers creating universal apps.
+- Half-finished an expense and left the app? It's still there when you come back, even if your phone closed the app in the background.
+- If saving ever fails, your entry stays on screen with a clear message so you can try again.
+- If the app is closed at the exact moment you save, Spendly notices on the next launch and won't create a duplicate.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+## Activity
+
+Everything you've recorded, newest first.
+
+- **Grouped by day**, with a total for each day.
+- **Search** by title, note or category name.
+- **Filter** by category with one tap.
+- **Tap any expense to edit it:** amount, category, title, note, date and time, payment method. Everything can be changed.
+- **Delete** asks you to confirm, then gives you **Undo** for 5 seconds anyway.
+- Stays smooth even with thousands of expenses.
+- Nothing recorded yet? Activity points you straight back to Add.
+
+---
+
+## Insights
+
+A quick, honest look at where your money goes.
+
+- Switch between **Week** and **Month**, and step back through earlier weeks and months.
+- **Total spent** for the period.
+- **Comparison with the previous period.** For the current week or month, it compares against the same days last time, so it's a fair comparison even halfway through.
+- **Daily spending chart.** Tap a day to see its exact amount. Days you spent nothing look different from days before you started using Spendly or still in the future, so "I spent nothing" is never confused with "no data yet".
+- **Spending by category**, with each category's share of the total.
+- **Your most frequent category.**
+- **Multiple currencies?** Totals are kept separate per currency and never converted. Pick which currency to look at.
+
+---
+
+## Categories
+
+Spendly comes with 10 categories: **Food, Transport, Groceries, Shopping, Bills, Health, Entertainment, Home, Travel and Other**.
+
+Open **Settings → Categories**, or press and hold any category on the Add screen, to make them yours:
+
+- **Reorder:** press and hold a category, then drag it where you want it. It lifts off the list, the others slide out of the way, and you'll feel a tick each time it passes one.
+- **Add your own** with a name, one of 20 icons and one of 10 colors.
+- **Rename and restyle** any category, built-in ones included.
+- **Hide** categories you don't use. They disappear from the Add screen, but past expenses in them still show their category. At least one category always stays visible.
+- **Restore defaults** brings the built-in categories back to their original names, looks and order. Your own categories are kept.
+
+---
+
+## Settings
+
+Every setting applies instantly and is remembered.
+
+**Money**
+- **Currency:** used for new expenses. Expenses you already recorded keep their own currency. Each option shows a preview of how amounts will look.
+- **Drag sensitivity:** Precise, Balanced or Fast.
+- **Amount step:** how much each step of the drag and the − / + buttons is worth (1, 5, 10 or 50 in your currency).
+
+**Quick Add**
+- **Default category:** start each expense with nothing selected, or with the category you used last.
+- **Haptics:** turn the vibration feedback on or off. You'll feel a small tap when you switch it on.
+
+**Appearance**
+- **Theme:** System, Light or Dark. The switch fades smoothly instead of flashing.
+- **Reduce motion:** System, On or Off. With it on, movement and zooming are replaced by gentle fades.
+
+**Data**
+- **Export to CSV** (see below).
+- **Sync data:** coming soon.
+
+**About**
+- **Replay introduction** to see the first-launch tutorial again.
+
+---
+
+## Exporting your data
+
+**Settings → Export to CSV** turns your expenses into a spreadsheet file.
+
+- Choose a range: **This month, Last 3 months, This year** or **All time**.
+- The file includes the date, time, amount, currency, category, title, note, payment method and an exact timestamp.
+- It opens your phone's share sheet, so you can save it to Files, send it to yourself or open it in Excel, Numbers or Google Sheets.
+- Anything you typed is exported as plain text, so it can never act as a formula inside a spreadsheet.
+
+---
+
+## Feel: haptics and animation
+
+Spendly is meant to feel good to use. You'll feel:
+
+| When you… | You feel |
+| --- | --- |
+| Pick a category | A light tap |
+| Drag the amount | A soft tick as it passes each step |
+| Save an expense | A short success buzz |
+| Lift a category to reorder it | A light tap |
+| Move it past another category | A soft tick |
+| Turn haptics on | A light tap, so you know it's working |
+
+Turn them all off in **Settings → Haptics**.
+
+Everything on screen moves smoothly rather than jumping: buttons respond when pressed, lists slide when items move, numbers cross-fade when they change, and screens glide in and out. If you prefer less motion, **Reduce motion** keeps everything just as clear with simple fades.
+
+---
+
+## First launch
+
+The first time you open Spendly, a short, hands-on introduction shows you the three steps (tap a category, set the amount, save) on a practice screen. Nothing is saved during practice. You can **Skip** it at any time and replay it later from Settings.
+
+---
+
+## For everyone
+
+- Works with **VoiceOver** (iPhone) and **TalkBack** (Android). Every control has a clear spoken name.
+- **Nothing requires dragging.** The amount has − / + buttons and a keypad, and categories can be moved with screen-reader "Move up / Move down" actions.
+- Saving, deleting and undoing are **announced out loud**.
+- Supports **large text sizes** without cutting off amounts or buttons.
+- Buttons and controls are **large enough to tap comfortably**.
+- **Color is never the only signal.** Selections and states also use shapes, labels or icons.
+- **Speaks your format.** Currency symbols, decimal separators, dates, and the first day of the week all follow your phone's settings.
+
+---
+
+## Your data stays yours
+
+- **No account, no sign-up.**
+- **Works fully offline.** Airplane mode changes nothing.
+- **Nothing is uploaded or tracked.** Every expense, category and setting is stored only on your phone.
+- Your data leaves the device only when you export it yourself.

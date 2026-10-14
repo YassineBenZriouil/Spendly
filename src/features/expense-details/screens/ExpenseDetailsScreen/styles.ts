@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { Radius, Spacing, Typography } from '@/theme/tokens';
+import { Spacing, Typography } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
   content: {
@@ -28,17 +28,6 @@ export const styles = StyleSheet.create({
     ...Typography.caption,
     textTransform: 'uppercase',
     marginTop: Spacing.sm,
-  },
-  error: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    borderRadius: Radius.md,
-  },
-  errorText: {
-    ...Typography.body,
-    flex: 1,
   },
   actions: {
     gap: Spacing.sm,

@@ -42,8 +42,9 @@ function ThemedNavigation() {
   return (
     <NavigationThemeProvider value={navigationTheme}>
       <StatusBar animated style={scheme === 'dark' ? 'light' : 'dark'} />
-      {/* Pushes slide normally; reduced motion swaps the slide for a fade */}
-      <Stack screenOptions={{ animation: reducedMotion ? 'fade' : 'default' }}>
+      {/* Pushes slide normally; reduced motion swaps the slide for a fade. Back is a bare chevron: the
+          previous screen is often the tabs group, whose route name ("(tabs)") would otherwise show as its title */}
+      <Stack screenOptions={{ animation: reducedMotion ? 'fade' : 'default', headerBackButtonDisplayMode: 'minimal' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
         <Stack.Screen name="settings/currency" options={{ title: 'Currency' }} />

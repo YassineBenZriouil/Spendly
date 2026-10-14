@@ -1,16 +1,16 @@
 import { router } from 'expo-router';
-import { Alert, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
+import { AccessibilityInfo, Alert, Text, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 
-import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming } from '@/animation/tokens';
 import { useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
-import { IconButton } from '@/components/IconButton';
 import { ListRow } from '@/components/ListRow';
 import { Screen } from '@/components/Screen';
+import { SortableList } from '@/components/SortableList';
 import { categoryRepository } from '@/domain/category/category.repository';
 import { moveCategory } from '@/domain/category/category.service';
+import type { ExpenseCategory } from '@/domain/category/category.types';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -23,14 +23,14 @@ export function ManageCategoriesScreen() {
   const entering = useEnterTransition();
   const categories = useCategories();
   const ids = categories.map((category) => category.id);
-  const reducedMotion = useReducedMotion();
-  // Reordered rows slide to their new place; under reduced motion they fade in there instead (keyed by position)
-  const layout = LinearTransition.duration(Duration.standard);
-  const reducedEntering = FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion);
 
-  const move = (id: string, direction: -1 | 1) => {
-    const next = moveCategory(ids, id, direction);
-    if (next) categoryRepository.reorder(next).catch(() => failed('reorder'));
+  const move = (category: ExpenseCategory, direction: -1 | 1) => {
+    const next = moveCategory(ids, category.id, direction);
+    if (!next) return;
+    categoryRepository
+      .reorder(next)
+      .then(() => AccessibilityInfo.announceForAccessibility(`${category.name}, position ${next.indexOf(category.id) + 1} of ${next.length}`))
+      .catch(() => failed('reorder'));
   };
 
   const restoreDefaults = () => {
@@ -52,43 +52,33 @@ export function ManageCategoriesScreen() {
     <Screen edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <Text style={[styles.note, { color: colors.textSecondary }]}>
-          Hidden categories disappear from Quick Add; expenses already in them keep showing their category.
+          Hold a category and drag to reorder. Hidden categories disappear from Quick Add; expenses already in them keep showing their category.
         </Text>
 
-        <Animated.View entering={entering} style={styles.list}>
-          {categories.map((category, index) => (
-            <Animated.View
-              key={reducedMotion ? `${category.id}-${index}` : category.id}
-              layout={reducedMotion ? undefined : layout}
-              entering={reducedMotion ? reducedEntering : undefined}>
-              <ListRow
-                icon={category.icon}
-                iconColor={categoryColors[category.colorToken]}
-                label={category.name}
-                caption={category.isVisible ? undefined : 'Hidden from Quick Add'}
-                accessibilityHint="Opens the category to rename, restyle or hide it"
-                onPress={() => router.push({ pathname: '/categories/[id]', params: { id: category.id } })}
-                accessory={
-                  <View style={styles.moves}>
-                    <IconButton
-                      icon="arrowUp"
-                      variant="plain"
-                      accessibilityLabel={`Move ${category.name} up`}
-                      disabled={index === 0}
-                      onPress={() => move(category.id, -1)}
-                    />
-                    <IconButton
-                      icon="arrowDown"
-                      variant="plain"
-                      accessibilityLabel={`Move ${category.name} down`}
-                      disabled={index === categories.length - 1}
-                      onPress={() => move(category.id, 1)}
-                    />
-                  </View>
-                }
-              />
-            </Animated.View>
-          ))}
+        <Animated.View entering={entering}>
+          <SortableList
+            items={categories}
+            onReorder={(next) => categoryRepository.reorder(next).catch(() => failed('reorder'))}
+            renderItem={(category) => {
+              const index = ids.indexOf(category.id);
+              return (
+                <ListRow
+                  icon={category.icon}
+                  iconColor={categoryColors[category.colorToken]}
+                  label={category.name}
+                  caption={category.isVisible ? undefined : 'Hidden from Quick Add'}
+                  accessibilityHint="Opens the category to rename, restyle or hide it"
+                  onPress={() => router.push({ pathname: '/categories/[id]', params: { id: category.id } })}
+                  // Screen-reader alternative to dragging
+                  accessibilityActions={[
+                    ...(index > 0 ? [{ name: 'moveUp', label: 'Move up' }] : []),
+                    ...(index < ids.length - 1 ? [{ name: 'moveDown', label: 'Move down' }] : []),
+                  ]}
+                  onAccessibilityAction={(event) => move(category, event.nativeEvent.actionName === 'moveUp' ? -1 : 1)}
+                />
+              );
+            }}
+          />
         </Animated.View>
 
         <View style={styles.actions}>

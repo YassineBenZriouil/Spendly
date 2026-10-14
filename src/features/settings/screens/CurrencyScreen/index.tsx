@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
-import { FlatList, Text } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { FlatList, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
+import { fade } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
 import { Screen } from '@/components/Screen';
@@ -12,11 +12,6 @@ import { updatePreferences, usePreferences } from '@/storage/preferences/prefere
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { styles } from './styles';
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 export function CurrencyScreen() {
   const { colors } = useTheme();
@@ -28,6 +23,7 @@ export function CurrencyScreen() {
       <FlatList
         data={options}
         keyExtractor={(item) => item.code}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           <Text style={[styles.note, { color: colors.textSecondary }]}>
             New expenses use this currency. Expenses you already recorded keep theirs.

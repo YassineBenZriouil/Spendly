@@ -2,14 +2,15 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, Keyboard, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming } from '@/animation/tokens';
-import { useEnterTransition } from '@/animation/transitions';
+import { Duration } from '@/animation/tokens';
+import { fade, useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
-import { Icon } from '@/components/Icon';
+import { ErrorBanner } from '@/components/ErrorBanner';
+
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { expenseRepository } from '@/domain/expense/expense.repository';
@@ -34,11 +35,6 @@ const toForm = ({ amountMinor, categoryId, title, note, occurredAt, paymentMetho
   categoryId,
   details: { title, note, occurredAt, paymentMethod },
 });
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 export function ExpenseDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -213,13 +209,7 @@ export function ExpenseDetailsScreen() {
             />
 
             {error && (
-              <Animated.View
-                {...fade}
-                accessibilityLiveRegion="polite"
-                style={[styles.error, { backgroundColor: colors.surfaceSecondary }]}>
-                <Icon name="error" color={colors.danger} size={18} />
-                <Text style={[styles.errorText, { color: colors.textPrimary }]}>{error}</Text>
-              </Animated.View>
+              <ErrorBanner message={error} />
             )}
 
             <View style={styles.actions}>

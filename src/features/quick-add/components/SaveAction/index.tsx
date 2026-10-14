@@ -14,7 +14,7 @@ import Animated, {
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration, ReducedTiming } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
+import { fade, settleTo } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -68,8 +68,8 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
   });
 
   const label = labels[phase] ?? 'Save';
-  const fade = reducedMotion
-    ? { entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion), exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion) }
+  const labelFade = reducedMotion
+    ? fade
     : { entering: FadeIn.duration(Duration.quick), exiting: FadeOut.duration(Duration.micro) };
   const layout = LinearTransition.duration(Duration.standard).reduceMotion(ReducedTiming.reduceMotion);
 
@@ -86,7 +86,7 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
           onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>
           <Animated.View style={[styles.button, buttonStyle]}>
             {/* Keyed so each label change cross-fades instead of snapping */}
-            <Animated.View key={label} {...fade} style={styles.labelLayer}>
+            <Animated.View key={label} {...labelFade} style={styles.labelLayer}>
               {phase === 'saved' && <Icon name="check" color={colors.surface} size={20} />}
               <Animated.Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.label, textStyle]}>{label}</Animated.Text>
             </Animated.View>
@@ -97,8 +97,8 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
       {undoLabel && (
         <Animated.View
           layout={layout}
-          entering={reducedMotion ? fade.entering : FadeInRight.duration(Duration.standard)}
-          exiting={reducedMotion ? fade.exiting : FadeOutRight.duration(Duration.quick)}>
+          entering={reducedMotion ? labelFade.entering : FadeInRight.duration(Duration.standard)}
+          exiting={reducedMotion ? labelFade.exiting : FadeOutRight.duration(Duration.quick)}>
           <Button label="Undo" variant="secondary" onPress={onUndo} accessibilityHint={`Removes ${undoLabel}`} />
         </Animated.View>
       )}

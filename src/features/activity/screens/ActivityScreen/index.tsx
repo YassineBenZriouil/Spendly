@@ -2,17 +2,15 @@ import { router } from 'expo-router';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AccessibilityInfo, ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Animated, {
-  FadeIn,
   FadeInDown,
-  FadeOut,
   FadeOutDown,
   LinearTransition,
   type BaseAnimationBuilder,
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming } from '@/animation/tokens';
-import { useEnterTransition } from '@/animation/transitions';
+import { Duration } from '@/animation/tokens';
+import { fade, useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
@@ -82,10 +80,6 @@ export function ActivityScreen() {
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const filterCategories = categories.filter((category) => category.isVisible || category.id === categoryId);
 
-  const fade = {
-    entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-    exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  };
   // Only rows that just appeared animate in; rows mounted by scrolling must not
   const rowEntering: BaseAnimationBuilder = reducedMotion ? fade.entering : FadeInDown.duration(Duration.standard);
   const layout = LinearTransition.duration(Duration.standard);

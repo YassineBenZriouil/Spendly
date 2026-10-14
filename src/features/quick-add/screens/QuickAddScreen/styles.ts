@@ -45,14 +45,8 @@ export const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
   },
   error: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    borderRadius: Radius.md,
     marginBottom: Spacing.sm,
   },
-  errorText: Typography.body,
   footer: {
     paddingBottom: Spacing.md,
   },

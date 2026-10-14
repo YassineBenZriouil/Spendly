@@ -1,11 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, ScrollView, Text, View } from 'react-native';
+import { Keyboard, ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
-  FadeIn,
   FadeInDown,
-  FadeOut,
   FadeOutDown,
   FadeOutUp,
   useAnimatedStyle,
@@ -14,9 +12,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
-import { Icon } from '@/components/Icon';
+import { Duration } from '@/animation/tokens';
+import { fade, settleTo } from '@/animation/transitions';
+import { ErrorBanner } from '@/components/ErrorBanner';
+
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import type { ExpenseCategory } from '@/domain/category/category.types';
@@ -123,10 +122,10 @@ export function QuickAddScreen() {
   const placeholderStyle = useAnimatedStyle(() => ({ opacity: placeholderVisible.get() }));
 
   const panelEnter = reducedMotion
-    ? FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)
+    ? fade.entering
     : FadeInDown.duration(Duration.standard);
   const panelExit = reducedMotion
-    ? FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)
+    ? fade.exiting
     : FadeOutDown.duration(Duration.quick);
 
   return (
@@ -136,7 +135,7 @@ export function QuickAddScreen() {
         <Animated.Text
           key={todayLabel}
           entering={panelEnter}
-          exiting={FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)}
+          exiting={fade.exiting}
           accessibilityLabel={todayLabel.replace(' · ', ', spent ')}
           style={[styles.date, { color: colors.textSecondary }]}>
           {todayLabel}
@@ -250,16 +249,13 @@ export function QuickAddScreen() {
       </KeyboardAvoidingView>
 
       {phase === 'error' && (
-        <Animated.View
-          entering={panelEnter}
-          exiting={reducedMotion ? panelExit : FadeOutUp.duration(Duration.quick)}
-          accessibilityLiveRegion="polite"
-          style={[styles.error, { backgroundColor: colors.surfaceSecondary }]}>
-          <Icon name="error" color={colors.danger} size={18} />
-          <Text style={[styles.errorText, { color: colors.textPrimary }]}>
-            Couldn&apos;t save. Your entry is still here.
-          </Text>
-        </Animated.View>
+        <View style={styles.error}>
+          <ErrorBanner
+            message="Couldn't save. Your entry is still here."
+            entering={panelEnter}
+            exiting={reducedMotion ? panelExit : FadeOutUp.duration(Duration.quick)}
+          />
+        </View>
       )}
 
       <View style={styles.footer}>

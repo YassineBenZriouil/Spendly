@@ -1,10 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, useSharedValue } from 'react-native-reanimated';
+import Animated, { useSharedValue } from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
-import { useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
@@ -29,11 +28,6 @@ const STEPS = [
   { title: 'Set the amount', hint: 'Drag the number up or down, or use − and +.' },
   { title: 'Tap Save', hint: 'That records it. Details like a note are optional.' },
 ] as const;
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 /** First-launch practice on a miniature composer: tap → drag → Save. Nothing is stored. Skippable at any time. */
 export function OnboardingScreen() {

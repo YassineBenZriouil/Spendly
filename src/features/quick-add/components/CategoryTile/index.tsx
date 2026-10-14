@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
-  FadeIn,
   FadeInDown,
   interpolate,
   interpolateColor,
@@ -13,8 +12,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming, Stagger } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
+import { Duration, Stagger } from '@/animation/tokens';
+import { fade, settleTo } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -73,7 +72,7 @@ export function CategoryTile({
   });
 
   const entering = reducedMotion
-    ? FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)
+    ? fade.entering
     : FadeInDown.duration(Duration.standard).delay(index * Stagger);
 
   return (

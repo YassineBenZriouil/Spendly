@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { Spacing, Typography } from '@/theme/tokens';
+import { ListGap, Spacing, Typography } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
   content: {
@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     gap: Spacing.xl,
   },
   section: {
-    gap: Spacing.sm,
+    gap: ListGap,
   },
   sectionTitle: {
     ...Typography.caption,

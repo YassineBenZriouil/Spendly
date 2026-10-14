@@ -1,10 +1,9 @@
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
-import { useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition } from '@/animation/transitions';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
@@ -26,11 +25,6 @@ import { styles } from './styles';
 
 /** Don't flash a spinner for loads that finish almost immediately. */
 const LOADING_DELAY_MS = 300;
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 export function InsightsScreen() {
   const { colors } = useTheme();

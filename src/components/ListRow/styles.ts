@@ -23,6 +23,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
+  accessory: {
+    justifyContent: 'center',
+  },
   label: Typography.body,
   caption: Typography.caption,
   value: Typography.label,

@@ -32,15 +32,4 @@ export const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   note: Typography.caption,
-  error: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    borderRadius: Radius.md,
-  },
-  errorText: {
-    ...Typography.body,
-    flex: 1,
-  },
 });

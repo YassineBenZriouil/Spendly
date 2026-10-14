@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LayoutAnimationConfig } from 'react-native-reanimated';
+import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
+import { fade } from '@/animation/transitions';
 import type { CurrencyTotal } from '@/domain/expense/expense.repository';
 import { formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -11,11 +11,6 @@ import { formatDay } from '@/utils/dateFormat';
 import { styles } from './styles';
 
 export const DAY_HEADER_HEIGHT = 44;
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 type DayHeaderProps = {
   day: Date;

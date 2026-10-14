@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, {
-  FadeIn,
   LinearTransition,
   useAnimatedStyle,
   useSharedValue,
@@ -11,7 +10,7 @@ import Animated, {
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration, ReducedTiming } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
+import { fade, settleTo } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import type { CategorySpend } from '@/domain/insights/insights.repository';
@@ -43,7 +42,7 @@ export function CategoryBreakdown({ items, categories, totalMinor, currencyCode 
         <Animated.View
           key={item.categoryId}
           layout={layout}
-          entering={FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)}>
+          entering={fade.entering}>
           <CategoryRow
             item={item}
             category={byId.get(item.categoryId)}

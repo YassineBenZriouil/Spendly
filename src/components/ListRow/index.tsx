@@ -1,19 +1,14 @@
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, interpolate, interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { Pressable, Text, View, type AccessibilityActionEvent, type AccessibilityActionInfo } from 'react-native';
+import Animated, { interpolate, interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { ReducedTiming } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
+
+import { fade, settleTo } from '@/animation/transitions';
 import { Icon, type IconName } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { styles } from './styles';
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 type ListRowProps = {
   label: string;
@@ -28,10 +23,24 @@ type ListRowProps = {
   /** Controls on the right (switches, buttons). */
   accessory?: ReactNode;
   accessibilityHint?: string;
+  /** Extra screen-reader actions (e.g. move up/down as the alternative to dragging). */
+  accessibilityActions?: AccessibilityActionInfo[];
+  onAccessibilityAction?: (event: AccessibilityActionEvent) => void;
 };
 
 /** A settings / management row. */
-export function ListRow({ label, caption, value, icon, iconColor, onPress, accessory, accessibilityHint }: ListRowProps) {
+export function ListRow({
+  label,
+  caption,
+  value,
+  icon,
+  iconColor,
+  onPress,
+  accessory,
+  accessibilityHint,
+  accessibilityActions,
+  onAccessibilityAction,
+}: ListRowProps) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const pressed = useSharedValue(0);
@@ -64,7 +73,9 @@ export function ListRow({ label, caption, value, icon, iconColor, onPress, acces
           {value}
         </Animated.Text>
       )}
-      {accessory}
+      {/* Own box so the row centers it: RN's iOS Switch sets alignSelf: 'flex-start' on itself, which would
+          otherwise pin it to the top of the row */}
+      {accessory && <View style={styles.accessory}>{accessory}</View>}
       {onPress && <Icon name="chevronRight" color={colors.textSecondary} size={14} />}
     </Animated.View>
   );
@@ -75,6 +86,8 @@ export function ListRow({ label, caption, value, icon, iconColor, onPress, acces
       accessibilityRole="button"
       accessibilityLabel={value ? `${label}, ${value}` : label}
       accessibilityHint={accessibilityHint}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={onAccessibilityAction}
       onPress={onPress}
       onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>

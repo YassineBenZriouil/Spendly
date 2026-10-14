@@ -2,10 +2,9 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
-import { useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { OptionGroup } from '@/components/OptionGroup';
@@ -40,11 +39,6 @@ function rangeFor(key: RangeKey, now = new Date()): IsoRange {
         : new Date(now.getFullYear(), 0, 1);
   return { start: start.toISOString(), end };
 }
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 /** CSV export: pick a range, see what's included, write the file and hand it to the share sheet. */
 export function ExportScreen() {

@@ -1,8 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -11,7 +9,7 @@ import Animated, {
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { ReducedTiming } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
+import { fade, settleTo } from '@/animation/transitions';
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
 import { deviceLocale, formatMoney } from '@/domain/money/money.format';
@@ -34,11 +32,6 @@ const MAX_BAR = 24;
 const GAP = 2;
 /** A zero day is a visible stub on the baseline; "no data" is a hollow ring instead. */
 const ZERO_STUB = 2;
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 /** Daily spending for the period: one series, one color. Tap a bar for its value. */
 export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {

@@ -1,12 +1,12 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Keyboard, Switch, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
-import { useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
+import { ErrorBanner } from '@/components/ErrorBanner';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
 import { Screen } from '@/components/Screen';
@@ -29,11 +29,6 @@ import type { CategoryColorToken } from '@/theme/tokens';
 import { styles } from './styles';
 
 type Form = CategoryInput & { isVisible: boolean };
-
-const fade = {
-  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
-};
 
 /** "fitness" -> "Fitness": icon and color keys read aloud as words. */
 const readable = (key: string) => key.charAt(0).toUpperCase() + key.slice(1);
@@ -171,10 +166,7 @@ export function CategoryEditorScreen() {
           )}
 
           {error && (
-            <Animated.View {...fade} accessibilityLiveRegion="polite" style={[styles.error, { backgroundColor: colors.surfaceSecondary }]}>
-              <Icon name="error" color={colors.danger} size={18} />
-              <Text style={[styles.errorText, { color: colors.textPrimary }]}>{error}</Text>
-            </Animated.View>
+            <ErrorBanner message={error} />
           )}
 
           <Button
