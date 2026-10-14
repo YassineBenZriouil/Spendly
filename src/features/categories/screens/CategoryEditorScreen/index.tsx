@@ -37,7 +37,7 @@ type Form = CategoryInput & { isVisible: boolean };
 export function CategoryEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
-  const { colors, categoryColors } = useTheme();
+  const { colors, categoryColors, style } = useTheme();
   const entering = useEnterTransition();
   // Stored names: the form shows the display name, but an untouched name field must save the stored one unchanged
   const categories = useCategories({ displayNames: false });
@@ -131,17 +131,22 @@ export function CategoryEditorScreen() {
           </View>
 
           <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('categories.editor.color')}</Text>
-          <View accessibilityRole="radiogroup" accessibilityLabel={t('categories.editor.color')} style={styles.grid}>
-            {(Object.keys(categoryColors) as CategoryColorToken[]).map((token) => (
-              <Swatch
-                key={token}
-                accessibilityLabel={t(`categories.color.${token}` as MessageKey)}
-                color={categoryColors[token]}
-                selected={form.colorToken === token}
-                onPress={() => setForm({ ...form, colorToken: token })}
-              />
-            ))}
-          </View>
+          {/* Black & White shows no category colors, so there is nothing to pick; the stored color is kept for Color */}
+          {style === 'mono' ? (
+            <Text style={[styles.note, { color: colors.textSecondary }]}>{t('categories.editor.colorMonoNote')}</Text>
+          ) : (
+            <View accessibilityRole="radiogroup" accessibilityLabel={t('categories.editor.color')} style={styles.grid}>
+              {(Object.keys(categoryColors) as CategoryColorToken[]).map((token) => (
+                <Swatch
+                  key={token}
+                  accessibilityLabel={t(`categories.color.${token}` as MessageKey)}
+                  color={categoryColors[token]}
+                  selected={form.colorToken === token}
+                  onPress={() => setForm({ ...form, colorToken: token })}
+                />
+              ))}
+            </View>
+          )}
 
           <ListRow
             label={t('categories.editor.showInQuickAdd')}

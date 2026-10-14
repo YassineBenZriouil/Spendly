@@ -2,6 +2,7 @@ import type { Message } from '../../types';
 
 export const categories = {
   // Built-in category names, shown in the app's language until the user renames them (see categoryDisplayName)
+  'categories.editor.colorMonoNote': "Colors appear in the Color style (Settings → Appearance). Black & White shows the icon and name only.",
   'categories.builtIn.food': 'Food',
   'categories.builtIn.transport': 'Transport',
   'categories.builtIn.groceries': 'Groceries',

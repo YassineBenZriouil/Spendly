@@ -3,22 +3,35 @@ import { useColorScheme } from 'react-native';
 
 import { updatePreferences, usePreferences } from '@/storage/preferences/preferences';
 
-import { CategoryColors, Colors, type ColorScheme } from './tokens';
+import {
+  themeCategoryColors,
+  themeColors,
+  type AccentName,
+  type CategoryColorToken,
+  type ColorScheme,
+  type ThemeColors,
+  type ThemeStyle,
+} from './tokens';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 type ThemeContextValue = {
+  /** Black & White or Color. */
+  style: ThemeStyle;
+  accent: AccentName;
+  /** Light/dark choice: System, Light or Dark. */
   preference: ThemePreference;
   setPreference: (preference: ThemePreference) => void;
   scheme: ColorScheme;
-  colors: (typeof Colors)[ColorScheme];
-  categoryColors: (typeof CategoryColors)[ColorScheme];
+  colors: ThemeColors;
+  /** Per-category tint: real colors in Color, grays in Black & White. */
+  categoryColors: Record<CategoryColorToken, string>;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const preference = usePreferences().theme;
+  const { theme: preference, themeStyle: style, accent } = usePreferences();
   const setPreference = (theme: ThemePreference) => updatePreferences({ theme });
   const system = useColorScheme();
   const scheme: ColorScheme =
@@ -27,11 +40,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return (
     <ThemeContext
       value={{
+        style,
+        accent,
         preference,
         setPreference,
         scheme,
-        colors: Colors[scheme],
-        categoryColors: CategoryColors[scheme],
+        colors: themeColors(style, scheme, accent),
+        categoryColors: themeCategoryColors(style, scheme),
       }}>
       {children}
     </ThemeContext>

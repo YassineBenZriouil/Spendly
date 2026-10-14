@@ -27,6 +27,8 @@ type TrendChartProps = {
   days: Day[];
   kind: PeriodKind;
   currencyCode: string;
+  /** Index of today in `days` (current period only): drawn hatched in Black & White, as the day isn't over. */
+  todayIndex: number;
 };
 
 /** Bars never fill their slot: capped at 24pt, with at least a 2pt surface gap between neighbours. */
@@ -34,10 +36,14 @@ const MAX_BAR = 24;
 const GAP = 2;
 /** A zero day is a visible stub on the baseline; "no data" is a hollow ring instead. */
 const ZERO_STUB = 2;
+/** Stripes cover the tallest bar plus its width, every HATCH_GAP points. */
+const HATCH_GAP = 5;
+const HATCH_LINES = Math.ceil((PLOT_HEIGHT * 2 + MAX_BAR) / HATCH_GAP);
 
 /** Daily spending for the period: one series, one color. Tap a bar for its value. */
-export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
-  const { colors } = useTheme();
+export function TrendChart({ days, kind, currencyCode, todayIndex }: TrendChartProps) {
+  const { colors, style } = useTheme();
+  const hatchToday = style === 'mono' && todayIndex >= 0;
   const [plotWidth, setPlotWidth] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -95,6 +101,7 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
               width={barWidth}
               dimmed={selected !== null && selected !== index}
               selected={selected === index}
+              hatched={hatchToday && index === todayIndex}
               accessibilityLabel={t('insights.chart.barLabel', { day: formatDay(day.day), value: describe(day) })}
               onPress={() => setSelected(selected === index ? null : index)}
             />
@@ -117,6 +124,13 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
         <LegendItem label={t('insights.chart.nothingSpent')}>
           <View style={[styles.keyStub, { backgroundColor: colors.chart }]} />
         </LegendItem>
+        {hatchToday && (
+          <LegendItem label={t('insights.chart.today')}>
+            <View style={[styles.keyBar, styles.hatched, { borderColor: colors.chart }]}>
+              <Hatch color={colors.chart} />
+            </View>
+          </LegendItem>
+        )}
         <LegendItem label={t('insights.chart.noData')}>
           <View style={[styles.keyRing, { borderColor: colors.textSecondary }]} />
         </LegendItem>
@@ -141,11 +155,24 @@ type TrendBarProps = {
   width: number;
   dimmed: boolean;
   selected: boolean;
+  /** Today in Black & White: outlined with diagonal stripes instead of a solid fill. */
+  hatched: boolean;
   accessibilityLabel: string;
   onPress: () => void;
 };
 
-function TrendBar({ day, height, width, dimmed, selected, accessibilityLabel, onPress }: TrendBarProps) {
+/** Diagonal stripes filling their (clipping) parent. */
+function Hatch({ color }: { color: string }) {
+  return (
+    <View pointerEvents="none" style={styles.hatchClip}>
+      {Array.from({ length: HATCH_LINES }, (_, i) => (
+        <View key={i} style={[styles.hatchLine, { backgroundColor: color, left: i * HATCH_GAP - PLOT_HEIGHT }]} />
+      ))}
+    </View>
+  );
+}
+
+function TrendBar({ day, height, width, dimmed, selected, hatched, accessibilityLabel, onPress }: TrendBarProps) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const animatedHeight = useSharedValue(0);
@@ -185,10 +212,11 @@ function TrendBar({ day, height, width, dimmed, selected, accessibilityLabel, on
         <Animated.View
           style={[
             styles.bar,
-            { width, backgroundColor: colors.chart },
+            hatched ? [styles.hatched, { width, borderColor: colors.chart }] : { width, backgroundColor: colors.chart },
             stub ? { height: ZERO_STUB } : barStyle,
-          ]}
-        />
+          ]}>
+          {hatched && !stub && <Hatch color={colors.chart} />}
+        </Animated.View>
       )}
     </Pressable>
   );

@@ -5,12 +5,13 @@ import { useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Alert, ScrollView, Switch, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition, useLayoutTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ListRow } from '@/components/ListRow';
 import { OptionGroup } from '@/components/OptionGroup';
 import { Screen } from '@/components/Screen';
+import { Swatch } from '@/components/Swatch';
 import { expenseRepository } from '@/domain/expense/expense.repository';
 import { sampleExpenses } from '@/domain/expense/sampleExpenses';
 import type { Backup } from '@/domain/backup/backup';
@@ -27,17 +28,17 @@ import {
   type DragSensitivity,
 } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
-import { EdgeToEdge } from '@/theme/tokens';
+import { AccentNames, Accents, EdgeToEdge, type ThemeStyle } from '@/theme/tokens';
 import { formatDay } from '@/utils/dateFormat';
 import { writeFailureMessage } from '@/storage/database/errors';
-import { languagePreference, type LanguagePreference, setLanguagePreference, t } from '@/i18n';
+import { languagePreference, type LanguagePreference, type MessageKey, setLanguagePreference, t } from '@/i18n';
 
 import { styles } from './styles';
 
 const INCREMENTS: AmountIncrement[] = [1, 5, 10, 50];
 
 export function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const entering = useEnterTransition();
   const preferences = usePreferences();
   const saveError = usePreferencesSaveError();
@@ -222,6 +223,34 @@ export function SettingsScreen() {
                 onChange={changeLanguage}
               />
             </Setting>
+            <Setting label={t('settings.style.label')} caption={t('settings.style.caption')}>
+              <OptionGroup<ThemeStyle>
+                accessibilityLabel={t('settings.style.label')}
+                options={[
+                  { value: 'mono', label: t('settings.style.mono') },
+                  { value: 'color', label: t('settings.style.color') },
+                ]}
+                value={preferences.themeStyle}
+                onChange={(themeStyle) => updatePreferences({ themeStyle })}
+              />
+            </Setting>
+            {preferences.themeStyle === 'color' && (
+              <Animated.View {...fade}>
+                <Setting label={t('settings.accent.label')}>
+                  <View accessibilityRole="radiogroup" accessibilityLabel={t('settings.accent.label')} style={styles.accents}>
+                    {AccentNames.map((name) => (
+                      <Swatch
+                        key={name}
+                        accessibilityLabel={t(`settings.accent.${name}` as MessageKey)}
+                        selected={preferences.accent === name}
+                        color={Accents[name][scheme].accent}
+                        onPress={() => updatePreferences({ accent: name })}
+                      />
+                    ))}
+                  </View>
+                </Setting>
+              </Animated.View>
+            )}
             <Setting label={t('settings.theme.label')}>
               <OptionGroup<AppPreferences['theme']>
                 accessibilityLabel={t('settings.theme.label')}
@@ -301,26 +330,29 @@ export function SettingsScreen() {
   );
 }
 
+// Sections and settings slide (or cross-fade) when one above them changes height, e.g. the accent row appearing
 function Section({ title, children }: { title: string; children: ReactNode }) {
   const { colors } = useTheme();
+  const layout = useLayoutTransition();
   return (
-    <View style={styles.section}>
+    <Animated.View layout={layout} style={styles.section}>
       <Text accessibilityRole="header" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
         {title}
       </Text>
       {children}
-    </View>
+    </Animated.View>
   );
 }
 
 /** A labelled control that sits under its label rather than beside it. */
 function Setting({ label, caption, children }: { label: string; caption?: string; children: ReactNode }) {
   const { colors } = useTheme();
+  const layout = useLayoutTransition();
   return (
-    <View style={styles.setting}>
+    <Animated.View layout={layout} style={styles.setting}>
       <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>{label}</Text>
       {caption && <Text style={[styles.note, { color: colors.textSecondary }]}>{caption}</Text>}
       {children}
-    </View>
+    </Animated.View>
   );
 }

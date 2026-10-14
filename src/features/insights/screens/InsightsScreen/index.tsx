@@ -225,7 +225,14 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
 
       <Card>
         <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.daily')}</Text>
-        <TrendChart key={chartKey} days={insights.days} kind={kind} currencyCode={currencyCode} />
+        <TrendChart
+          key={chartKey}
+          days={insights.days}
+          kind={kind}
+          currencyCode={currencyCode}
+          // Today is the last tracked day of the current period (days after it have no data yet)
+          todayIndex={insights.isCurrent ? insights.days.findLastIndex((day) => day.state !== 'noData') : -1}
+        />
       </Card>
 
       <Card>

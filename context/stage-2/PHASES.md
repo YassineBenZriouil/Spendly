@@ -86,11 +86,30 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
   performance on the mid-range Android.
 - The 6 accents (proposal: lime (current), blue, violet, coral, teal, amber, each tuned to pass AA).
 
+**Decisions made while building it**
+
+- Settings → Appearance: **Style** (Black & White / Color), **Accent** (Color only, 6 swatches, appears with a
+  fade and the settings below slide), **Mode** (System / Light / Dark, the old Theme setting, for both styles).
+- Black & White: pure white / black backgrounds, grays for surfaces and text, the accent is black (white in
+  dark) with inverted content; success and danger are not colored (their icons and words carry the meaning).
+- Categories in B&W: each color token maps to one of 5 grays (icon tint and chip fill), all ≥ 3:1 as icons and
+  ≥ 4.5:1 under the chip label. The category editor hides its color picker in B&W with a note (the stored color
+  is kept for Color).
+- Charts in B&W: black bars, gray when dimmed, and **today's bar hatched** (the day isn't over), with a legend
+  entry. No-data days stay a hollow ring, so outline vs fill still separates them. Hatching uses plain rotated
+  Views, no new dependency.
+- Accents (light / dark tuned separately): lime (current), blue, violet, coral, teal, amber.
+- Migration: on first launch after the update, anyone with stored settings goes to **Color** with their light/dark
+  choice; a fresh install gets **Black & White + System**. Decided once and stored.
+- Found, not fixed: in **Color light**, the category chip's label (background color on the category color) is
+  3.4–4.2:1, under 4.5:1. It predates this phase; the contrast test enforces the chip rule for B&W and Color dark,
+  with a `shortcut:` note for Color light.
+
 **Done when**
 
-- [ ] Contrast test covers B&W light/dark and all 6 accents in light/dark (text 4.5:1, UI and icons 3:1).
-- [ ] No component reads a raw palette color: everything goes through the theme (tokens test still passes).
-- [ ] Migration test: old System / Light / Dark → Color with the same appearance; fresh install → B&W + System.
+- [x] Contrast test covers B&W light/dark and all 6 accents in light/dark (text 4.5:1, UI and icons 3:1).
+- [x] No component reads a raw palette color: everything goes through the theme (tokens test still passes).
+- [x] Migration test: old System / Light / Dark → Color with the same appearance; fresh install → B&W + System.
 - [ ] Every screen reviewed in B&W light, B&W dark, Color light, Color dark (screenshots). *Device.*
 - [ ] Categories are distinguishable in B&W without color (pattern / fill + icon + label). *Device.*
 

@@ -96,6 +96,7 @@ export const insights = {
 
   // Daily chart
   'insights.chart.nothingSpent': 'Nothing spent',
+  'insights.chart.today': 'Today, so far',
   'insights.chart.noData': 'No data',
   'insights.chart.spent': 'Spent',
   'insights.chart.highestDay': 'Highest day',

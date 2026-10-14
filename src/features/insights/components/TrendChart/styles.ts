@@ -47,6 +47,21 @@ export const styles = StyleSheet.create({
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
   },
+  hatched: {
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  hatchClip: {
+    ...StyleSheet.absoluteFill,
+    overflow: 'hidden',
+  },
+  hatchLine: {
+    position: 'absolute',
+    top: -PLOT_HEIGHT / 2,
+    width: 1.5,
+    height: PLOT_HEIGHT * 2,
+    transform: [{ rotate: '45deg' }],
+  },
   ring: {
     width: 6,
     height: 6,

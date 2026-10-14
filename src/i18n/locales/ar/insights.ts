@@ -100,6 +100,7 @@ export const insights: Translation<typeof english> = {
   'insights.category.labelWithChange': '{name}، {amount}، {share} بالمئة، {count}، {change}',
 
   'insights.chart.nothingSpent': 'لا إنفاق',
+  'insights.chart.today': 'اليوم حتى الآن',
   'insights.chart.noData': 'لا بيانات',
   'insights.chart.spent': 'الإنفاق',
   'insights.chart.highestDay': 'أعلى يوم',

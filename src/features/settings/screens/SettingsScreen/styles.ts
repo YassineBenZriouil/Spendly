@@ -28,4 +28,9 @@ export const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   note: Typography.caption,
+  accents: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
 });

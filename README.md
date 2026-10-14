@@ -110,7 +110,9 @@ Every setting applies instantly and is remembered.
 
 **Appearance**
 - **Language:** System (follows your phone), English or العربية. Spendly restarts to switch; nothing you entered is lost.
-- **Theme:** System, Light or Dark. The switch fades smoothly instead of flashing.
+- **Style:** **Black & White** (the default for new installs: only black, white and grays) or **Color** (category colors and an accent).
+- **Accent** (Color style): lime, blue, violet, coral, teal or amber.
+- **Mode:** System, Light or Dark, for either style. Every change fades smoothly instead of flashing.
 - **Reduce motion:** System, On or Off. With it on, movement and zooming are replaced by gentle fades.
 
 **Data**
@@ -167,10 +169,10 @@ The first time you open Spendly, a short, hands-on introduction shows you the th
 - Saving, deleting and undoing are **announced out loud**.
 - Supports **large text sizes** without cutting off amounts or buttons.
 - Buttons and controls are **large enough to tap comfortably**.
-- **Color is never the only signal.** Selections and states also use shapes, labels or icons.
+- **Color is never the only signal.** Selections and states also use shapes, labels or icons, which is why Black & White loses nothing: categories keep their icon and name (with a gray of their own), and the chart uses black, gray and stripes.
 - **English and Arabic.** Spendly follows your phone's language (or the one you pick in Settings), and in Arabic the whole layout reads right to left (amounts stay left to right, as digits are written).
 - **Speaks your format.** Currency symbols, decimal separators, dates, and the first day of the week always follow your phone's region settings.
-- **Follows your phone by default.** Language, theme and Reduce motion start on *System* and can each be changed in Settings.
+- **Follows your phone by default.** Language, light/dark mode and Reduce motion start on *System* and can each be changed in Settings.
 
 ---
 

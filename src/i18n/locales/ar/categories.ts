@@ -2,6 +2,7 @@ import type { Translation } from '../../types';
 import type { categories as english } from '../en/categories';
 
 export const categories: Translation<typeof english> = {
+  'categories.editor.colorMonoNote': "تظهر الألوان في نمط الألوان (الإعدادات ← العرض). أما الأبيض والأسود فيعرض الأيقونة والاسم فقط.",
   'categories.builtIn.food': 'طعام',
   'categories.builtIn.transport': 'تنقل',
   'categories.builtIn.groceries': 'بقالة',
