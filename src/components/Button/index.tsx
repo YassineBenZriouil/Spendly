@@ -48,11 +48,23 @@ export function Button({
   const pressedBackground = variant === 'primary' ? colors.accentPressed : colors.borderSubtle;
   const textColor = variant === 'primary' ? colors.onAccent : colors.textPrimary;
 
+  // Selected options take the accent fill (and keep the ink outline, so color is never the only cue)
   const animatedStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(pressed.get(), [0, 1], [background, pressedBackground]),
+    backgroundColor: interpolateColor(
+      pressed.get(),
+      [0, 1],
+      [
+        interpolateColor(selection.get(), [0, 1], [background, colors.accent]),
+        interpolateColor(selection.get(), [0, 1], [pressedBackground, colors.accentPressed]),
+      ],
+    ),
     borderColor: interpolateColor(selection.get(), [0, 1], ['transparent', colors.textPrimary]),
     opacity: interpolate(enabled.get(), [0, 1], [0.4, 1]),
     transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.97]) }],
+  }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(selection.get(), [0, 1], [textColor, colors.onAccent]),
   }));
 
   return (
@@ -66,7 +78,7 @@ export function Button({
       onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>
       <Animated.View style={[styles.button, animatedStyle]}>
-        <Animated.Text style={[styles.label, { color: textColor }]}>{label}</Animated.Text>
+        <Animated.Text style={[styles.label, labelStyle]}>{label}</Animated.Text>
       </Animated.View>
     </Pressable>
   );

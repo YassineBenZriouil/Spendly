@@ -11,11 +11,7 @@ export const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   amount: {
-    ...Typography.amount,
-    // Wider than the screen on purpose: long amounts are scaled down to fit instead of being clipped
-    width: 800,
-    textAlign: 'center',
-    padding: 0,
+    alignSelf: 'stretch',
   },
   slot: {
     alignSelf: 'stretch',

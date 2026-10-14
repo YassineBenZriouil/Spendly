@@ -169,12 +169,31 @@ that cross-fade when they change. Light/dark tokens exist (`theme/tokens.ts`).
 - **App icon, splash and store screenshots** match the new identity (the current
   adaptive icon has a faint gray outline to remove).
 
+**Decisions made while building it**
+
+- Numbers: Space Grotesk SemiBold, embedded at build time (`expo-font` plugin, `assets/fonts/`, OFL licence
+  alongside). Body text stays on the system font, as `IDENTITY.md` asks. Metrics come from the font file
+  (`NumberFont` in `theme/tokens.ts`); every digit gets the widest digit's width, so nothing shifts sideways.
+- `AnimatedNumber`: each digit is a clipped column (9 0 1 … 9 0) that rolls on the UI thread; single-step carries
+  roll in the direction of the change, larger jumps take the direct path; unchanged digits never move. Reduced
+  motion: changed digits fade in. Used for the composer amount (live, `hero`, `fit`), the edit screen, Insights
+  total, category amounts, the chart readout, Activity rows, day totals and today's total. Amounts inside
+  sentences, button labels and captions stay plain text.
+- Hero amount: currency symbol at half size on the digits' baseline, symbol and decimals in the secondary color.
+- Accent: Save, selected `Button`s (lime fill + ink outline) and the tab bar pill (lime, with on-accent icon and
+  label cross-faded in).
+- Contrast fixes (light theme): `textSecondary`, `success`, `danger`, and the coral / amber / sky category colors
+  were darkened slightly to pass. The light composer `surface` stays pure white, as the brand spec sets; the
+  canvas behind it is warm.
+- Type scale: `Typography.micro` (11) replaces three literal sizes; `NumberSize` covers numbers.
+- Android icon: the foreground no longer has the faint gray square outline (it now doubles as the themed icon).
+
 **Done when**
 
-- [ ] Every amount and total in the app uses `AnimatedNumber`.
-- [ ] Automated contrast check over all color token pairs passes AA in both themes.
-- [ ] No hex colors or numeric font sizes outside `theme/` (enforced by lint or test).
-- [ ] Side-by-side screenshots of all screens, light and dark, reviewed together for consistency.
+- [x] Every amount and total in the app uses `AnimatedNumber`.
+- [x] Automated contrast check over all color token pairs passes AA in both themes. *(`theme/__tests__/contrast-test.ts`)*
+- [x] No hex colors or numeric font sizes outside `theme/` (enforced by lint or test). *(`theme/__tests__/tokensOnly-test.ts`)*
+- [ ] Side-by-side screenshots of all screens, light and dark, reviewed together for consistency. *Device: needs a new development build (the font is embedded natively).*
 
 ---
 

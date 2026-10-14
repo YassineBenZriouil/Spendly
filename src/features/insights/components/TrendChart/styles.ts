@@ -9,15 +9,12 @@ export const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   readoutSlot: {
-    height: 22,
+    minHeight: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
-  readout: {
-    ...Typography.label,
-    fontVariant: ['tabular-nums'],
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
+  readout: Typography.label,
   plot: {
     height: PLOT_HEIGHT,
   },
@@ -61,8 +58,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   label: {
-    ...Typography.caption,
-    fontSize: 11,
+    ...Typography.micro,
     flex: 1,
     textAlign: 'center',
   },
@@ -76,10 +72,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
   },
-  legendLabel: {
-    ...Typography.caption,
-    fontSize: 11,
-  },
+  legendLabel: Typography.micro,
   keyBar: {
     width: 8,
     height: 12,

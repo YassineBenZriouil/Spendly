@@ -13,6 +13,7 @@ import { moveCategory } from '@/domain/category/category.service';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -50,7 +51,10 @@ export function ManageCategoriesScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={EdgeToEdge.scroll}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Text style={[styles.note, { color: colors.textSecondary }]}>
           Hold a category and drag to reorder. Hidden categories disappear from Quick Add; expenses already in them keep showing their category.
         </Text>

@@ -141,7 +141,7 @@ Spendly is meant to feel good to use. You'll feel:
 
 Turn them all off in **Settings → Haptics**.
 
-Everything on screen moves smoothly rather than jumping: buttons respond when pressed, lists slide when items move, numbers cross-fade when they change, and screens glide in and out. If you prefer less motion, **Reduce motion** keeps everything just as clear with simple fades.
+Everything on screen moves smoothly rather than jumping: buttons respond when pressed, lists slide when items move, each digit of an amount rolls to its new value while the rest stay still, and screens glide in and out. If you prefer less motion, **Reduce motion** keeps everything just as clear with simple fades.
 
 ---
 

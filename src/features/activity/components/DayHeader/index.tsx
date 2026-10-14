@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native';
-import Animated, { LayoutAnimationConfig } from 'react-native-reanimated';
+import { LayoutAnimationConfig } from 'react-native-reanimated';
 
-import { fade } from '@/animation/transitions';
+import { MoneyTotals } from '@/components/MoneyTotals';
 import type { CurrencyTotal } from '@/domain/expense/expense.repository';
 import { formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -26,17 +26,10 @@ export function DayHeader({ day, totals }: DayHeaderProps) {
   return (
     <View accessible accessibilityRole="header" accessibilityLabel={`${label}, total ${total}`} style={styles.header}>
       <Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
-      {/* Keyed so a changed daily total cross-fades; no fade when the header merely scrolls into view */}
+      {/* Digits roll when the daily total changes; nothing fades when the header merely scrolls into view */}
       <LayoutAnimationConfig skipEntering>
         <View style={styles.totalSlot}>
-          <Animated.Text
-            key={total}
-            {...fade}
-            maxFontSizeMultiplier={FontScaleCap.control}
-            numberOfLines={1}
-            style={[styles.total, { color: colors.textSecondary }]}>
-            {total}
-          </Animated.Text>
+          <MoneyTotals totals={totals} size="caption" color={colors.textSecondary} />
         </View>
       </LayoutAnimationConfig>
     </View>

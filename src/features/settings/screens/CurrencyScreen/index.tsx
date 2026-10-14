@@ -10,6 +10,7 @@ import { currencyOptions } from '@/domain/money/currencies';
 import { deviceCurrency, formatMoney } from '@/domain/money/money.format';
 import { updatePreferences, usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -23,6 +24,7 @@ export function CurrencyScreen() {
       <FlatList
         data={options}
         keyExtractor={(item) => item.code}
+        style={EdgeToEdge.scroll}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           <Text style={[styles.note, { color: colors.textSecondary }]}>
@@ -50,7 +52,7 @@ export function CurrencyScreen() {
             />
           );
         }}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}
       />
     </Screen>
   );

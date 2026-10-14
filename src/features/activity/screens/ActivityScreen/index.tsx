@@ -21,6 +21,7 @@ import { formatMoney } from '@/domain/money/money.format';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { recentlyDeleted } from '@/features/expense-details/state/recentlyDeleted';
 import { useTheme } from '@/theme/ThemeProvider';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { DAY_HEADER_HEIGHT, DayHeader } from '../../components/DayHeader';
 import { EXPENSE_ROW_HEIGHT, ExpenseRow } from '../../components/ExpenseRow';
@@ -168,7 +169,8 @@ export function ActivityScreen() {
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           initialNumToRender={16}
-          contentContainerStyle={styles.listContent}
+          style={EdgeToEdge.scroll}
+          contentContainerStyle={[styles.listContent, EdgeToEdge.content]}
         />
       ),
     };
@@ -196,7 +198,8 @@ export function ActivityScreen() {
           keyboardShouldPersistTaps="handled"
           accessibilityRole="radiogroup"
           accessibilityLabel="Filter by category"
-          contentContainerStyle={styles.chips}>
+          style={EdgeToEdge.scroll}
+          contentContainerStyle={[styles.chips, EdgeToEdge.content]}>
           <Button
             label="All"
             variant="secondary"

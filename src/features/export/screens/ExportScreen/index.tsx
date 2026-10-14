@@ -15,6 +15,7 @@ import { CsvFields, expensesToCsv } from '@/domain/export/csv';
 import { useTheme } from '@/theme/ThemeProvider';
 import { addLocalMonths, startOfLocalMonth, type IsoRange } from '@/utils/dates';
 import { formatDay } from '@/utils/dateFormat';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -91,7 +92,10 @@ export function ExportScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={EdgeToEdge.scroll}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
           <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Date range</Text>
           <OptionGroup<RangeKey> accessibilityLabel="Date range" options={RANGES} value={range} onChange={setRange} />

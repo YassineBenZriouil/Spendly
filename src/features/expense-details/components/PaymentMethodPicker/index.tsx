@@ -3,6 +3,7 @@ import { ScrollView } from 'react-native';
 import { Button } from '@/components/Button';
 import { PaymentMethods } from '@/domain/expense/expense.service';
 import type { PaymentMethod } from '@/domain/expense/expense.types';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -27,7 +28,8 @@ export function PaymentMethodPicker({ value, onChange }: PaymentMethodPickerProp
       keyboardShouldPersistTaps="handled"
       accessibilityRole="radiogroup"
       accessibilityLabel="Payment method"
-      contentContainerStyle={styles.row}>
+      style={EdgeToEdge.scroll}
+      contentContainerStyle={[styles.row, EdgeToEdge.content]}>
       {PaymentMethods.map((method) => (
         <Button
           key={method}

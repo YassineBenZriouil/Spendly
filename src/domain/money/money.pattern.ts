@@ -20,11 +20,23 @@ export type MoneyPattern = {
   digits: string[];
 };
 
+const patterns = new Map<string, MoneyPattern>();
+
 /**
  * Only uses `Intl.NumberFormat#format`: Hermes on iOS has no `formatToParts`, so the structure
- * is read back from formatted sample numbers.
+ * is read back from formatted sample numbers. Cached: every displayed amount asks for it.
  */
 export function getMoneyPattern(currencyCode: string, locale = deviceLocale()): MoneyPattern {
+  const key = `${locale}:${currencyCode}`;
+  let pattern = patterns.get(key);
+  if (!pattern) {
+    pattern = buildMoneyPattern(currencyCode, locale);
+    patterns.set(key, pattern);
+  }
+  return pattern;
+}
+
+function buildMoneyPattern(currencyCode: string, locale: string): MoneyPattern {
   const formatter = new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode });
   const exponent = currencyExponent(currencyCode);
 

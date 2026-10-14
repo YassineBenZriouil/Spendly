@@ -24,6 +24,7 @@ import { CategoryIcons } from '@/domain/category/category.types';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { CategoryColorToken } from '@/theme/tokens';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -90,7 +91,8 @@ export function CategoryEditorScreen() {
         bottomOffset={24}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}>
+        style={EdgeToEdge.scroll}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
           {/* Live preview of the tile; keyed so icon/color changes cross-fade */}
           <View style={styles.previewSlot} accessible accessibilityLabel={`Preview: ${form.name || 'Unnamed'}`}>

@@ -52,15 +52,10 @@ export const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   totalSlot: {
-    height: 56,
+    minHeight: 56,
+    justifyContent: 'center',
   },
-  total: {
-    ...Typography.amount,
-    fontSize: 40,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
+  noTotal: Typography.title,
   comparison: {
     flexDirection: 'row',
     alignItems: 'center',

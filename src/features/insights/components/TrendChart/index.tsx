@@ -10,6 +10,7 @@ import Animated, {
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { ReducedTiming } from '@/animation/tokens';
 import { fade, settleTo } from '@/animation/transitions';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
 import { deviceLocale, formatMoney } from '@/domain/money/money.format';
@@ -57,14 +58,28 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
     : max > 0
       ? `Highest day · ${formatMoney(max, currencyCode)}`
       : 'No spending yet in this period';
+  // Shown as a label that cross-fades plus an amount that rolls from one day to the next
+  const readoutLabel = selectedDay ? formatDay(selectedDay.day) : max > 0 ? 'Highest day' : readout;
+  const readoutAmount = selectedDay ? (selectedDay.state === 'spent' ? selectedDay.totalMinor : null) : max > 0 ? max : null;
+  const readoutNote = selectedDay && selectedDay.state !== 'spent' ? describe(selectedDay) : null;
 
   return (
     <View style={styles.chart}>
-      {/* Keyed so the readout cross-fades when a bar is tapped */}
-      <View style={styles.readoutSlot} accessibilityLiveRegion="polite">
-        <Animated.Text key={readout} {...fade} numberOfLines={1} style={[styles.readout, { color: colors.textPrimary }]}>
-          {readout}
+      <View style={styles.readoutSlot} accessible accessibilityLabel={readout} accessibilityLiveRegion="polite">
+        <Animated.Text key={readoutLabel} {...fade} numberOfLines={1} style={[styles.readout, { color: colors.textPrimary }]}>
+          {readoutLabel}
+          {readoutAmount !== null || readoutNote ? ' ·' : ''}
         </Animated.Text>
+        {readoutAmount !== null && (
+          <Animated.View {...fade}>
+            <AnimatedNumber value={readoutAmount} currencyCode={currencyCode} size="label" accessible={false} />
+          </Animated.View>
+        )}
+        {readoutNote && (
+          <Animated.Text key={readoutNote} {...fade} style={[styles.readout, { color: colors.textPrimary }]}>
+            {readoutNote}
+          </Animated.Text>
+        )}
       </View>
 
       <View style={styles.plot} onLayout={(e) => setPlotWidth(e.nativeEvent.layout.width)}>

@@ -17,13 +17,7 @@ export const styles = StyleSheet.create({
   },
   amountSlot: {
     flex: 1,
-    height: 72,
   },
-  amountLayer: {
-    ...StyleSheet.absoluteFill,
-    justifyContent: 'center',
-  },
-  amount: Typography.amount,
   sectionTitle: {
     ...Typography.caption,
     textTransform: 'uppercase',

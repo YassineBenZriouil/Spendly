@@ -7,6 +7,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration } from '@/animation/tokens';
 import { fade, useEnterTransition } from '@/animation/transitions';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -23,6 +24,7 @@ import { CategoryGrid } from '@/features/quick-add/components/CategoryGrid';
 import { Keypad } from '@/features/quick-add/components/Keypad';
 import { dragConfigFor } from '@/features/quick-add/utils/dragMapping';
 import { useTheme } from '@/theme/ThemeProvider';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { DetailsFields } from '../../components/DetailsFields';
 import { recentlyDeleted } from '../../state/recentlyDeleted';
@@ -156,7 +158,8 @@ export function ExpenseDetailsScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}>
+        style={EdgeToEdge.scroll}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
           <View style={styles.amountRow}>
             <View
@@ -164,12 +167,7 @@ export function ExpenseDetailsScreen() {
               accessibilityLabel={`Amount, ${amountLabel}`}
               accessibilityLiveRegion="polite"
               style={styles.amountSlot}>
-              {/* Keyed so each new amount cross-fades in */}
-              <Animated.View key={amountLabel} {...fade} style={styles.amountLayer}>
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.amount, { color: colors.textPrimary }]}>
-                  {amountLabel}
-                </Text>
-              </Animated.View>
+              <AnimatedNumber value={form.amountMinor} currencyCode={currencyCode} size="hero" hero fit accessible={false} />
             </View>
             <IconButton
               icon={keypadOpen ? 'close' : 'keypad'}

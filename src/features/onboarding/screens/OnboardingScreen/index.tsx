@@ -9,7 +9,6 @@ import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { BuiltInCategories } from '@/domain/category/builtInCategories';
 import { formatMoney } from '@/domain/money/money.format';
-import { getMoneyPattern } from '@/domain/money/money.pattern';
 import { AmountSurface } from '@/features/quick-add/components/AmountSurface';
 import { CategoryGrid } from '@/features/quick-add/components/CategoryGrid';
 import { useAmountDrag } from '@/features/quick-add/hooks/useAmountDrag';
@@ -35,7 +34,6 @@ export function OnboardingScreen() {
   const entering = useEnterTransition();
   const { currencyCode, dragSensitivity, amountIncrement } = usePreferences();
   const config = dragConfigFor(currencyCode, { sensitivity: dragSensitivity, increment: amountIncrement });
-  const pattern = getMoneyPattern(currencyCode);
 
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [amountMinor, setAmountMinor] = useState(0);
@@ -105,7 +103,7 @@ export function OnboardingScreen() {
               gesture={gesture}
               amountMinor={amountMinor}
               currencyCode={currencyCode}
-              pattern={pattern}
+              maxAmountMinor={config.maxAmountMinor}
               onIncrement={() => setAmount(amountMinor + config.stepMinor)}
               onDecrement={() => setAmount(amountMinor - config.stepMinor)}
             />

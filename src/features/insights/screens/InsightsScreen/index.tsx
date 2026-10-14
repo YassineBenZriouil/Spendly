@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { fade, useEnterTransition } from '@/animation/transitions';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
@@ -17,6 +18,7 @@ import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { addLocalDays } from '@/utils/dates';
 import { formatDayRange, formatMonth } from '@/utils/dateFormat';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { CategoryBreakdown } from '../../components/CategoryBreakdown';
 import { TrendChart } from '../../components/TrendChart';
@@ -161,19 +163,23 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
   const chartKey = `${insights.period.start.toISOString()}-${currencyCode}`;
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={EdgeToEdge.scroll}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}>
       <Card>
         <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Total spent</Text>
         <View style={styles.totalSlot} accessible accessibilityLabel={`Total spent, ${total}`}>
-          {/* Keyed so a new total cross-fades */}
-          <Animated.Text
-            key={total}
-            {...fade}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={[styles.total, { color: colors.textPrimary }]}>
-            {total}
-          </Animated.Text>
+          {/* Digits roll as the total changes; switching to and from "Nothing spent" fades */}
+          {totalMinor > 0 ? (
+            <Animated.View key="total" entering={fade.entering}>
+              <AnimatedNumber value={totalMinor} currencyCode={currencyCode} size="display" accessible={false} />
+            </Animated.View>
+          ) : (
+            <Animated.Text key="none" entering={fade.entering} style={[styles.noTotal, { color: colors.textSecondary }]}>
+              Nothing spent
+            </Animated.Text>
+          )}
         </View>
         <Comparison
           totalMinor={totalMinor}

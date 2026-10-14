@@ -62,7 +62,7 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: TabBa
         style={styles.row}
         onLayout={(e) => setRowWidth(e.nativeEvent.layout.width)}>
         <Animated.View style={[styles.indicator, indicatorStyle]}>
-          <View style={[styles.pill, { backgroundColor: colors.surfaceSecondary }]} />
+          <View style={[styles.pill, { backgroundColor: colors.accent }]} />
         </Animated.View>
 
         {state.routes.map((route, index) => {
@@ -85,7 +85,9 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: TabBa
               focused={focused}
               onPress={onPress}
               onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
-              icon={options.tabBarIcon?.({ focused, color: colors.textPrimary, size: 24 })}
+              icon={options.tabBarIcon?.({ focused: false, color: colors.textPrimary, size: 24 })}
+              // Drawn on the accent pill: the same icon in the on-accent color, cross-faded in
+              selectedIcon={options.tabBarIcon?.({ focused: true, color: colors.onAccent, size: 24 })}
             />
           );
         })}
@@ -98,11 +100,12 @@ type TabItemProps = {
   label: string;
   focused: boolean;
   icon: ReactNode;
+  selectedIcon: ReactNode;
   onPress: () => void;
   onLongPress: () => void;
 };
 
-function TabItem({ label, focused, icon, onPress, onLongPress }: TabItemProps) {
+function TabItem({ label, focused, icon, selectedIcon, onPress, onLongPress }: TabItemProps) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const progress = useSharedValue(focused ? 1 : 0);
@@ -128,8 +131,9 @@ function TabItem({ label, focused, icon, onPress, onLongPress }: TabItemProps) {
   }));
 
   const labelStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.get(), [0, 1], [colors.textSecondary, colors.textPrimary]),
+    color: interpolateColor(progress.get(), [0, 1], [colors.textSecondary, colors.onAccent]),
   }));
+  const selectedIconStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
 
   return (
     <Pressable
@@ -142,7 +146,10 @@ function TabItem({ label, focused, icon, onPress, onLongPress }: TabItemProps) {
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}
       style={styles.item}>
       <Animated.View style={[styles.itemContent, itemStyle]}>
-        <Animated.View style={iconStyle}>{icon}</Animated.View>
+        <Animated.View style={iconStyle}>
+          {icon}
+          <Animated.View style={[styles.selectedIcon, selectedIconStyle]}>{selectedIcon}</Animated.View>
+        </Animated.View>
         <Animated.Text maxFontSizeMultiplier={FontScaleCap.tight} style={[styles.label, labelStyle]}>{label}</Animated.Text>
       </Animated.View>
     </Pressable>

@@ -11,6 +11,7 @@ import Animated, {
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration, ReducedTiming } from '@/animation/tokens';
 import { fade, settleTo } from '@/animation/transitions';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import type { CategorySpend } from '@/domain/insights/insights.repository';
@@ -100,7 +101,7 @@ function CategoryRow({ item, category, ratio, share, currencyCode }: CategoryRow
           <Text numberOfLines={1} style={[styles.name, { color: colors.textPrimary }]}>
             {name}
           </Text>
-          <Text style={[styles.amount, { color: colors.textPrimary }]}>{amount}</Text>
+          <AnimatedNumber value={item.totalMinor} currencyCode={currencyCode} size="label" accessible={false} />
         </View>
         <View style={styles.line}>
           <View

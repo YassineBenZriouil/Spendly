@@ -25,9 +25,4 @@ export const styles = StyleSheet.create({
   },
   title: Typography.label,
   subtitle: Typography.caption,
-  amount: {
-    ...Typography.label,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
 });

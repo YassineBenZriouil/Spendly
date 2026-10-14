@@ -22,12 +22,4 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignSelf: 'stretch',
   },
-  total: {
-    ...Typography.caption,
-    fontVariant: ['tabular-nums'],
-    // Old and new totals overlap while cross-fading
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-  },
 });

@@ -22,6 +22,7 @@ import {
   type DragSensitivity,
 } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -48,7 +49,10 @@ export function SettingsScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={EdgeToEdge.scroll}
+        contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
           <Section title="Categories">
             <ListRow

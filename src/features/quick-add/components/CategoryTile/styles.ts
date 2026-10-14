@@ -15,9 +15,5 @@ export const styles = StyleSheet.create({
     gap: Spacing.xs,
     paddingHorizontal: Spacing.xs,
   },
-  label: {
-    ...Typography.caption,
-    fontSize: 11,
-    fontWeight: '500',
-  },
+  label: Typography.micro,
 });

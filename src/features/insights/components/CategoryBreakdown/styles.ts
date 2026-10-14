@@ -31,10 +31,6 @@ export const styles = StyleSheet.create({
     ...Typography.label,
     flex: 1,
   },
-  amount: {
-    ...Typography.label,
-    fontVariant: ['tabular-nums'],
-  },
   track: {
     flex: 1,
     height: 8,

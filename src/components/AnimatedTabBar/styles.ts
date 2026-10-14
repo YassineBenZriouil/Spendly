@@ -21,6 +21,9 @@ export const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     borderRadius: Radius.pill,
   },
+  selectedIcon: {
+    ...StyleSheet.absoluteFill,
+  },
   item: {
     flex: 1,
     minHeight: MinTouchTarget + Spacing.sm,

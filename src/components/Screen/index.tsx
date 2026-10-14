@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme/ThemeProvider';
-import { Spacing } from '@/theme/tokens';
+import { ScreenGutter } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -33,8 +33,8 @@ export function Screen({ children, edges = ['top'] }: ScreenProps) {
           backgroundColor: colors.background,
           paddingTop: inset('top'),
           paddingBottom: inset('bottom'),
-          paddingLeft: Spacing.lg + inset('left'),
-          paddingRight: Spacing.lg + inset('right'),
+          paddingLeft: ScreenGutter + inset('left'),
+          paddingRight: ScreenGutter + inset('right'),
         },
       ]}>
       {children}

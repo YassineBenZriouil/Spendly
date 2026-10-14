@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Keyboard, ScrollView, View } from 'react-native';
+import { Keyboard, ScrollView, Text, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
   FadeInDown,
@@ -17,6 +17,7 @@ import { fade, settleTo } from '@/animation/transitions';
 import { ErrorBanner } from '@/components/ErrorBanner';
 
 import { IconButton } from '@/components/IconButton';
+import { MoneyTotals } from '@/components/MoneyTotals';
 import { Screen } from '@/components/Screen';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { formatMoney } from '@/domain/money/money.format';
@@ -26,7 +27,7 @@ import { DetailsFields } from '@/features/expense-details/components/DetailsFiel
 import { haptics } from '@/haptics/haptics.service';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
-import { FontScaleCap } from '@/theme/tokens';
+import { EdgeToEdge, FontScaleCap } from '@/theme/tokens';
 
 import { AmountSuggestions } from '../../components/AmountSuggestions';
 import { AmountSurface } from '../../components/AmountSurface';
@@ -119,7 +120,7 @@ export function QuickAddScreen() {
 
   const todayLabel =
     todayTotals.length > 0
-      ? `Today · ${todayTotals.map((total) => formatMoney(total.totalMinor, total.currencyCode)).join(' + ')}`
+      ? `Today, spent ${todayTotals.map((total) => formatMoney(total.totalMinor, total.currencyCode)).join(' and ')}`
       : 'Today';
 
   const placeholderVisible = useSharedValue(selected ? 0 : 1);
@@ -138,15 +139,16 @@ export function QuickAddScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        {/* Keyed so a new total cross-fades in */}
-        <Animated.Text
-          key={todayLabel}
-          entering={panelEnter}
-          exiting={fade.exiting}
-          accessibilityLabel={todayLabel.replace(' · ', ', spent ')}
-          style={[styles.date, { color: colors.textSecondary }]}>
-          {todayLabel}
-        </Animated.Text>
+        {/* Today's total: digits roll as it changes */}
+        <View accessible accessibilityLabel={todayLabel} style={styles.today}>
+          <Text style={[styles.date, { color: colors.textSecondary }]}>Today</Text>
+          {todayTotals.length > 0 && (
+            <Animated.Text {...fade} style={[styles.date, { color: colors.textSecondary }]}>
+              ·
+            </Animated.Text>
+          )}
+          <MoneyTotals totals={todayTotals} size="label" color={colors.textSecondary} />
+        </View>
         <IconButton icon="settings" variant="plain" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
       </View>
 
@@ -172,7 +174,7 @@ export function QuickAddScreen() {
             gesture={gesture}
             amountMinor={draft.amountMinor}
             currencyCode={currencyCode}
-            pattern={pattern}
+            maxAmountMinor={config.maxAmountMinor}
             onIncrement={() => setAmount(draft.amountMinor + config.stepMinor)}
             onDecrement={() => setAmount(draft.amountMinor - config.stepMinor)}
             accessory={
@@ -232,7 +234,11 @@ export function QuickAddScreen() {
               </Animated.View>
             ) : panel === 'details' ? (
               <Animated.View key="details" entering={panelEnter} exiting={panelExit} style={styles.detailsLayer}>
-                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <ScrollView
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  style={EdgeToEdge.scroll}
+                  contentContainerStyle={EdgeToEdge.content}>
                   <DetailsFields
                     details={draft.details ?? {}}
                     onChange={(changes) => dispatch({ type: 'detailsChanged', changes })}

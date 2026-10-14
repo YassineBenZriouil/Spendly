@@ -1,6 +1,7 @@
 import { ScrollView } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { EdgeToEdge } from '@/theme/tokens';
 
 import { styles } from './styles';
 
@@ -20,7 +21,9 @@ export function OptionGroup<T extends string | number>({ accessibilityLabel, opt
       showsHorizontalScrollIndicator={false}
       accessibilityRole="radiogroup"
       accessibilityLabel={accessibilityLabel}
-      contentContainerStyle={styles.row}>
+      // Runs to the screen edges instead of being cut at the gutter
+      style={EdgeToEdge.scroll}
+      contentContainerStyle={[styles.row, EdgeToEdge.content]}>
       {options.map((option) => (
         <Button
           key={option.value}

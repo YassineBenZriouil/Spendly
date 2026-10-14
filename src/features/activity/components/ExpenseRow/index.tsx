@@ -3,6 +3,7 @@ import Animated, { interpolate, interpolateColor, useAnimatedStyle, useSharedVal
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { settleTo } from '@/animation/transitions';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import type { Expense } from '@/domain/expense/expense.types';
@@ -56,9 +57,7 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
             {expense.title ? `${categoryName} · ${time}` : time}
           </Text>
         </View>
-        <Text maxFontSizeMultiplier={FontScaleCap.control} numberOfLines={1} style={[styles.amount, { color: colors.textPrimary }]}>
-          {amount}
-        </Text>
+        <AnimatedNumber value={expense.amountMinor} currencyCode={expense.currencyCode} size="label" accessible={false} />
       </Animated.View>
     </Pressable>
   );
