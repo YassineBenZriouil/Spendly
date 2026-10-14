@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "يستخدم Spendly الكاميرا لالتقاط صورة للإيصال والاحتفاظ بها مع المصروف، على هذا الهاتف فقط.",
+    "NSPhotoLibraryUsageDescription": "يفتح Spendly صورك لتتمكن من إرفاق إيصال بمصروف. تبقى الصور على هذا الهاتف."
+  }
+}

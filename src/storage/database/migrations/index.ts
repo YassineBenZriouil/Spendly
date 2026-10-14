@@ -135,6 +135,13 @@ export const migrations: Migration[] = [
       `);
     },
   },
+  {
+    // Receipt photos (Stage 2 Phase 4): the file name only; the JPEG lives in the app's photo directory
+    version: 6,
+    async up(txn) {
+      await txn.execAsync('ALTER TABLE expenses ADD COLUMN photo TEXT;');
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1].version;

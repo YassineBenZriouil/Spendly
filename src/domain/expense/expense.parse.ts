@@ -1,3 +1,5 @@
+import { isPhotoName } from '@/domain/photo/photo';
+
 import { PaymentMethods } from './expense.service';
 import type { Expense, PaymentMethod } from './expense.types';
 
@@ -25,6 +27,7 @@ export function parseExpense(value: unknown): Expense | null {
     isOptionalText(v.note) &&
     (v.paymentMethod === undefined || PaymentMethods.includes(v.paymentMethod as PaymentMethod)) &&
     (v.kind === undefined || v.kind === 'expense' || v.kind === 'income') &&
+    (v.photo === undefined || isPhotoName(v.photo)) &&
     isIsoDate(v.occurredAt) &&
     isIsoDate(v.createdAt) &&
     isIsoDate(v.updatedAt);
@@ -38,6 +41,7 @@ export function parseExpense(value: unknown): Expense | null {
     ...(v.note ? { note: v.note as string } : {}),
     ...(v.paymentMethod ? { paymentMethod: v.paymentMethod as PaymentMethod } : {}),
     ...(v.kind === 'income' ? { kind: 'income' as const } : {}),
+    ...(v.photo ? { photo: v.photo as string } : {}),
     occurredAt: v.occurredAt as string,
     createdAt: v.createdAt as string,
     updatedAt: v.updatedAt as string,

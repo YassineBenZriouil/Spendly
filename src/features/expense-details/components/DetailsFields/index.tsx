@@ -10,6 +10,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 import { DateTimeField } from '../DateTimeField';
 import { PaymentMethodPicker } from '../PaymentMethodPicker';
+import { PhotoField } from '../PhotoField';
 import { styles } from './styles';
 
 type DetailsFieldsProps = {
@@ -75,6 +76,7 @@ export function DetailsFields({
         resettable={dateResettable}
       />
       <PaymentMethodPicker value={details.paymentMethod} onChange={(paymentMethod) => onChange({ paymentMethod })} />
+      <PhotoField photo={details.photo} onChange={(photo) => onChange({ photo })} />
       {onRepeatChange && (
         <View style={styles.repeat}>
           <OptionGroup<RepeatOption>

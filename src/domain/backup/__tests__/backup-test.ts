@@ -205,11 +205,57 @@ describe('backup format 3: income and budgets', () => {
     const backup = parsed(
       JSON.stringify(createBackup({ expenses: await first.expenses.search({}), categories: await first.categories.list(), preferences: { budget } })),
     );
-    expect(backup.format).toBe(3);
+    expect(backup.format).toBe(BACKUP_FORMAT);
     expect(backup.preferences.budget).toEqual(budget);
 
     const second = await phone();
     await restoreBackup(second.db, backup);
     expect((await second.expenses.get(salary.id))?.kind).toBe('income');
+  });
+});
+
+describe('backup format 4: receipt photos', () => {
+  // A tiny JPEG start (SOI + APP0), enough for the parser's checks
+  const jpeg = btoa(String.fromCharCode(0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49));
+  const withPhoto = createExpense(
+    { amountMinor: 1200, currencyCode: 'EUR', categoryId: 'food', photo: 'mgq1x2-a1b2c3d4e5.jpg' },
+    new Date('2026-10-03T12:00:00.000Z'),
+  );
+  const file = (photos: unknown[], expenses = [withPhoto]) =>
+    JSON.stringify({ ...createBackup({ expenses, categories: [], preferences: {} }), photos });
+  const reason = (text: string) => {
+    const result = parseBackup(text);
+    return result.ok ? null : result.reason;
+  };
+
+  it('carries photos with their expenses', () => {
+    const backup = parsed(file([{ name: withPhoto.photo, data: jpeg }]));
+    expect(backup.photos).toEqual([{ name: withPhoto.photo, data: jpeg }]);
+    expect(backup.expenses[0].photo).toBe(withPhoto.photo);
+  });
+
+  it('rejects the whole file when a photo is missing, damaged, unsafe or doubled', () => {
+    expect(reason(file([]))).toMatch(/photos are missing or damaged/);
+    expect(reason(file([{ name: withPhoto.photo, data: btoa('not a jpeg at all') }]))).toMatch(/photos/);
+    expect(reason(file([{ name: withPhoto.photo, data: 'not base64!' }]))).toMatch(/photos/);
+    expect(reason(file([{ name: withPhoto.photo, data: jpeg }, { name: '../spendly.db', data: jpeg }]))).toMatch(/photos/);
+    expect(reason(file([{ name: withPhoto.photo, data: jpeg }, { name: withPhoto.photo, data: jpeg }]))).toMatch(/photos/);
+    expect(reason(file([null]))).toMatch(/photos/);
+  });
+
+  it('rejects an expense whose photo name could point outside the photo folder', () => {
+    expect(reason(file([], [{ ...withPhoto, photo: '../../spendly.db' }]))).toMatch(/unreadable expense/);
+  });
+
+  it('still reads format 3 files (no photos)', () => {
+    const backup = parsed(JSON.stringify({ ...JSON.parse(file([], [expenses[1]])), format: 3, photos: undefined }));
+    expect(backup.photos).toEqual([]);
+  });
+
+  it('stores the photo name with the restored expense', async () => {
+    const second = await phone();
+    await restoreBackup(second.db, parsed(file([{ name: withPhoto.photo, data: jpeg }])));
+    expect((await second.expenses.get(withPhoto.id))?.photo).toBe(withPhoto.photo);
+    expect(await second.expenses.photoNames()).toEqual([withPhoto.photo]);
   });
 });

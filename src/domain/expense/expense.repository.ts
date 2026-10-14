@@ -43,6 +43,8 @@ export type ExpenseRepository = {
   amountSuggestions(categoryId: string, currencyCode: string, since: string): Promise<number[]>;
   /** Category and time of every expense since `since` (for time-of-day defaults). */
   categoryTimes(since: string): Promise<CategoryTime[]>;
+  /** Photo file names of every stored expense, deleted ones included (their photos are kept until the purge). */
+  photoNames(): Promise<string[]>;
   /** Tells subscribers that expenses changed outside this repository (e.g. a restored backup). */
   notifyChanged(): void;
   /** Called after every successful write. Returns an unsubscribe function. */
@@ -59,6 +61,7 @@ type ExpenseRow = {
   occurred_at: string;
   payment_method: PaymentMethod | null;
   kind: EntryKind;
+  photo: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -74,6 +77,7 @@ function fromRow(row: ExpenseRow): Expense {
     ...(row.note ? { note: row.note } : {}),
     ...(row.payment_method ? { paymentMethod: row.payment_method } : {}),
     ...(row.kind === 'income' ? { kind: 'income' as const } : {}),
+    ...(row.photo ? { photo: row.photo } : {}),
     occurredAt: row.occurred_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -95,12 +99,13 @@ export function expenseParams(expense: Expense): SqlValue[] {
     expense.createdAt,
     expense.updatedAt,
     expense.kind ?? 'expense',
+    expense.photo ?? null,
   ];
 }
 
 /** Insert that skips an id already present: saves are idempotent (also used by backup restore). */
-export const INSERT_EXPENSE_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at, kind)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+export const INSERT_EXPENSE_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at, kind, photo)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    ON CONFLICT (id) DO NOTHING`;
 
 /** Escapes LIKE wildcards (with `!`, see ESCAPE below) so user text matches literally. */
@@ -131,7 +136,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
       const result = await db.runAsync(
         `UPDATE expenses
          SET amount_minor = ?, currency_code = ?, category_id = ?, title = ?, note = ?,
-             occurred_at = ?, payment_method = ?, created_at = ?, updated_at = ?, kind = ?
+             occurred_at = ?, payment_method = ?, created_at = ?, updated_at = ?, kind = ?, photo = ?
          WHERE id = ? AND deleted_at IS NULL`,
         [...rest, id],
       );
@@ -152,6 +157,13 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
       const db = await database();
       await db.runAsync('UPDATE expenses SET deleted_at = NULL WHERE id = ?', [id]);
       changed();
+    },
+
+    async photoNames() {
+      const db = await database();
+      // From `expenses`, not `live_expenses`: a deleted expense keeps its photo until the purge removes the row
+      const rows = await db.getAllAsync<{ photo: string }>('SELECT photo FROM expenses WHERE photo IS NOT NULL', []);
+      return rows.map((row) => row.photo);
     },
 
     notifyChanged: changed,

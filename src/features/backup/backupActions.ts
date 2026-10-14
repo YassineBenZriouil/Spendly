@@ -10,6 +10,7 @@ import { recurrenceRepository } from '@/domain/recurrence/recurrence.repository'
 import { getDatabase } from '@/storage/database/connection';
 import { t } from '@/i18n';
 import { getPreferences, sanitizePreferences, updatePreferences } from '@/storage/preferences/preferences';
+import { photoBytes, readPhotoBase64, writePhotoBase64 } from '@/storage/photos/photoFiles';
 
 /** Writes a backup of everything and hands it to the share sheet (Files, AirDrop, email…). Returns the expense count. */
 export async function shareBackup(): Promise<number> {
@@ -19,13 +20,24 @@ export async function shareBackup(): Promise<number> {
     categoryRepository.list(),
     recurrenceRepository.all(),
   ]);
-  const backup = createBackup({ expenses, categories, preferences: getPreferences(), ...repeats });
+  // Photos ride inside the file (format 4); the whole file is built in memory, see `backupPhotoBytes`
+  const photos = await Promise.all(
+    photoNamesOf(expenses).map(async (name) => ({ name, data: await readPhotoBase64(name) })),
+  );
+  const backup = createBackup({ expenses, categories, preferences: getPreferences(), ...repeats, photos });
   // Cache directory: the system may clear it later; the kept copy is wherever the user saves it
   const file = new File(Paths.cache, `spendly-backup-${backup.createdAt.slice(0, 10)}.json`);
   file.create({ overwrite: true });
   file.write(JSON.stringify(backup));
   await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: t('data.backUp.shareTitle') });
   return expenses.length;
+}
+
+const photoNamesOf = (expenses: { photo?: string }[]) => expenses.flatMap((expense) => (expense.photo ? [expense.photo] : []));
+
+/** Size of the photos a backup would carry, in bytes, so a large file can be announced before it is made. */
+export async function backupPhotoBytes(): Promise<number> {
+  return photoBytes(photoNamesOf(await expenseRepository.search({})));
 }
 
 /** Lets the user pick a backup file and checks all of it. `null` if they cancelled. */
@@ -38,6 +50,9 @@ export async function pickBackup(): Promise<BackupParseResult | null> {
 
 /** Adds the backup's data (nothing here is overwritten) and its settings, then refreshes every screen. */
 export async function applyBackup(backup: Backup): Promise<RestoreResult> {
+  // Photos first (already checked by parseBackup): if the database step then fails, the files are only orphans,
+  // removed by the next launch's cleanup; an expense never points to a photo that isn't there
+  for (const photo of backup.photos) writePhotoBase64(photo.name, photo.data);
   const result = await restoreBackup(await getDatabase(), backup);
   updatePreferences(sanitizePreferences(backup.preferences));
   expenseRepository.notifyChanged();

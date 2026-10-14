@@ -53,4 +53,9 @@ export const data: Translation<typeof english> = {
     'وجد Spendly مشكلة في ملف بياناته وتركه كما هو تمامًا. إذا بدا أي شيء غير صحيح، فاستعد أحدث نسخة احتياطية (الإعدادات ← البيانات).',
   'data.health.notNow': 'ليس الآن',
   'data.health.openSettings': 'فتح الإعدادات',
+  'data.parse.badPhotos': "بعض صور الإيصالات مفقودة أو تالفة",
+  'data.backUp.largeTitle': "نسخة احتياطية كبيرة",
+  'data.backUp.largeMessage': "مع صور الإيصالات، يبلغ حجم هذه النسخة نحو {size} ميغابايت. قد تستغرق مشاركتها بعض الوقت، وبعض التطبيقات تحدّ من حجم المرفقات.",
+  'data.backUp.largeContinue': "النسخ على أي حال",
+  'data.backUp.largeCancel': "إلغاء",
 };

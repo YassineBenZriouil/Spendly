@@ -3,7 +3,7 @@ import { createId } from '@/utils/ids';
 import type { EntryKind, Expense, PaymentMethod } from './expense.types';
 
 /** Optional context. `occurredAt` missing means "now" (stamped at save time). */
-export type ExpenseDetails = Partial<Pick<Expense, 'title' | 'note' | 'occurredAt' | 'paymentMethod'>>;
+export type ExpenseDetails = Partial<Pick<Expense, 'title' | 'note' | 'occurredAt' | 'paymentMethod' | 'photo'>>;
 
 export type NewExpense = Pick<Expense, 'amountMinor' | 'currencyCode' | 'categoryId'> & ExpenseDetails & { kind?: EntryKind };
 
@@ -22,7 +22,7 @@ type DraftEntry = Omit<Expense, 'kind'> & { kind?: EntryKind };
 
 /** Trims text and drops empty optional fields (and the default kind), so records never hold meaningless values. */
 function withCleanDetails(expense: DraftEntry): Expense {
-  const { title, note, paymentMethod, kind, ...rest } = expense;
+  const { title, note, paymentMethod, kind, photo, ...rest } = expense;
   const cleanTitle = title?.trim();
   const cleanNote = note?.trim();
   return {
@@ -31,6 +31,7 @@ function withCleanDetails(expense: DraftEntry): Expense {
     ...(cleanNote ? { note: cleanNote } : {}),
     ...(paymentMethod && PaymentMethods.includes(paymentMethod) ? { paymentMethod } : {}),
     ...(kind === 'income' ? { kind } : {}),
+    ...(photo ? { photo } : {}),
   };
 }
 
@@ -49,7 +50,7 @@ export function createExpense(input: NewExpense, now = new Date(), id = createId
 }
 
 export type ExpenseChanges = Partial<
-  Pick<Expense, 'amountMinor' | 'categoryId' | 'title' | 'note' | 'occurredAt' | 'paymentMethod'>
+  Pick<Expense, 'amountMinor' | 'categoryId' | 'title' | 'note' | 'occurredAt' | 'paymentMethod' | 'photo'>
 > & { kind?: EntryKind };
 
 /** Applies edits to a stored expense. Currency is never changed: history keeps its own currency. */

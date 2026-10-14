@@ -9,6 +9,7 @@ import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
 import { useReducedMotion } from '@/animation/reducedMotion';
 
 import { ThemeFade } from '@/components/ThemeFade';
+import { cleanUpPhotos } from '@/features/photos/cleanUpPhotos';
 import { databaseHealth } from '@/storage/database/health';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -45,6 +46,12 @@ function ThemedNavigation() {
       ],
     );
   }, [damaged]);
+  // Housekeeping once per launch: photo files nothing refers to any more
+  useEffect(() => {
+    cleanUpPhotos().catch(() => {
+      // Best effort; the next launch tries again
+    });
+  }, []);
   const navigationTheme = {
     ...base,
     colors: {
@@ -72,6 +79,7 @@ function ThemedNavigation() {
         <Stack.Screen name="categories/[id]" options={{ title: t('common.screen.category') }} />
         <Stack.Screen name="expense/[id]" options={{ title: t('common.screen.expense') }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="photo/[name]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
       </Stack>
       <ThemeFade />
       {/* Settings override: Reanimated's own default (springs, layout animations) follows the choice too.

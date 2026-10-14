@@ -217,6 +217,14 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 
 **Goal:** keep the proof with the expense, on the phone only.
 
+> **Status (2026-10-14): built in code**; device checks pending. Migration is **v6** (v5 went to the performance
+> indexes, `../FIXING-PERFORMANCE.md`). Photos: `domain/photo/photo.ts` (names, JPEG check, orphan rule),
+> `storage/photos/photoFiles.ts` (`Paths.document/receipts`, resize with `expo-image-manipulator`),
+> `features/expense-details/components/PhotoField` (in `DetailsFields`), full screen at route `photo/[name]`,
+> cleanup at launch (`features/photos/cleanUpPhotos.ts`). **Decided:** backups embed photos as base64 in the same
+> JSON file (format 4); a warning shows above 50 MB of photos. Known limit: the whole file is built and read in
+> memory, so a few hundred photos is the practical ceiling; revisit (zip / streaming) if users hit it.
+
 **Today:** expenses have text details only; backup is a JSON file.
 
 **Work**
@@ -237,10 +245,12 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 **Done when**
 
 - [ ] Add / replace / remove a photo, with Undo; photo survives restart and edits. *Device.*
-- [ ] Purge removes orphaned files (test with a temp directory); no photo is ever lost while its expense exists.
-- [ ] Backup → restore on another phone brings photos back; damaged or missing photo files reject the restore
-      cleanly (tests for the parser).
-- New native module: `expo-image-picker` (new build).
+- [x] Purge removes orphaned files (test with a temp directory); no photo is ever lost while its expense exists.
+      (`features/photos/__tests__/cleanUpPhotos-test.ts`: live, deleted, draft and Undo photos and files under an
+      hour old are kept; replaced, abandoned and purged ones are removed.)
+- [ ] Backup → restore on another phone brings photos back *(device)*; damaged or missing photo files reject the
+      restore cleanly *(done: tests for the parser in `backup-test.ts`, format 4)*.
+- New native modules: `expo-image-picker` and `expo-image-manipulator` (new build).
 
 ---
 

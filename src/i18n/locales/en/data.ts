@@ -39,4 +39,9 @@ export const data = {
     'Spendly found a problem in its data file and left it exactly as it is. If anything looks wrong, restore your latest backup (Settings → Data).',
   'data.health.notNow': 'Not now',
   'data.health.openSettings': 'Open Settings',
+  'data.parse.badPhotos': "some receipt photos are missing or damaged",
+  'data.backUp.largeTitle': "Large backup",
+  'data.backUp.largeMessage': "With receipt photos, this backup is about {size} MB. It may take a while to share, and some apps limit attachment size.",
+  'data.backUp.largeContinue': "Back up anyway",
+  'data.backUp.largeCancel': "Cancel",
 } as const satisfies Record<`data.${string}`, Message>;

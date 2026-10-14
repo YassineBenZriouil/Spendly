@@ -16,7 +16,7 @@ import { expenseRepository } from '@/domain/expense/expense.repository';
 import { sampleExpenses } from '@/domain/expense/sampleExpenses';
 import type { Backup } from '@/domain/backup/backup';
 import { formatMoney } from '@/domain/money/money.format';
-import { applyBackup, pickBackup, shareBackup } from '@/features/backup/backupActions';
+import { applyBackup, backupPhotoBytes, pickBackup, shareBackup } from '@/features/backup/backupActions';
 import { baseStepMinor } from '@/features/quick-add/utils/dragMapping';
 import { haptics } from '@/haptics/haptics.service';
 import {
@@ -62,10 +62,26 @@ export function SettingsScreen() {
   // One backup or restore at a time (the share sheet and picker are modal, but taps can land before they open)
   const dataBusy = useRef(false);
 
+  // Above this, receipt photos make the file slow to share (and some apps refuse it): say so first
+  const LARGE_BACKUP_BYTES = 50 * 1024 * 1024;
+  const confirmLargeBackup = async () => {
+    const bytes = await backupPhotoBytes().catch(() => 0);
+    if (bytes < LARGE_BACKUP_BYTES) return true;
+    // Base64 inside the file makes it about a third bigger than the photos themselves
+    const size = String(Math.round((bytes * 4) / 3 / (1024 * 1024)));
+    return new Promise<boolean>((resolve) =>
+      Alert.alert(t('data.backUp.largeTitle'), t('data.backUp.largeMessage', { size }), [
+        { text: t('data.backUp.largeCancel'), style: 'cancel', onPress: () => resolve(false) },
+        { text: t('data.backUp.largeContinue'), onPress: () => resolve(true) },
+      ]),
+    );
+  };
+
   const backUp = async () => {
     if (dataBusy.current) return;
     dataBusy.current = true;
     try {
+      if (!(await confirmLargeBackup())) return;
       const count = await shareBackup();
       AccessibilityInfo.announceForAccessibility(t('data.backUp.ready', { expenses: t('common.expenseCount', { count }) }));
     } catch (error) {

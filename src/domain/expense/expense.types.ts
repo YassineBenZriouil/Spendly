@@ -17,6 +17,8 @@ export type Expense = {
   paymentMethod?: PaymentMethod;
   /** Only present for income; absent means an expense. */
   kind?: 'income';
+  /** Receipt photo: a file name in the app's photo directory (see `domain/photo`). */
+  photo?: string;
   createdAt: string;
   updatedAt: string;
 };

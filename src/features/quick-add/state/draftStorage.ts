@@ -1,6 +1,7 @@
 import Storage from 'expo-sqlite/kv-store';
 
 import { PaymentMethods } from '@/domain/expense/expense.service';
+import { isPhotoName } from '@/domain/photo/photo';
 import type { PaymentMethod } from '@/domain/expense/expense.types';
 import { Frequencies, type Frequency } from '@/domain/recurrence/recurrence.types';
 
@@ -76,8 +77,9 @@ function isDraft(value: unknown): value is QuickAddDraft {
 
 function isDetails(value: unknown) {
   if (!value || typeof value !== 'object') return false;
-  const { title, note, occurredAt, paymentMethod } = value as Record<string, unknown>;
+  const { title, note, occurredAt, paymentMethod, photo } = value as Record<string, unknown>;
   return (
+    (photo === undefined || isPhotoName(photo)) &&
     optionalString(title) &&
     optionalString(note) &&
     (occurredAt === undefined || (typeof occurredAt === 'string' && !Number.isNaN(Date.parse(occurredAt)))) &&

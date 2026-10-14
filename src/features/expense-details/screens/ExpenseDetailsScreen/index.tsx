@@ -34,11 +34,11 @@ import { styles } from './styles';
 
 type Form = { amountMinor: number; categoryId: string; kind: EntryKind; details: ExpenseDetails };
 
-const toForm = ({ amountMinor, categoryId, kind, title, note, occurredAt, paymentMethod }: Expense): Form => ({
+const toForm = ({ amountMinor, categoryId, kind, title, note, occurredAt, paymentMethod, photo }: Expense): Form => ({
   amountMinor,
   categoryId,
   kind: kind ?? 'expense',
-  details: { title, note, occurredAt, paymentMethod },
+  details: { title, note, occurredAt, paymentMethod, photo },
 });
 
 export function ExpenseDetailsScreen() {
@@ -106,6 +106,7 @@ export function ExpenseDetailsScreen() {
     note: form.details.note,
     occurredAt: form.details.occurredAt,
     paymentMethod: form.details.paymentMethod,
+    photo: form.details.photo,
   };
   const original = toForm(expense);
   const repeatChanged = rule !== undefined && repeat !== (rule?.frequency ?? null);
@@ -113,7 +114,7 @@ export function ExpenseDetailsScreen() {
     form.amountMinor !== original.amountMinor ||
     form.categoryId !== original.categoryId ||
     form.kind !== original.kind ||
-    (['title', 'note', 'occurredAt', 'paymentMethod'] as const).some(
+    (['title', 'note', 'occurredAt', 'paymentMethod', 'photo'] as const).some(
       (key) => (form.details[key] ?? '').toString().trim() !== (original.details[key] ?? ''),
     );
   const canSave = (fieldsChanged || repeatChanged) && form.amountMinor > 0 && !busy;

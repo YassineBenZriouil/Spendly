@@ -14,6 +14,7 @@ text-size rows). Phase 6 of `PHASES-2.md` is done when every cell passes.
 7. **Back up** and **Restore** (Settings → Data).
 8. **Reorder** a category without dragging (screen reader: Move up / Move down actions).
 9. **Repeat**: set Repeat on an expense; when due, Confirm and Skip it (row buttons, or the row's actions with a screen reader), then Undo each. Use **Again** on an expense without swiping (row action or the edit screen button).
+10. **Receipt photo**: in the details (Quick Add or edit screen), Add receipt photo → Take photo and → Choose from library; open the thumbnail full screen and close it; Replace it; Remove it, then Undo. Each outcome is announced ("Photo added", "Photo removed", "Photo put back"); the thumbnail reads "Receipt photo, image button". With camera access denied, the alert offers Open Settings.
 
 ## Matrix
 
@@ -39,6 +40,7 @@ text-size rows). Phase 6 of `PHASES-2.md` is done when every cell passes.
 | Swipe back | The back button in the header. |
 | Swipe an expense for Again | The row's "Again" action (screen readers) and the Again button on the edit screen. |
 | Tap a chart bar | The breakdown list below it holds the same numbers; each bar is a labelled button. |
+| Pinch / zoom a receipt photo | Not offered: the full-screen photo fits the screen; the system zoom (Zoom / Magnification) works on it. |
 
 ## Haptics are never the only signal
 

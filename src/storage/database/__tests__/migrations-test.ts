@@ -160,6 +160,42 @@ describe('migrate', () => {
     await expect(db.runAsync("UPDATE expenses SET kind = 'gift' WHERE id = 'e1'", [])).rejects.toThrow();
   });
 
+  it('upgrades a database created by v5 (frozen schema snapshot) to receipt photos without losing data', async () => {
+    // Snapshot of what version 5 shipped. Never update it.
+    const db = createTestDatabase();
+    await db.execAsync(`
+      CREATE TABLE categories (
+        id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, icon TEXT NOT NULL, color_token TEXT NOT NULL,
+        is_built_in INTEGER NOT NULL, is_visible INTEGER NOT NULL, sort_order INTEGER NOT NULL, created_at TEXT NOT NULL
+      );
+      CREATE TABLE expenses (
+        id TEXT PRIMARY KEY NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+        currency_code TEXT NOT NULL, category_id TEXT NOT NULL REFERENCES categories (id),
+        title TEXT, note TEXT, occurred_at TEXT NOT NULL, payment_method TEXT,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT,
+        kind TEXT NOT NULL DEFAULT 'expense' CHECK (kind IN ('expense', 'income'))
+      );
+      CREATE INDEX expenses_occurred_at ON expenses (occurred_at);
+      CREATE INDEX expenses_deleted ON expenses (deleted_at) WHERE deleted_at IS NOT NULL;
+      CREATE INDEX expenses_live_by_time ON expenses (occurred_at, created_at) WHERE deleted_at IS NULL;
+      CREATE INDEX expenses_live_by_category ON expenses (category_id, occurred_at, created_at) WHERE deleted_at IS NULL;
+      CREATE VIEW live_expenses AS SELECT * FROM expenses WHERE deleted_at IS NULL;
+      CREATE VIEW live_spending AS SELECT * FROM live_expenses WHERE kind = 'expense';
+      INSERT INTO categories VALUES ('food', 'Food', 'food', 'coral', 1, 1, 0, '2026-01-01T00:00:00.000Z');
+      INSERT INTO expenses VALUES ('e1', 1200, 'EUR', 'food', 'Lunch', NULL, '2026-10-01T12:00:00.000Z', 'card',
+        '2026-10-01T12:00:00.000Z', '2026-10-01T12:00:00.000Z', NULL, 'expense');
+      PRAGMA user_version = 5;
+    `);
+
+    await migrate(db);
+
+    expect(await version(db)).toBe(LATEST_VERSION);
+    // Existing expenses have no photo, and the views show the new column
+    expect(await db.getAllAsync('SELECT id, title, photo FROM live_spending', [])).toEqual([{ id: 'e1', title: 'Lunch', photo: null }]);
+    await db.runAsync("UPDATE expenses SET photo = 'mgq1x2-a1b2c3d4e5.jpg' WHERE id = 'e1'", []);
+    expect(await db.getAllAsync('SELECT photo FROM live_expenses', [])).toEqual([{ photo: 'mgq1x2-a1b2c3d4e5.jpg' }]);
+  });
+
   it('rolls a failing migration back completely and retries it on the next launch', async () => {
     const db = createTestDatabase();
     await migrate(db);

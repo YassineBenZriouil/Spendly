@@ -2,15 +2,19 @@ import { BuiltInCategories } from '@/domain/category/builtInCategories';
 import { parseCategory } from '@/domain/category/category.parse';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { parseExpense } from '@/domain/expense/expense.parse';
+import { isJpegBase64, isPhotoName } from '@/domain/photo/photo';
 import type { Expense } from '@/domain/expense/expense.types';
 import { parseHandledOccurrence, parseRecurrence } from '@/domain/recurrence/recurrence.parse';
 import type { HandledOccurrence, Recurrence } from '@/domain/recurrence/recurrence.types';
 import { t } from '@/i18n';
 
 /** Bump when the file layout changes; older apps then refuse newer files instead of misreading them. */
-export const BACKUP_FORMAT = 3;
-/** Oldest file layout this version still reads (1: before repeating expenses, 2: before income and budgets). */
+export const BACKUP_FORMAT = 4;
+/** Oldest file layout this version still reads (1: before repeating expenses, 2: before income and budgets, 3: before photos). */
 const OLDEST_FORMAT = 1;
+
+/** A receipt photo inside the backup file: its file name and the JPEG, base64. */
+export type BackupPhoto = { name: string; data: string };
 
 /** Everything needed to rebuild Spendly on another phone. No backend: the user keeps and moves this file. */
 export type Backup = {
@@ -22,6 +26,8 @@ export type Backup = {
   /** Repeating expense rules and their confirmed / skipped occurrences (format 2; empty when reading format 1). */
   recurrences: Recurrence[];
   occurrences: HandledOccurrence[];
+  /** Receipt photos of the expenses above (format 4; empty when reading older formats). */
+  photos: BackupPhoto[];
   /** Validated again when applied (only known, valid settings are restored). */
   preferences: Record<string, unknown>;
 };
@@ -33,12 +39,14 @@ export function createBackup(
     preferences,
     recurrences = [],
     occurrences = [],
+    photos = [],
   }: {
     expenses: Expense[];
     categories: ExpenseCategory[];
     preferences: object;
     recurrences?: Recurrence[];
     occurrences?: HandledOccurrence[];
+    photos?: BackupPhoto[];
   },
   now = new Date(),
 ): Backup {
@@ -50,6 +58,7 @@ export function createBackup(
     categories,
     recurrences,
     occurrences,
+    photos,
     preferences: { ...preferences },
   };
 }
@@ -83,7 +92,8 @@ export function parseBackup(text: string): BackupParseResult {
     file.format < OLDEST_FORMAT ||
     !Array.isArray(file.expenses) ||
     !Array.isArray(file.categories) ||
-    (file.format >= 2 && (!Array.isArray(file.recurrences) || !Array.isArray(file.occurrences)))
+    (file.format >= 2 && (!Array.isArray(file.recurrences) || !Array.isArray(file.occurrences))) ||
+    (file.format >= 4 && !Array.isArray(file.photos))
   ) {
     return { ok: false, reason: NOT_A_BACKUP };
   }
@@ -129,6 +139,21 @@ export function parseBackup(text: string): BackupParseResult {
     return { ok: false, reason: damaged(t('data.parse.unreadableRepeats')) };
   }
 
+  // Every photo is checked (a safe name and real JPEG data), and every expense's photo must be in the file
+  const photos = file.format >= 4 ? (file.photos as unknown[]) : [];
+  const validPhotos = photos.filter(
+    (photo): photo is BackupPhoto =>
+      !!photo && typeof photo === 'object' && isPhotoName((photo as BackupPhoto).name) && isJpegBase64((photo as BackupPhoto).data),
+  );
+  const photoNames = new Set(validPhotos.map((photo) => photo.name));
+  if (
+    validPhotos.length !== photos.length ||
+    photoNames.size !== validPhotos.length ||
+    validExpenses.some((expense) => expense.photo !== undefined && !photoNames.has(expense.photo))
+  ) {
+    return { ok: false, reason: damaged(t('data.parse.badPhotos')) };
+  }
+
   const preferences = file.preferences && typeof file.preferences === 'object' ? (file.preferences as Record<string, unknown>) : {};
   return {
     ok: true,
@@ -140,6 +165,7 @@ export function parseBackup(text: string): BackupParseResult {
       categories: validCategories,
       recurrences: validRecurrences,
       occurrences: validOccurrences,
+      photos: validPhotos,
       preferences,
     },
   };

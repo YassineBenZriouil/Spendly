@@ -175,3 +175,26 @@ describe('SQLite expense repository', () => {
     ]);
   });
 });
+
+describe('receipt photos', () => {
+  const PHOTO = 'mgq1x2-a1b2c3d4e5.jpg';
+
+  it('keeps the photo name through save, edit and removal of the photo', async () => {
+    const repository = await setup();
+    const expense = createExpense({ amountMinor: 900, currencyCode: 'EUR', categoryId: 'food', photo: PHOTO });
+    await repository.save(expense);
+    expect((await repository.get(expense.id))?.photo).toBe(PHOTO);
+
+    await repository.update(updateExpense(expense, { photo: undefined }));
+    expect(await repository.get(expense.id)).not.toHaveProperty('photo');
+    expect(await repository.photoNames()).toEqual([]);
+  });
+
+  it('a deleted expense keeps its photo until the purge removes the row', async () => {
+    const repository = await setup();
+    const expense = createExpense({ amountMinor: 900, currencyCode: 'EUR', categoryId: 'food', photo: PHOTO });
+    await repository.save(expense);
+    await repository.remove(expense.id);
+    expect(await repository.photoNames()).toEqual([PHOTO]);
+  });
+});

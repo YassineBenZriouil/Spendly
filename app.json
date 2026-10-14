@@ -57,6 +57,14 @@
             "./assets/fonts/SpaceGrotesk-SemiBold.ttf"
           ]
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Spendly uses the camera to take a photo of a receipt and keep it with the expense, on this phone only.",
+          "photosPermission": "Spendly opens your photos so you can attach a receipt to an expense. Photos stay on this phone.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
@@ -68,6 +76,9 @@
       "eas": {
         "projectId": "2894977a-6658-4ac4-bbbd-9f1ec26264df"
       }
+    },
+    "locales": {
+      "ar": "./assets/locales/ar.json"
     }
   }
 }
