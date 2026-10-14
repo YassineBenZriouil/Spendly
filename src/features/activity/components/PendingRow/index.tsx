@@ -76,6 +76,7 @@ export function PendingRow({ occurrence, category, onConfirm, onSkip, onMore }: 
         size="label"
         color={colors.textSecondary}
         accessible={false}
+        still
       />
       {/* Screen readers use the row's actions instead */}
       <View style={styles.actions} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>

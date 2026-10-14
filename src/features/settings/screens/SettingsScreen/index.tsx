@@ -127,11 +127,12 @@ export function SettingsScreen() {
   const { currencyCode } = preferences;
   const [seeding, setSeeding] = useState(false);
 
-  const seed = async () => {
+  const seed = async (count: 1000 | 10000) => {
     setSeeding(true);
     try {
-      await expenseRepository.saveMany(sampleExpenses(1000, currencyCode));
-      Alert.alert(t('settings.developer.samplesAddedTitle'), t('settings.developer.samplesAddedMessage'));
+      await expenseRepository.saveMany(sampleExpenses(count, currencyCode));
+      const title = count === 1000 ? t('settings.developer.samplesAddedTitle') : t('settings.developer.samplesAddedTitle10k');
+      Alert.alert(title, t('settings.developer.samplesAddedMessage'));
     } catch {
       Alert.alert(t('settings.developer.samplesFailed'));
     } finally {
@@ -329,7 +330,8 @@ export function SettingsScreen() {
           {__DEV__ && (
             <Section title={t('settings.section.developer')}>
               <View style={styles.dataRow}>
-                <Button label={t('settings.developer.addSamples')} variant="secondary" disabled={seeding} onPress={seed} />
+                <Button label={t('settings.developer.addSamples')} variant="secondary" disabled={seeding} onPress={() => seed(1000)} />
+                <Button label={t('settings.developer.addSamples10k')} variant="secondary" disabled={seeding} onPress={() => seed(10000)} />
               </View>
             </Section>
           )}

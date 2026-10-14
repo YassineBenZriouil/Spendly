@@ -9,6 +9,8 @@ export type InsightsRepository = {
   /** Per currency, largest first. Currencies are never added together. */
   totalsByCurrency(range: IsoRange): Promise<{ currencyCode: string; totalMinor: number; count: number }[]>;
   byCategory(range: IsoRange, currencyCode: string): Promise<CategorySpend[]>;
+  /** `byCategory` for several ranges in one query (the Insights baseline), in the order of `ranges`. */
+  byCategoryInRanges(ranges: IsoRange[], currencyCode: string): Promise<CategorySpend[][]>;
   /** Total per day, in the order of `days`; 0 for days without expenses. */
   daily(days: IsoRange[], currencyCode: string): Promise<number[]>;
   /** Income in one currency over a range (Net in Insights). */
@@ -39,6 +41,25 @@ export function createSqliteInsightsRepository(database: () => Promise<Db>): Ins
         [start, end, currencyCode],
       );
       return rows.map((row) => ({ categoryId: row.category_id, totalMinor: row.total_minor, count: row.count }));
+    },
+
+    async byCategoryInRanges(ranges, currencyCode) {
+      if (ranges.length === 0) return [];
+      const db = await database();
+      const values = ranges.map(() => '(?, ?, ?)').join(', ');
+      const params: SqlValue[] = ranges.flatMap((range, index) => [index, range.start, range.end]);
+      const rows = await db.getAllAsync<{ window: number; category_id: string; total_minor: number; count: number }>(
+        `WITH windows (window, start, end) AS (VALUES ${values})
+         SELECT windows.window AS window, e.category_id AS category_id, SUM(e.amount_minor) AS total_minor, COUNT(*) AS count
+         FROM windows JOIN live_spending e ON e.occurred_at >= windows.start AND e.occurred_at < windows.end
+         WHERE e.currency_code = ?
+         GROUP BY windows.window, e.category_id
+         ORDER BY windows.window, total_minor DESC, count DESC`,
+        [...params, currencyCode],
+      );
+      const spend: CategorySpend[][] = ranges.map(() => []);
+      for (const row of rows) spend[row.window].push({ categoryId: row.category_id, totalMinor: row.total_minor, count: row.count });
+      return spend;
     },
 
     async daily(days, currencyCode) {

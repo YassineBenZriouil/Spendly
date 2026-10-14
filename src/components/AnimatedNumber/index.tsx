@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PixelRatio, useWindowDimensions, View } from 'react-native';
+import { PixelRatio, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
@@ -45,6 +45,11 @@ type AnimatedNumberProps = {
   fit?: boolean;
   /** Speaks the formatted amount. Turn off when a parent element already describes it. */
   accessible?: boolean;
+  /**
+   * Plain text (same font, size and color) until the value changes, then rolling digits. For list rows: hundreds of
+   * them mount while scrolling, and an amount that is only shown never needs the per-digit views.
+   */
+  still?: boolean;
 };
 
 /** Symbol size relative to the digits for `hero`. */
@@ -57,7 +62,48 @@ const COLUMN_DIGITS = [9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
  * unchanged digits stay still; with reduced motion, changed digits fade in instead. Fixed-width digit cells mean
  * numbers never shift sideways. Runs on the UI thread, so it can follow a value that changes every frame.
  */
-export function AnimatedNumber({
+export function AnimatedNumber(props: AnimatedNumberProps) {
+  return props.still ? <StillNumber {...props} /> : <RollingNumber {...props} />;
+}
+
+/** Plain text until `value` changes; then rolls from the old value to the new one, like any other number. */
+function StillNumber({ value, currencyCode, size, color, accessible = true }: AnimatedNumberProps) {
+  const { colors } = useTheme();
+  const [rolling, setRolling] = useState(false);
+  const [stillValue] = useState(value);
+  if (!rolling && value !== stillValue) setRolling(true);
+  // Rolling digits mount at the old value and get the new one a frame later, once mounted, so they roll between them
+  const [shown, setShown] = useState(value);
+  useEffect(() => {
+    if (!rolling) return;
+    const frame = requestAnimationFrame(() => setShown(value));
+    return () => cancelAnimationFrame(frame);
+  }, [rolling, value]);
+  const fontSize = NumberSize[size] * Math.min(useWindowDimensions().fontScale, FontScaleCap.control);
+
+  if (rolling) {
+    return <RollingNumber value={shown} currencyCode={currencyCode} size={size} color={color} accessible={accessible} />;
+  }
+  return (
+    <Text
+      accessible={accessible}
+      allowFontScaling={false}
+      numberOfLines={1}
+      importantForAccessibility={accessible ? 'yes' : 'no-hide-descendants'}
+      style={[
+        styles.still,
+        {
+          fontSize,
+          lineHeight: PixelRatio.roundToNearestPixel(fontSize * (NumberFont.ascent + NumberFont.descent)),
+          color: color ?? colors.textPrimary,
+        },
+      ]}>
+      {formatMoney(value, currencyCode)}
+    </Text>
+  );
+}
+
+function RollingNumber({
   value,
   currencyCode,
   size,
@@ -67,7 +113,7 @@ export function AnimatedNumber({
   hero = false,
   fit = false,
   accessible = true,
-}: AnimatedNumberProps) {
+}: Omit<AnimatedNumberProps, 'still'>) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const pattern = getMoneyPattern(currencyCode);

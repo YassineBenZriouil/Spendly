@@ -72,7 +72,9 @@ export const settings = {
     "Your phone's storage is full, so this setting couldn't be saved. It applies until you close the app.",
   'settings.saveError.generic': "This setting couldn't be saved. It applies until you close the app.",
   'settings.developer.addSamples': 'Add 1,000 sample expenses',
+  'settings.developer.addSamples10k': 'Add 10,000 sample expenses',
   'settings.developer.samplesAddedTitle': 'Added 1,000 sample expenses',
+  'settings.developer.samplesAddedTitle10k': 'Added 10,000 sample expenses',
   'settings.developer.samplesAddedMessage': 'Their note is "Sample data", so you can search for them.',
   'settings.developer.samplesFailed': "Couldn't add sample expenses",
 } as const satisfies Record<`settings.${string}`, Message>;

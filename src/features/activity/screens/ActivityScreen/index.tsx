@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Platform, ScrollView, Text, View } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -71,16 +71,16 @@ export function ActivityScreen() {
   const filtered = text.trim() !== '' || categoryId !== undefined;
   // Due repeating expenses show among the rows, except while searching by text; the category filter applies to them
   const pending = usePendingOccurrences();
-  const visiblePending = text.trim() ? [] : pending.filter((occurrence) => !categoryId || occurrence.template.categoryId === categoryId);
-  const items = result ? groupByDay(result.expenses, visiblePending) : [];
-
-  // Fixed row heights: the list can jump anywhere in a long history without measuring
-  const offsets: number[] = [];
-  let offset = 0;
-  for (const item of items) {
-    offsets.push(offset);
-    offset += item.type === 'day' ? DAY_HEADER_HEIGHT : EXPENSE_ROW_HEIGHT;
-  }
+  const searching = text.trim() !== '';
+  // Grouping and offsets walk every row, so they run once per new result, not on every keystroke or undo bar change.
+  // Explicit memo: the React Compiler leaves these computations unmemoized (checked in its output).
+  const visiblePending = useMemo(
+    () => (searching ? [] : pending.filter((occurrence) => !categoryId || occurrence.template.categoryId === categoryId)),
+    [searching, pending, categoryId],
+  );
+  // The rows only, not `result`, which also changes when fresh rows expire
+  const expenses = result?.expenses;
+  const { items, offsets } = useMemo(() => listLayout(expenses ? groupByDay(expenses, visiblePending) : []), [expenses, visiblePending]);
 
   // Delete or edit from the edit screen: Undo here (still offered after a restart, within the window)
   // Also Again (saved), and Confirm / Skip of repeating expenses
@@ -90,7 +90,7 @@ export function ActivityScreen() {
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const filterCategories = categories.filter((category) => category.isVisible || category.id === categoryId);
 
-  // Only rows that just appeared animate in; rows mounted by scrolling must not
+  // Only rows a small write just added animate in; rows mounted by scrolling or a new filter must not
   const rowEntering: BaseAnimationBuilder = reducedMotion ? fade.entering : FadeInDown.duration(Duration.standard);
   const layout = useLayoutTransition();
 
@@ -114,17 +114,19 @@ export function ActivityScreen() {
         </Animated.View>
       );
     }
-    const row = (
-      <AgainSwipe onAgain={() => actions.again(item.expense)}>
-        <ExpenseRow
-          expense={item.expense}
-          category={categoryById.get(item.expense.categoryId)}
-          onPress={openExpense}
-          onAgain={actions.again}
-        />
-      </AgainSwipe>
+    // Always the same wrapper: adding or removing it later would remount the whole row
+    return (
+      <Animated.View entering={result?.freshIds.has(item.key) ? rowEntering : undefined}>
+        <AgainSwipe onAgain={() => actions.again(item.expense)}>
+          <ExpenseRow
+            expense={item.expense}
+            category={categoryById.get(item.expense.categoryId)}
+            onPress={openExpense}
+            onAgain={actions.again}
+          />
+        </AgainSwipe>
+      </Animated.View>
     );
-    return result?.freshIds.has(item.key) ? <Animated.View entering={rowEntering}>{row}</Animated.View> : row;
   };
 
   // Each state cross-fades into the next in the same space
@@ -184,8 +186,10 @@ export function ActivityScreen() {
         ),
       };
     }
+    // A new filter or a bulk change brings a new list (one cross-fade, mounting only the first rows) instead of
+    // hundreds of row animations; small writes keep the list, so their rows animate and neighbours slide
     return {
-      key: 'list',
+      key: `list-${result.listKey}`,
       body: (
         <Animated.FlatList
           data={items}
@@ -201,6 +205,10 @@ export function ActivityScreen() {
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           initialNumToRender={16}
+          // A few screens of rows stay mounted, not the default 21: long histories stay light
+          windowSize={7}
+          maxToRenderPerBatch={10}
+          removeClippedSubviews={Platform.OS === 'android'}
           style={EdgeToEdge.scroll}
           contentContainerStyle={[styles.listContent, EdgeToEdge.content]}
         />
@@ -292,6 +300,17 @@ export function ActivityScreen() {
       )}
     </Screen>
   );
+}
+
+/** Fixed row heights: the list can jump anywhere in a long history without measuring. */
+function listLayout(items: ActivityItem[]) {
+  const offsets: number[] = [];
+  let offset = 0;
+  for (const item of items) {
+    offsets.push(offset);
+    offset += item.type === 'day' ? DAY_HEADER_HEIGHT : EXPENSE_ROW_HEIGHT;
+  }
+  return { items, offsets };
 }
 
 /** "Deleted $4.50, Coffee": one whole message per case, since word order differs between languages. */

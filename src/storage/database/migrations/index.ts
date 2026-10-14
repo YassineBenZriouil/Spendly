@@ -120,6 +120,21 @@ export const migrations: Migration[] = [
       `);
     },
   },
+  {
+    // Performance (context/FIXING-PERFORMANCE.md Step 6): indexes over live rows only, in the order Activity lists
+    // them, so long histories are read in order without sorting, and a category filter reads only its own rows.
+    // `expenses_deleted_at` goes: SQLite picked it for every live read, and `deleted_at IS NULL` matches every live
+    // row, so each date-range query read the whole table. Only the purge needs deleted rows, and they are few.
+    version: 5,
+    async up(txn) {
+      await txn.execAsync(`
+        DROP INDEX IF EXISTS expenses_deleted_at;
+        CREATE INDEX expenses_deleted ON expenses (deleted_at) WHERE deleted_at IS NOT NULL;
+        CREATE INDEX expenses_live_by_time ON expenses (occurred_at, created_at) WHERE deleted_at IS NULL;
+        CREATE INDEX expenses_live_by_category ON expenses (category_id, occurred_at, created_at) WHERE deleted_at IS NULL;
+      `);
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1].version;

@@ -92,12 +92,11 @@ export async function loadInsights(
 
   const firstDay = firstAt ? startOfLocalDay(new Date(firstAt)) : null;
   const today = startOfLocalDay(now);
-  const baseline = await Promise.all(
-    baselineWindows(period, now, firstWeekday, firstDay).map(async (window) => {
-      const spend = await repository.byCategory(window, currencyCode);
-      return { totalMinor: spend.reduce((sum, item) => sum + item.totalMinor, 0), byCategory: spend };
-    }),
-  );
+  const baselineSpend = await repository.byCategoryInRanges(baselineWindows(period, now, firstWeekday, firstDay), currencyCode);
+  const baseline = baselineSpend.map((spend) => ({
+    totalMinor: spend.reduce((sum, item) => sum + item.totalMinor, 0),
+    byCategory: spend,
+  }));
   const hadDataBefore = firstAt !== null && firstAt < comparison.end;
 
   return {

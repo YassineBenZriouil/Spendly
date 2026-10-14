@@ -46,6 +46,13 @@ export const styles = StyleSheet.create({
     includeFontPadding: false,
     textAlign: 'center',
   },
+  /** `still` mode: one plain text, digits of equal width so amounts in a column line up. */
+  still: {
+    direction: 'ltr',
+    fontFamily: NumberFont.family,
+    fontVariant: ['tabular-nums'],
+    includeFontPadding: false,
+  },
   symbol: {
     position: 'absolute',
     left: 0,

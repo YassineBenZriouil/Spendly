@@ -73,7 +73,9 @@ export const settings: Translation<typeof english> = {
     'مساحة تخزين هاتفك ممتلئة، لذا تعذّر حفظ هذا الإعداد. سيبقى ساريًا حتى تغلق التطبيق.',
   'settings.saveError.generic': 'تعذّر حفظ هذا الإعداد. سيبقى ساريًا حتى تغلق التطبيق.',
   'settings.developer.addSamples': 'إضافة 1000 مصروف تجريبي',
+  'settings.developer.addSamples10k': 'إضافة 10000 مصروف تجريبي',
   'settings.developer.samplesAddedTitle': 'تمت إضافة 1000 مصروف تجريبي',
+  'settings.developer.samplesAddedTitle10k': 'تمت إضافة 10000 مصروف تجريبي',
   'settings.developer.samplesAddedMessage': 'ملاحظتها "Sample data"، لذا يمكنك البحث عنها.',
   'settings.developer.samplesFailed': 'تعذّرت إضافة المصروفات التجريبية',
 };

@@ -88,4 +88,21 @@ describe('baseline', () => {
     expect(notableMinimumMinor('KWD')).toBe(10000);
     expect(notableMinimumMinor('JPY')).toBe(1000);
   });
+
+  it('reads every window in one query, same as one query per window', async () => {
+    const repository = await setup([
+      [local(9, 5), 3000, 'food'],
+      [local(9, 5, 9), 3000, 'transport'],
+      [local(9, 6), 4000, 'transport'],
+      [local(9, 13), 2000, 'food'],
+    ]);
+    const ranges = [
+      { start: local(9, 5, 0), end: local(9, 8, 0) },
+      { start: local(9, 8, 0), end: local(9, 12, 0) }, // nothing spent
+      { start: local(9, 12, 0), end: local(9, 15, 0) },
+    ];
+    const separately = await Promise.all(ranges.map((range) => repository.byCategory(range, 'EUR')));
+    expect(await repository.byCategoryInRanges(ranges, 'EUR')).toEqual(separately);
+    expect(separately[0].map((spend) => spend.categoryId)).toEqual(['transport', 'food']);
+  });
 });

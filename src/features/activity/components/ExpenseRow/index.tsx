@@ -82,7 +82,7 @@ export function ExpenseRow({ expense, category, onPress, onAgain }: ExpenseRowPr
                 {t('activity.row.incomeSign')}
               </Animated.Text>
             )}
-            <AnimatedNumber value={expense.amountMinor} currencyCode={expense.currencyCode} size="label" accessible={false} />
+            <AnimatedNumber value={expense.amountMinor} currencyCode={expense.currencyCode} size="label" accessible={false} still />
           </View>
         </LayoutAnimationConfig>
       </Animated.View>
