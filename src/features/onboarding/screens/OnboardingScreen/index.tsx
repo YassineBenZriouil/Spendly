@@ -41,7 +41,7 @@ export function OnboardingScreen() {
   const [amountMinor, setAmountMinor] = useState(0);
   const [saved, setSaved] = useState(false);
   const amount = useSharedValue(0);
-  const { gesture, pulse } = useAmountDrag({
+  const { gesture, pulse, edgeOffset } = useAmountDrag({
     amount,
     config,
     enabled: !saved,
@@ -101,6 +101,7 @@ export function OnboardingScreen() {
             <AmountSurface
               amount={amount}
               pulse={pulse}
+              edgeOffset={edgeOffset}
               gesture={gesture}
               amountMinor={amountMinor}
               currencyCode={currencyCode}

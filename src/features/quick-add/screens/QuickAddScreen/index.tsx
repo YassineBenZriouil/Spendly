@@ -68,7 +68,7 @@ export function QuickAddScreen() {
   const setAmount = (amountMinor: number) =>
     dispatch({ type: 'amountChanged', amountMinor: clampAmount(amountMinor, config) });
 
-  const { gesture, pulse } = useAmountDrag({
+  const { gesture, pulse, edgeOffset } = useAmountDrag({
     amount,
     config,
     enabled: !busy,
@@ -168,6 +168,7 @@ export function QuickAddScreen() {
           <AmountSurface
             amount={amount}
             pulse={pulse}
+            edgeOffset={edgeOffset}
             gesture={gesture}
             amountMinor={draft.amountMinor}
             currencyCode={currencyCode}

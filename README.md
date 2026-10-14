@@ -11,7 +11,7 @@ Spendly is a small, fast expense tracker that lives entirely on your phone. No a
 Spendly opens straight onto the Add screen, so you're always one tap away from logging something.
 
 1. **Tap a category.** The category flies up into place above the amount, so you can see what you picked. You'll feel a light tap.
-2. **Set the amount.** Drag the number **up to increase** it and down to decrease it. Small movements make small changes; a quicker drag moves faster. The amount snaps to clean steps, and you'll feel a soft tick as it passes each one.
+2. **Set the amount.** Drag the number **up to increase** it and down to decrease it. Move slowly and it changes one step at a time, exactly the same every time; flick and it races ahead, then slows back to single steps the moment you slow down. You'll feel a soft tick as it passes each step, and at zero or the maximum the number gently resists with a firmer tap, so you never overshoot by accident.
 3. **Tap Save.** You'll feel a short confirmation buzz, the button briefly says **Saved**, and you can start the next expense right away.
 
 **Your usual amounts, one tap away.** Once you've logged a category a few times, Spendly shows up to three amounts you use most for it, right under the number. Tap one and you're ready to save.
@@ -132,7 +132,8 @@ Spendly is meant to feel good to use. You'll feel:
 | When you… | You feel |
 | --- | --- |
 | Pick a category | A light tap |
-| Drag the amount | A soft tick as it passes each step |
+| Drag the amount | A soft tick as it passes each step (spaced out when you drag fast) |
+| Reach zero or the maximum while dragging | A firmer tap |
 | Save an expense | A short success buzz |
 | Lift a category to reorder it | A light tap |
 | Move it past another category | A soft tick |

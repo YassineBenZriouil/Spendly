@@ -113,12 +113,29 @@ horizontal movement.
 - **Revisit the settings:** with good acceleration, "Drag sensitivity" and "Amount
   step" may no longer be needed (decided in Phase 7).
 
+**Decisions made while building it** (numbers live at the top of `utils/dragMapping.ts`)
+
+- Incremental mapping: each update applies only the new finger movement, scaled by the current speed. Below
+  300 pt/s: exactly 1 step per 9 pt (balanced; 14 precise, 6 fast). Gain eases in to ×16 at 2000 pt/s
+  (≈ ×3.5 at 1000 pt/s). Gain follows the current speed only, so slowing down is instantly precise again.
+- Travel at balanced for common targets, from 0: 5 → 45 pt slow; 40 → 360 pt slow or ≈ 100 pt brisk;
+  100 → ≈ 254 pt at 1000 pt/s or ≈ 56 pt at a flick. Cents (e.g. 12.50) are not on the drag grid: keypad.
+- Activation travel (6 pt) is excluded, so the amount never moves on touch-down or activation. An off-grid typed
+  amount snaps to the grid on the first step.
+- Edges: at 0 / maximum, further pull is remembered and shown as a stiffening offset (max 20 pt) that springs
+  back on release; moving back first undoes the pull. Reaching an edge plays `haptics.edge` (rigid) once.
+  Reduced motion: no offset, the haptic and the stopped number remain.
+- Ticks: one per step when slow; when fast, one per 9 pt of finger travel (ticks every `speedGain` steps), so it
+  never buzzes. No clock involved, so it is deterministic.
+- Not changed: the number stays centered with tabular digits (no shift within the same digit count). The
+  finger-covers-number point is left to the device check below; the drag area already extends below the number.
+
 **Done when**
 
-- [ ] Mapping is a pure function covered by tests: same input → same amount; slow drag = exactly 1 step per N pt; no change before the activation threshold; clamping and rubber-band.
-- [ ] 10 test users (or 10 repetitions by you) hit 5 target amounts; ≥ 90% land exactly without correction.
-- [ ] Zero dropped frames during a 5-second continuous drag on the mid-range Android (profiled).
-- [ ] No React render during the drag (verified with the profiler).
+- [x] Mapping is a pure function covered by tests: same input → same amount; slow drag = exactly 1 step per N pt; no change before the activation threshold; clamping and rubber-band.
+- [ ] 10 test users (or 10 repetitions by you) hit 5 target amounts; ≥ 90% land exactly without correction. *Device.*
+- [ ] Zero dropped frames during a 5-second continuous drag on the mid-range Android (profiled). *Device.*
+- [x] No React render during the drag. *(Only `onDragStart` / `onDragEnd` reach React; every frame writes shared values.)*
 
 ---
 

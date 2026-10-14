@@ -12,6 +12,10 @@ export const haptics = {
   tick() {
     if (enabled()) Haptics.selectionAsync().catch(ignore);
   },
+  /** The amount hit 0 or its maximum while dragging: firmer than a tick, so the limit is felt. */
+  edge() {
+    if (enabled()) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid).catch(ignore);
+  },
   /** Category picked. */
   select() {
     if (enabled()) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(ignore);

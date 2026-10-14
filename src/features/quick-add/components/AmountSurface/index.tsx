@@ -30,6 +30,8 @@ type AmountSurfaceProps = {
   /** Displayed amount, driven on the UI thread by the drag gesture. */
   amount: SharedValue<number>;
   pulse: SharedValue<number>;
+  /** Pull past 0 or the maximum (pt): the number follows it, stiffly. */
+  edgeOffset: SharedValue<number>;
   gesture: PanGesture;
   /** Committed draft amount (React state). */
   amountMinor: number;
@@ -44,6 +46,7 @@ type AmountSurfaceProps = {
 export function AmountSurface({
   amount,
   pulse,
+  edgeOffset,
   gesture,
   amountMinor,
   currencyCode,
@@ -77,7 +80,7 @@ export function AmountSurface({
     const text = formatWithPattern(Math.round(amount.get()), pattern);
     const natural = text.length * Typography.amount.fontSize * fontScale * CHAR_WIDTH_RATIO;
     const fit = width.get() > 0 ? Math.min(1, width.get() / natural) : 1;
-    return { transform: [{ scale: fit * pulse.get() }] };
+    return { transform: [{ translateY: edgeOffset.get() }, { scale: fit * pulse.get() }] };
   });
 
   const hintStyle = useAnimatedStyle(() => ({

@@ -11,9 +11,10 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration, Springs } from '@/animation/tokens';
+import { settleTo } from '@/animation/transitions';
 import { haptics } from '@/haptics/haptics.service';
 
-import { amountFromDrag, type DragConfig } from '../utils/dragMapping';
+import { advanceDrag, rubberBand, speedGain, startDrag, type DragConfig, type DragState } from '../utils/dragMapping';
 
 type UseAmountDragOptions = {
   /** Displayed amount (minor units). Written every frame on the UI thread, never through React state. */
@@ -25,38 +26,56 @@ type UseAmountDragOptions = {
   onDragEnd: (amountMinor: number) => void;
 };
 
-/** Haptic every 10 steps: sparse enough to stay meaningful. */
-const STEPS_PER_TICK = 10;
-
 export function useAmountDrag({ amount, config, enabled, onDragStart, onDragEnd }: UseAmountDragOptions) {
   const reducedMotion = useReducedMotion();
-  const startAmount = useSharedValue(0);
-  const lastTick = useSharedValue(0);
+  const drag = useSharedValue<DragState>(startDrag(0));
+  /** translationY at the previous update: each update applies only the new movement. */
+  const lastTranslation = useSharedValue(0);
+  /** Steps since the last haptic tick. */
+  const untickedSteps = useSharedValue(0);
   const active = useSharedValue(false);
   /** Tiny bump on each step so the digits feel physical. */
   const pulse = useSharedValue(1);
-  const tickSize = config.stepMinor * STEPS_PER_TICK;
+  /** How far the number is pulled past 0 or the maximum (pt). */
+  const edgeOffset = useSharedValue(0);
 
   const gesture = Gesture.Pan()
     .enabled(enabled)
     // Vertical only: let horizontal swipes and scroll keep their gestures
     .activeOffsetY([-6, 6])
     .failOffsetX([-24, 24])
-    .onStart(() => {
+    .onStart((event) => {
       cancelAnimation(amount);
+      cancelAnimation(edgeOffset);
+      // The travel that activated the gesture is not counted: no jump on activation
+      lastTranslation.set(event.translationY);
+      // An amount mid-animation (e.g. after a keypad entry) continues from a whole minor unit
+      const from = Math.round(amount.get());
+      amount.set(from);
+      drag.set(startDrag(from));
+      untickedSteps.set(0);
       active.set(true);
-      startAmount.set(amount.get());
-      lastTick.set(Math.floor(amount.get() / tickSize));
       scheduleOnRN(onDragStart);
     })
     .onUpdate((event) => {
-      const next = amountFromDrag(startAmount.get(), event.translationY, config);
-      if (next === amount.get()) return;
-      amount.set(next);
+      if (!active.get()) return;
+      const dy = event.translationY - lastTranslation.get();
+      lastTranslation.set(event.translationY);
+      const previous = drag.get().amountMinor;
+      const update = advanceDrag(drag.get(), dy, event.velocityY, config);
+      drag.set(update.state);
+      if (!reducedMotion) edgeOffset.set(rubberBand(update.state.overscroll));
+      if (!update.stepped) return;
+
+      amount.set(update.state.amountMinor);
       if (!reducedMotion) pulse.set(withSequence(withTiming(1.04, { duration: Duration.tick }), withSpring(1, Springs.press)));
-      const tick = Math.floor(next / tickSize);
-      if (tick !== lastTick.get()) {
-        lastTick.set(tick);
+      // One tick per step when slow; when fast, one per `pixelsPerStep` of finger travel, so it never buzzes
+      untickedSteps.set(untickedSteps.get() + Math.abs(update.state.amountMinor - previous) / config.stepMinor);
+      if (update.hitEdge) {
+        untickedSteps.set(0);
+        scheduleOnRN(haptics.edge);
+      } else if (untickedSteps.get() >= speedGain(event.velocityY) - 1e-9) {
+        untickedSteps.set(0);
         scheduleOnRN(haptics.tick);
       }
     })
@@ -64,8 +83,9 @@ export function useAmountDrag({ amount, config, enabled, onDragStart, onDragEnd 
     .onFinalize(() => {
       if (!active.get()) return;
       active.set(false);
-      scheduleOnRN(onDragEnd, amount.get());
+      edgeOffset.set(settleTo(0, reducedMotion));
+      scheduleOnRN(onDragEnd, drag.get().amountMinor);
     });
 
-  return { gesture, pulse };
+  return { gesture, pulse, edgeOffset };
 }
