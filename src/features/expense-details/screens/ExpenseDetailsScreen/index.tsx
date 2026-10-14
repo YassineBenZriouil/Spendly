@@ -25,9 +25,10 @@ import { Keypad } from '@/features/quick-add/components/Keypad';
 import { dragConfigFor } from '@/features/quick-add/utils/dragMapping';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
+import { undoStore } from '@/features/undo/state/undoStore';
+import { writeFailureMessage } from '@/storage/database/errors';
 
 import { DetailsFields } from '../../components/DetailsFields';
-import { recentlyDeleted } from '../../state/recentlyDeleted';
 import { styles } from './styles';
 
 type Form = { amountMinor: number; categoryId: string; details: ExpenseDetails };
@@ -115,9 +116,9 @@ export function ExpenseDetailsScreen() {
     setError(null);
     try {
       await task();
-    } catch {
+    } catch (error) {
       // Values stay in the form so nothing typed is lost
-      setError(failure);
+      setError(writeFailureMessage(error, failure));
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -128,7 +129,9 @@ export function ExpenseDetailsScreen() {
     Keyboard.dismiss();
     run(async () => {
       await expenseRepository.update(updateExpense(expense, changes));
-      AccessibilityInfo.announceForAccessibility('Changes saved');
+      // The version before the edit, so Activity can offer Undo (even after a restart)
+      undoStore.offer('edited', expense);
+      AccessibilityInfo.announceForAccessibility('Changes saved. Undo is available in Activity.');
       router.back();
     }, "Couldn't save changes. Your edits are still here.");
   };
@@ -143,7 +146,7 @@ export function ExpenseDetailsScreen() {
         onPress: () =>
           run(async () => {
             await expenseRepository.remove(expense.id);
-            recentlyDeleted.set(expense);
+            undoStore.offer('deleted', expense);
             AccessibilityInfo.announceForAccessibility('Expense deleted. Undo is available in Activity.');
             router.back();
           }, "Couldn't delete. Try again."),

@@ -69,6 +69,9 @@ describe('migrate', () => {
     expect(await db.getAllAsync('SELECT id, amount_minor, category_id, title FROM expenses', [])).toEqual([
       { id: 'e1', amount_minor: 450, category_id: 'c1', title: 'Café' },
     ]);
+    // v2: every existing expense is live (not deleted) and visible through the live view
+    expect(await db.getAllAsync('SELECT id FROM live_expenses', [])).toEqual([{ id: 'e1' }]);
+    expect(await db.getFirstAsync('SELECT deleted_at FROM expenses WHERE id = ?', ['e1'])).toEqual({ deleted_at: null });
     // User edits to categories survive: migrations never re-seed over them
     expect(await db.getFirstAsync('SELECT name, is_visible FROM categories WHERE id = ?', ['food'])).toEqual({
       name: 'Eating out',

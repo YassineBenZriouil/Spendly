@@ -14,10 +14,12 @@ import type { ExpenseCategory } from '@/domain/category/category.types';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
+import { writeFailureMessage } from '@/storage/database/errors';
 
 import { styles } from './styles';
 
-const failed = (action: string) => Alert.alert(`Couldn't ${action}`, 'Nothing was changed. Try again.');
+const failed = (action: string) => (error: unknown) =>
+  Alert.alert(`Couldn't ${action}`, writeFailureMessage(error, 'Nothing was changed. Try again.'));
 
 export function ManageCategoriesScreen() {
   const { colors, categoryColors } = useTheme();
@@ -31,7 +33,7 @@ export function ManageCategoriesScreen() {
     categoryRepository
       .reorder(next)
       .then(() => AccessibilityInfo.announceForAccessibility(`${category.name}, position ${next.indexOf(category.id) + 1} of ${next.length}`))
-      .catch(() => failed('reorder'));
+      .catch(failed('reorder'));
   };
 
   const restoreDefaults = () => {
@@ -43,7 +45,7 @@ export function ManageCategoriesScreen() {
         {
           text: 'Restore',
           style: 'destructive',
-          onPress: () => categoryRepository.restoreDefaults().catch(() => failed('restore defaults')),
+          onPress: () => categoryRepository.restoreDefaults().catch(failed('restore defaults')),
         },
       ],
     );
@@ -62,7 +64,7 @@ export function ManageCategoriesScreen() {
         <Animated.View entering={entering}>
           <SortableList
             items={categories}
-            onReorder={(next) => categoryRepository.reorder(next).catch(() => failed('reorder'))}
+            onReorder={(next) => categoryRepository.reorder(next).catch(failed('reorder'))}
             renderItem={(category) => {
               const index = ids.indexOf(category.id);
               return (

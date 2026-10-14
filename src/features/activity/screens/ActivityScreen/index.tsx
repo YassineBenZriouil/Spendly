@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { AccessibilityInfo, ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -15,11 +15,10 @@ import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
-import { expenseRepository } from '@/domain/expense/expense.repository';
 import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { useCategories } from '@/features/categories/hooks/useCategories';
-import { recentlyDeleted } from '@/features/expense-details/state/recentlyDeleted';
+import { useUndo } from '@/features/undo/hooks/useUndo';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
 
@@ -30,7 +29,6 @@ import { groupByDay, type ActivityItem } from '../../utils/groupByDay';
 import { styles } from './styles';
 
 const SEARCH_DEBOUNCE_MS = 200;
-const UNDO_WINDOW_MS = 5000;
 /** Don't flash a spinner for loads that finish almost immediately. */
 const LOADING_DELAY_MS = 300;
 
@@ -60,23 +58,13 @@ export function ActivityScreen() {
     offset += item.type === 'day' ? DAY_HEADER_HEIGHT : EXPENSE_ROW_HEIGHT;
   }
 
-  const deleted = useSyncExternalStore(recentlyDeleted.subscribe, recentlyDeleted.get);
-  useEffect(() => {
-    if (!deleted) return;
-    const timer = setTimeout(() => recentlyDeleted.set(null), UNDO_WINDOW_MS);
-    return () => clearTimeout(timer);
-  }, [deleted]);
-  const undoDelete = async () => {
-    if (!deleted) return;
-    recentlyDeleted.set(null);
-    try {
-      // Same id and timestamps: the record comes back exactly as it was
-      await expenseRepository.save(deleted);
-      AccessibilityInfo.announceForAccessibility('Expense restored');
-    } catch {
-      recentlyDeleted.set(deleted);
-    }
-  };
+  // Delete or edit from the edit screen: Undo here (still offered after a restart, within the window)
+  const { action: undoable, undo, error: undoError } = useUndo(['deleted', 'edited']);
+  const undoLabel = undoable
+    ? `${undoable.kind === 'deleted' ? 'Deleted' : 'Edited'} ${formatMoney(undoable.expense.amountMinor, undoable.expense.currencyCode)}${
+        undoable.expense.title ? `, ${undoable.expense.title}` : ''
+      }`
+    : '';
 
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const filterCategories = categories.filter((category) => category.isVisible || category.id === categoryId);
@@ -224,17 +212,26 @@ export function ActivityScreen() {
         </Animated.View>
       </View>
 
-      {deleted && (
+      {undoable && (
         <Animated.View
           entering={reducedMotion ? fade.entering : FadeInDown.duration(Duration.standard)}
           exiting={reducedMotion ? fade.exiting : FadeOutDown.duration(Duration.quick)}
           accessibilityLiveRegion="polite"
           style={[styles.undoBar, { backgroundColor: colors.surfaceSecondary }]}>
-          <Text numberOfLines={1} style={[styles.undoText, { color: colors.textPrimary }]}>
-            Deleted {formatMoney(deleted.amountMinor, deleted.currencyCode)}
-            {deleted.title ? `, ${deleted.title}` : ''}
-          </Text>
-          <Button label="Undo" variant="secondary" onPress={undoDelete} accessibilityHint="Restores the deleted expense" />
+          {/* Keyed so the message cross-fades if the undo fails */}
+          <Animated.Text
+            key={undoError ?? undoLabel}
+            {...fade}
+            numberOfLines={2}
+            style={[styles.undoText, { color: undoError ? colors.danger : colors.textPrimary }]}>
+            {undoError ?? undoLabel}
+          </Animated.Text>
+          <Button
+            label="Undo"
+            variant="secondary"
+            onPress={undo}
+            accessibilityHint={undoable.kind === 'deleted' ? 'Restores the deleted expense' : 'Puts back the previous version'}
+          />
         </Animated.View>
       )}
     </Screen>

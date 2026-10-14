@@ -229,12 +229,29 @@ removed immediately. There is no way to recover from a lost or replaced phone.
 - **Integrity check on launch:** `PRAGMA quick_check`; if it fails, keep the file,
   tell the user, and offer restore from backup.
 
+**Decisions made while building it**
+
+- Soft delete via migration v2 (`deleted_at` + a `live_expenses` view that every read uses, so no query can forget
+  the filter). Purge of rows deleted > 30 days ago runs when the database opens and never blocks opening.
+- Undo: one persisted slot (`saved` / `deleted` / `edited`) with its expiry (5 s) in the key-value store; a new action
+  replaces the previous one. It is offered **after** the write succeeds, so it never promises to undo something that
+  didn't happen. Edits are single `UPDATE`s (atomic); "Undo edit" restores the stored previous version.
+- Failure handling: save, edit, delete, undo, category save/reorder/restore defaults and preferences all report
+  failures (ErrorBanner or alert); a full disk gets its own message. Preference write failures are shown in Settings.
+- Backup: JSON with `app`, `format: 1`, `createdAt`, expenses, categories, preferences. Restore rejects the whole file
+  on any problem (not JSON, other app, newer format, unreadable record, duplicate ids, missing categories), then
+  inserts in one transaction, skipping ids already present (never overwrites). Settings in the file replace the
+  current ones. A locally deleted expense restored from an older backup stays deleted (its id is already present).
+- Integrity: `PRAGMA quick_check` on open; on failure the file is left untouched, the app warns once and points to
+  Settings → Data.
+- New native module: `expo-document-picker` (restore). Needs a new development build, like the font in Phase 3.
+
 **Done when**
 
-- [ ] Kill-tests (kill during save, during edit, during delete, during reorder, during restore) each verified on device: no loss, no duplicate.
-- [ ] Undo works after closing and reopening the app within the window (save and delete).
-- [ ] Tests: soft delete + purge, v1 → v2 migration with data, restore validation (corrupt, wrong version, partial), merge idempotency, every write-failure path.
-- [ ] A backup made on one phone restores correctly on another.
+- [ ] Kill-tests (kill during save, during edit, during delete, during reorder, during restore) each verified on device: no loss, no duplicate. *Device.*
+- [ ] Undo works after closing and reopening the app within the window (save and delete). *Device (logic covered by `undoStore-test`).*
+- [x] Tests: soft delete + purge, v1 → v2 migration with data, restore validation (corrupt, wrong version, partial), merge idempotency, every write-failure path. *(`softDelete-test`, `migrations-test`, `connection-test`, `backup-test`, `undoStore-test`, `performUndo-test`, `expense.parse-test`; UI failure paths share `writeFailureMessage`.)*
+- [ ] A backup made on one phone restores correctly on another. *Device (covered end to end against real SQL in `backup-test`).*
 
 ---
 

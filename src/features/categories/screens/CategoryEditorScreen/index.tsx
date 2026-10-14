@@ -25,6 +25,7 @@ import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { CategoryColorToken } from '@/theme/tokens';
 import { EdgeToEdge } from '@/theme/tokens';
+import { writeFailureMessage } from '@/storage/database/errors';
 
 import { styles } from './styles';
 
@@ -77,8 +78,8 @@ export function CategoryEditorScreen() {
         await categoryRepository.add({ ...createCategory(input, categories.length), isVisible: form.isVisible });
       }
       router.back();
-    } catch {
-      setError("Couldn't save the category. Your changes are still here.");
+    } catch (error) {
+      setError(writeFailureMessage(error, "Couldn't save the category. Your changes are still here."));
     } finally {
       setSaving(false);
     }

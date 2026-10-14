@@ -54,7 +54,7 @@ export function QuickAddScreen() {
   const pattern = getMoneyPattern(currencyCode);
   const config = dragConfigFor(currencyCode, { sensitivity: dragSensitivity, increment: amountIncrement });
 
-  const { state, dispatch, save, undo, undoable } = useQuickAdd(currencyCode);
+  const { state, dispatch, save, undo, undoable, undoError } = useQuickAdd(currencyCode);
   const { draft, phase } = state;
   const { stageRef, anchorRef, chips, show, hide, remove } = useCategoryMorph();
   /** What the bottom panel shows. Navigation-ish UI state, not part of the draft. */
@@ -273,10 +273,16 @@ export function QuickAddScreen() {
       {phase === 'error' && (
         <View style={styles.error}>
           <ErrorBanner
-            message="Couldn't save. Your entry is still here."
+            message={state.error ?? "Couldn't save. Your entry is still here."}
             entering={panelEnter}
             exiting={reducedMotion ? panelExit : FadeOutUp.duration(Duration.quick)}
           />
+        </View>
+      )}
+
+      {undoError && (
+        <View style={styles.error}>
+          <ErrorBanner message={undoError} />
         </View>
       )}
 

@@ -20,7 +20,7 @@ export function createSqliteInsightsRepository(database: () => Promise<Db>): Ins
     async totalsByCurrency({ start, end }) {
       const db = await database();
       const rows = await db.getAllAsync<{ currency_code: string; total_minor: number; count: number }>(
-        `SELECT currency_code, SUM(amount_minor) AS total_minor, COUNT(*) AS count FROM expenses
+        `SELECT currency_code, SUM(amount_minor) AS total_minor, COUNT(*) AS count FROM live_expenses
          WHERE occurred_at >= ? AND occurred_at < ?
          GROUP BY currency_code ORDER BY total_minor DESC`,
         [start, end],
@@ -31,7 +31,7 @@ export function createSqliteInsightsRepository(database: () => Promise<Db>): Ins
     async byCategory({ start, end }, currencyCode) {
       const db = await database();
       const rows = await db.getAllAsync<{ category_id: string; total_minor: number; count: number }>(
-        `SELECT category_id, SUM(amount_minor) AS total_minor, COUNT(*) AS count FROM expenses
+        `SELECT category_id, SUM(amount_minor) AS total_minor, COUNT(*) AS count FROM live_expenses
          WHERE occurred_at >= ? AND occurred_at < ? AND currency_code = ?
          GROUP BY category_id ORDER BY total_minor DESC, count DESC`,
         [start, end, currencyCode],
@@ -48,7 +48,7 @@ export function createSqliteInsightsRepository(database: () => Promise<Db>): Ins
       const rows = await db.getAllAsync<{ day: number; total_minor: number }>(
         `WITH days (day, start, end) AS (VALUES ${values})
          SELECT days.day AS day, SUM(e.amount_minor) AS total_minor
-         FROM days JOIN expenses e ON e.occurred_at >= days.start AND e.occurred_at < days.end
+         FROM days JOIN live_expenses e ON e.occurred_at >= days.start AND e.occurred_at < days.end
          WHERE e.currency_code = ?
          GROUP BY days.day`,
         [...params, currencyCode],
@@ -60,7 +60,7 @@ export function createSqliteInsightsRepository(database: () => Promise<Db>): Ins
 
     async firstExpenseAt() {
       const db = await database();
-      const row = await db.getFirstAsync<{ first: string | null }>('SELECT MIN(occurred_at) AS first FROM expenses', []);
+      const row = await db.getFirstAsync<{ first: string | null }>('SELECT MIN(occurred_at) AS first FROM live_expenses', []);
       return row?.first ?? null;
     },
   };

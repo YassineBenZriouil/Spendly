@@ -1,5 +1,5 @@
 import { getDatabase } from '@/storage/database/connection';
-import type { Db } from '@/storage/database/db.types';
+import type { Db, SqlValue } from '@/storage/database/db.types';
 
 import { BuiltInCategories } from './builtInCategories';
 import type { ExpenseCategory } from './category.types';
@@ -28,6 +28,24 @@ function fromRow(row: CategoryRow): ExpenseCategory {
   };
 }
 
+/** Insert that skips an id already present (used by `add` and by backup restore). */
+export const INSERT_CATEGORY_SQL = `INSERT INTO categories (id, name, icon, color_token, is_built_in, is_visible, sort_order, created_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+   ON CONFLICT (id) DO NOTHING`;
+
+export function categoryParams(category: ExpenseCategory): SqlValue[] {
+  return [
+    category.id,
+    category.name,
+    category.icon,
+    category.colorToken,
+    category.isBuiltIn ? 1 : 0,
+    category.isVisible ? 1 : 0,
+    category.sortOrder,
+    category.createdAt,
+  ];
+}
+
 export type CategoryRepository = {
   /** All categories, hidden ones included (old expenses still need their names), in display order. */
   list(): Promise<ExpenseCategory[]>;
@@ -39,6 +57,8 @@ export type CategoryRepository = {
   reorder(ids: string[]): Promise<void>;
   /** Built-ins get their original name, icon, color, order and visibility back; custom ones are kept after them. */
   restoreDefaults(): Promise<void>;
+  /** Tells subscribers that categories changed outside this repository (e.g. a restored backup). */
+  notifyChanged(): void;
   /** Called after every successful write. Returns an unsubscribe function. */
   subscribe(listener: () => void): () => void;
 };
@@ -56,23 +76,11 @@ export function createSqliteCategoryRepository(database: () => Promise<Db>): Cat
   return {
     list,
 
+    notifyChanged: changed,
+
     async add(category) {
       const db = await database();
-      await db.runAsync(
-        `INSERT INTO categories (id, name, icon, color_token, is_built_in, is_visible, sort_order, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (id) DO NOTHING`,
-        [
-          category.id,
-          category.name,
-          category.icon,
-          category.colorToken,
-          category.isBuiltIn ? 1 : 0,
-          category.isVisible ? 1 : 0,
-          category.sortOrder,
-          category.createdAt,
-        ],
-      );
+      await db.runAsync(INSERT_CATEGORY_SQL, categoryParams(category));
       changed();
     },
 

@@ -2,6 +2,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
 import { deviceCurrency } from '@/domain/money/money.format';
+import { isStorageFull } from '@/storage/database/errors';
 
 export type DragSensitivity = 'precise' | 'balanced' | 'fast';
 /** Multiples of the currency's base drag step (1 major unit, or 10 for zero-decimal currencies like JPY). */
@@ -43,16 +44,19 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   onboardingSeen: (v) => typeof v === 'boolean',
 };
 
+/** Only the known, valid preference values in `value` (from disk or a backup file); anything else is dropped. */
+export function sanitizePreferences(value: unknown): Partial<AppPreferences> {
+  if (!value || typeof value !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(([key, entry]) => allowed[key as keyof AppPreferences]?.(entry)),
+  ) as Partial<AppPreferences>;
+}
+
 /** Only what the user changed is stored; everything else falls back to defaults (e.g. device currency). */
 function readStored(): Partial<AppPreferences> {
   try {
     const raw = Storage.getItemSync(KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : {};
-    if (!parsed || typeof parsed !== 'object') return {};
-    // Drop unknown or invalid values instead of trusting whatever is on disk
-    return Object.fromEntries(
-      Object.entries(parsed).filter(([key, value]) => allowed[key as keyof AppPreferences]?.(value)),
-    ) as Partial<AppPreferences>;
+    return sanitizePreferences(raw ? JSON.parse(raw) : {});
   } catch {
     // Corrupt or unreadable: fall back to defaults rather than crash on launch
     return {};
@@ -68,15 +72,29 @@ export function getPreferences(): AppPreferences {
   return current;
 }
 
+/** Set when the last write to disk failed: the change applies now but would be lost on restart. */
+let saveError: string | null = null;
+
 /** Persists and applies immediately: every `usePreferences()` re-renders. */
 export function updatePreferences(changes: Partial<AppPreferences>) {
   current = { ...getPreferences(), ...changes };
   try {
     Storage.setItemSync(KEY, JSON.stringify({ ...readStored(), ...changes }));
-  } catch {
-    // Still applied for this session; the next change retries the write
+    saveError = null;
+  } catch (error) {
+    // Still applied for this session; the next change retries the write. Never silent: settings screens show it.
+    saveError = isStorageFull(error)
+      ? "Your phone's storage is full, so this setting couldn't be saved. It applies until you close the app."
+      : "This setting couldn't be saved. It applies until you close the app.";
   }
   listeners.forEach((listener) => listener());
+}
+
+const getSaveError = () => saveError;
+
+/** Why the last settings change couldn't be saved, or null. */
+export function usePreferencesSaveError(): string | null {
+  return useSyncExternalStore(subscribe, getSaveError);
 }
 
 function subscribe(listener: () => void) {

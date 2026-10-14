@@ -1,5 +1,7 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useSyncExternalStore } from 'react';
+import { Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
@@ -7,6 +9,7 @@ import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
 import { useReducedMotion } from '@/animation/reducedMotion';
 
 import { ThemeFade } from '@/components/ThemeFade';
+import { databaseHealth } from '@/storage/database/health';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
@@ -27,6 +30,20 @@ function ThemedNavigation() {
   const reducedMotion = useReducedMotion();
   const motionPreference = usePreferences().reducedMotion;
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+
+  // The launch integrity check found a problem: say so once, and point to the user's backups
+  const damaged = useSyncExternalStore(databaseHealth.subscribe, databaseHealth.isDamaged);
+  useEffect(() => {
+    if (!damaged) return;
+    Alert.alert(
+      'Your data needs attention',
+      'Spendly found a problem in its data file and left it exactly as it is. If anything looks wrong, restore your latest backup (Settings → Data).',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => router.push('/settings') },
+      ],
+    );
+  }, [damaged]);
   const navigationTheme = {
     ...base,
     colors: {

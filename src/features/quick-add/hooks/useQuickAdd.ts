@@ -4,9 +4,11 @@ import { AccessibilityInfo } from 'react-native';
 import { categoryRepository } from '@/domain/category/category.repository';
 import { expenseRepository, type ExpenseRepository } from '@/domain/expense/expense.repository';
 import { createExpense } from '@/domain/expense/expense.service';
-import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
+import { useUndo } from '@/features/undo/hooks/useUndo';
+import { undoStore } from '@/features/undo/state/undoStore';
 import { haptics } from '@/haptics/haptics.service';
+import { writeFailureMessage } from '@/storage/database/errors';
 import { createId } from '@/utils/ids';
 
 import { loadDraft, loadPendingExpenseId, saveDraft } from '../state/draftStorage';
@@ -22,7 +24,6 @@ import { SMART_DEFAULT_HISTORY_DAYS, smartDefaultCategory } from '../utils/smart
 
 /** How long "Saved" shows on the button. The next expense can start during it. */
 const SAVED_CONFIRMATION_MS = 1200;
-const UNDO_WINDOW_MS = 5000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const isUntouched = ({ categoryId, amountMinor, details = {} }: QuickAddDraft) =>
@@ -33,7 +34,8 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
     const draft = loadDraft();
     return draft ? restoreDraft(draft) : initial;
   });
-  const [undoable, setUndoable] = useState<Expense | null>(null);
+  // Undo for the latest save survives a restart (see undoStore)
+  const { action: undoable, undo, error: undoError } = useUndo(['saved'], repository);
   const [pendingOnLaunch] = useState(loadPendingExpenseId);
   // Synchronous guard: two taps in the same frame both see the old reducer state
   const savingRef = useRef(false);
@@ -95,12 +97,6 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
     return () => clearTimeout(timer);
   }, [state.phase]);
 
-  useEffect(() => {
-    if (!undoable) return;
-    const timer = setTimeout(() => setUndoable(null), UNDO_WINDOW_MS);
-    return () => clearTimeout(timer);
-  }, [undoable]);
-
   const save = async () => {
     const { categoryId, amountMinor, details } = state.draft;
     if (savingRef.current || !canSave(state.draft) || !categoryId) return;
@@ -118,28 +114,18 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
         console.log(`[timing] expense logged in ${Date.now() - entryStartedAt.current} ms`);
       }
       entryStartedAt.current = null;
-      setUndoable(expense);
+      undoStore.offer('saved', expense);
       haptics.success();
       // iOS has no live regions: say it out loud for VoiceOver
       AccessibilityInfo.announceForAccessibility(`Saved ${formatMoney(amountMinor, currencyCode)}. Undo is available.`);
     } catch (error) {
-      dispatch({ type: 'saveFailed', message: error instanceof Error ? error.message : 'Unknown error' });
-      AccessibilityInfo.announceForAccessibility("Couldn't save. Your entry is still here.");
+      const message = writeFailureMessage(error, "Couldn't save. Your entry is still here.");
+      dispatch({ type: 'saveFailed', message });
+      AccessibilityInfo.announceForAccessibility(message);
     } finally {
       savingRef.current = false;
     }
   };
 
-  const undo = async () => {
-    if (!undoable) return;
-    setUndoable(null);
-    try {
-      await repository.remove(undoable.id);
-      AccessibilityInfo.announceForAccessibility('Expense removed');
-    } catch {
-      setUndoable(undoable);
-    }
-  };
-
-  return { state, dispatch: userDispatch, save, undo, undoable };
+  return { state, dispatch: userDispatch, save, undo, undoable: undoable?.expense ?? null, undoError };
 }

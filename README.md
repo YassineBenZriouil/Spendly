@@ -24,7 +24,7 @@ Prefer not to drag? You don't have to:
 - The **keypad** button opens a number pad to type the amount.
 - The **reset** button sets the amount back to zero.
 
-**Made a mistake?** An **Undo** button appears for 5 seconds after every save.
+**Made a mistake?** An **Undo** button appears for 5 seconds after every save. Even if the app closes in those seconds, Undo is still there when you reopen it.
 
 **Today's total** is always shown at the top of the screen. If you've spent in more than one currency today, each one is shown.
 
@@ -55,7 +55,8 @@ Everything you've recorded, newest first.
 - **Search** by title, note or category name.
 - **Filter** by category with one tap.
 - **Tap any expense to edit it:** amount, category, title, note, date and time, payment method. Everything can be changed.
-- **Delete** asks you to confirm, then gives you **Undo** for 5 seconds anyway.
+- **Delete** asks you to confirm, then gives you **Undo** for 5 seconds anyway. Saved changes get an Undo too, which puts back the previous version.
+- Deleted expenses are kept out of sight for 30 days before they're removed for good.
 - Stays smooth even with thousands of expenses.
 - Nothing recorded yet? Activity points you straight back to Add.
 
@@ -169,3 +170,16 @@ The first time you open Spendly, a short, hands-on introduction shows you the th
 - **Works fully offline.** Airplane mode changes nothing.
 - **Nothing is uploaded or tracked.** Every expense, category and setting is stored only on your phone.
 - Your data leaves the device only when you export it yourself.
+
+### Back up and restore
+
+**Settings → Back up** saves all your expenses, categories and settings to a single file. Keep it in Files, iCloud Drive, Google Drive or email it to yourself. On a new phone, **Settings → Restore from backup** brings everything back.
+
+- Restoring **adds** what's in the file. Nothing already on your phone is changed or removed, and restoring the same file twice doesn't create duplicates.
+- The whole file is checked first. If any part of it is damaged, nothing is restored and Spendly tells you why.
+
+### Built not to lose anything
+
+- Your expenses are written safely: if the app or your phone shuts down mid-save, you never end up with half an expense or a duplicate.
+- If your phone's storage is full, Spendly says so clearly instead of failing silently, and keeps what you typed.
+- Every time it opens, Spendly checks its data file. If it ever finds a problem, it leaves the file untouched and tells you, so you can restore a backup.

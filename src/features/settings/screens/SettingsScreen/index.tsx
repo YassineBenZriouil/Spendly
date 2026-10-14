@@ -1,21 +1,25 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { Alert, ScrollView, Switch, Text, View } from 'react-native';
+import { useRef, useState, type ReactNode } from 'react';
+import { AccessibilityInfo, Alert, ScrollView, Switch, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
+import { ErrorBanner } from '@/components/ErrorBanner';
 import { ListRow } from '@/components/ListRow';
 import { OptionGroup } from '@/components/OptionGroup';
 import { Screen } from '@/components/Screen';
 import { expenseRepository } from '@/domain/expense/expense.repository';
 import { sampleExpenses } from '@/domain/expense/sampleExpenses';
+import type { Backup } from '@/domain/backup/backup';
 import { formatMoney } from '@/domain/money/money.format';
+import { applyBackup, pickBackup, shareBackup } from '@/features/backup/backupActions';
 import { baseStepMinor } from '@/features/quick-add/utils/dragMapping';
 import { haptics } from '@/haptics/haptics.service';
 import {
   updatePreferences,
+  usePreferencesSaveError,
   usePreferences,
   type AmountIncrement,
   type AppPreferences,
@@ -23,6 +27,8 @@ import {
 } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
+import { formatDay } from '@/utils/dateFormat';
+import { writeFailureMessage } from '@/storage/database/errors';
 
 import { styles } from './styles';
 
@@ -32,6 +38,61 @@ export function SettingsScreen() {
   const { colors } = useTheme();
   const entering = useEnterTransition();
   const preferences = usePreferences();
+  const saveError = usePreferencesSaveError();
+  // One backup or restore at a time (the share sheet and picker are modal, but taps can land before they open)
+  const dataBusy = useRef(false);
+  const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
+
+  const backUp = async () => {
+    if (dataBusy.current) return;
+    dataBusy.current = true;
+    try {
+      const count = await shareBackup();
+      AccessibilityInfo.announceForAccessibility(`Backup of ${plural(count, 'expense')} ready to save`);
+    } catch (error) {
+      Alert.alert("Couldn't back up", writeFailureMessage(error, 'Nothing was shared. Try again.'));
+    } finally {
+      dataBusy.current = false;
+    }
+  };
+
+  const runRestore = async (backup: Backup) => {
+    try {
+      const result = await applyBackup(backup);
+      const already = result.expensesAlreadyHere > 0 ? ` (${plural(result.expensesAlreadyHere, 'expense')} were already here)` : '';
+      const summary = `Added ${plural(result.expensesAdded, 'expense')} and ${plural(result.categoriesAdded, 'category', 'categories')}${already}.`;
+      Alert.alert('Backup restored', summary);
+      AccessibilityInfo.announceForAccessibility(`Backup restored. ${summary}`);
+    } catch (error) {
+      Alert.alert("Couldn't restore", writeFailureMessage(error, 'Nothing was changed. Try again.'));
+    }
+  };
+
+  const restore = async () => {
+    if (dataBusy.current) return;
+    dataBusy.current = true;
+    try {
+      const result = await pickBackup();
+      if (!result) return;
+      if (!result.ok) {
+        Alert.alert("Can't restore this file", result.reason);
+        return;
+      }
+      const { backup } = result;
+      Alert.alert(
+        'Restore this backup?',
+        `It has ${plural(backup.expenses.length, 'expense')} from ${formatDay(new Date(backup.createdAt))}. They're added to what's on this phone; nothing here is changed or removed. Its settings replace your current ones.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Restore', onPress: () => runRestore(backup) },
+        ],
+      );
+    } catch {
+      Alert.alert("Couldn't open the file", 'Nothing was changed. Try another file.');
+    } finally {
+      dataBusy.current = false;
+    }
+  };
   const { currencyCode } = preferences;
   const [seeding, setSeeding] = useState(false);
 
@@ -54,6 +115,7 @@ export function SettingsScreen() {
         style={EdgeToEdge.scroll}
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
+          {saveError && <ErrorBanner message={saveError} />}
           <Section title="Categories">
             <ListRow
               icon="other"
@@ -145,6 +207,18 @@ export function SettingsScreen() {
           </Section>
 
           <Section title="Data">
+            <ListRow
+              icon="backup"
+              label="Back up"
+              caption="Save all your expenses, categories and settings to a file you keep (or move to a new phone)"
+              onPress={backUp}
+            />
+            <ListRow
+              icon="restore"
+              label="Restore from backup"
+              caption="Adds what's in a backup file. Nothing on this phone is changed or removed."
+              onPress={restore}
+            />
             <ListRow
               icon="export"
               label="Export to CSV"

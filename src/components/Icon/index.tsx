@@ -52,6 +52,8 @@ const icons = {
   arrowUp: { ios: 'arrow.up', android: 'arrow_upward', web: 'arrow_upward' },
   arrowDown: { ios: 'arrow.down', android: 'arrow_downward', web: 'arrow_downward' },
   hidden: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
+  backup: { ios: 'archivebox', android: 'archive', web: 'archive' },
+  restore: { ios: 'clock.arrow.circlepath', android: 'settings_backup_restore', web: 'settings_backup_restore' },
 } as const;
 
 export type IconName = keyof typeof icons;

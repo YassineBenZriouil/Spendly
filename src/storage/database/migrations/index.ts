@@ -61,6 +61,18 @@ export const migrations: Migration[] = [
       }
     },
   },
+  {
+    // Soft delete: a deleted expense stays recoverable (Undo, even after a restart) until it is purged.
+    // Reads go through `live_expenses`, so no query can forget to exclude deleted rows.
+    version: 2,
+    async up(txn) {
+      await txn.execAsync(`
+        ALTER TABLE expenses ADD COLUMN deleted_at TEXT;
+        CREATE INDEX expenses_deleted_at ON expenses (deleted_at);
+        CREATE VIEW live_expenses AS SELECT * FROM expenses WHERE deleted_at IS NULL;
+      `);
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1].version;

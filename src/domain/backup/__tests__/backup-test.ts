@@ -1,0 +1,137 @@
+import { BuiltInCategories } from '@/domain/category/builtInCategories';
+import { createSqliteCategoryRepository } from '@/domain/category/category.repository';
+import { createCategory } from '@/domain/category/category.service';
+import { createSqliteExpenseRepository } from '@/domain/expense/expense.repository';
+import { createExpense, updateExpense } from '@/domain/expense/expense.service';
+import { migrate } from '@/storage/database/migrations';
+import { createTestDatabase } from '@/storage/database/testing/createTestDatabase';
+
+import { BACKUP_FORMAT, createBackup, parseBackup, type Backup } from '../backup';
+import { restoreBackup } from '../backup.repository';
+
+jest.mock('expo-sqlite', () => ({}));
+
+async function phone() {
+  const db = createTestDatabase();
+  await migrate(db);
+  const database = async () => db;
+  return { db, expenses: createSqliteExpenseRepository(database), categories: createSqliteCategoryRepository(database) };
+}
+
+const coffee = createCategory({ name: 'Coffee', icon: 'coffee', colorToken: 'amber' }, 10, new Date('2026-02-01T00:00:00.000Z'));
+const expenses = [
+  createExpense({ amountMinor: 450, currencyCode: 'EUR', categoryId: coffee.id, title: 'Flat white' }, new Date('2026-10-01T08:00:00.000Z')),
+  createExpense({ amountMinor: 3000, currencyCode: 'MAD', categoryId: 'food', paymentMethod: 'cash' }, new Date('2026-10-02T12:00:00.000Z')),
+];
+
+/** A backup made on one phone, as the file text that would be shared. */
+async function backupFromFirstPhone() {
+  const first = await phone();
+  await first.categories.add(coffee);
+  await first.expenses.saveMany(expenses);
+  const backup = createBackup({
+    expenses: await first.expenses.search({}),
+    categories: await first.categories.list(),
+    preferences: { currencyCode: 'EUR', theme: 'dark' },
+  });
+  return JSON.stringify(backup);
+}
+
+const parsed = (text: string): Backup => {
+  const result = parseBackup(text);
+  if (!result.ok) throw new Error(result.reason);
+  return result.backup;
+};
+
+describe('backup', () => {
+  it('restores everything on another phone exactly', async () => {
+    const backup = parsed(await backupFromFirstPhone());
+    const second = await phone();
+    const result = await restoreBackup(second.db, backup);
+
+    expect(result).toEqual({
+      expensesAdded: 2,
+      expensesAlreadyHere: 0,
+      categoriesAdded: 1,
+      categoriesAlreadyHere: BuiltInCategories.length,
+    });
+    for (const expense of expenses) expect(await second.expenses.get(expense.id)).toEqual(expense);
+    expect((await second.categories.list()).find((category) => category.id === coffee.id)).toEqual(coffee);
+    expect(backup.preferences).toEqual({ currencyCode: 'EUR', theme: 'dark' });
+  });
+
+  it('restoring the same file twice adds nothing the second time', async () => {
+    const backup = parsed(await backupFromFirstPhone());
+    const second = await phone();
+    await restoreBackup(second.db, backup);
+    const again = await restoreBackup(second.db, backup);
+    expect(again.expensesAdded).toBe(0);
+    expect(again.categoriesAdded).toBe(0);
+    expect(await second.expenses.search({})).toHaveLength(2);
+  });
+
+  it('never overwrites what is already on the phone', async () => {
+    const backup = parsed(await backupFromFirstPhone());
+    const second = await phone();
+    await second.categories.add(coffee);
+    const edited = updateExpense(expenses[0], { amountMinor: 999, title: 'Edited here' });
+    await second.expenses.save(expenses[0]);
+    await second.expenses.update(edited);
+
+    const result = await restoreBackup(second.db, backup);
+    expect(result.expensesAdded).toBe(1);
+    expect(result.expensesAlreadyHere).toBe(1);
+    expect(await second.expenses.get(expenses[0].id)).toEqual(edited);
+  });
+
+  it('writes nothing at all if any insert fails', async () => {
+    const second = await phone();
+    const broken = parsed(await backupFromFirstPhone());
+    // Bypasses validation on purpose: an expense whose category exists nowhere fails the foreign key
+    const backup = { ...broken, expenses: [...broken.expenses, { ...expenses[1], id: 'orphan', categoryId: 'nowhere' }] };
+    await expect(restoreBackup(second.db, backup)).rejects.toThrow();
+    expect(await second.expenses.search({})).toEqual([]);
+    expect((await second.categories.list()).some((category) => category.id === coffee.id)).toBe(false);
+  });
+});
+
+describe('parseBackup', () => {
+  const valid = async () => JSON.parse(await backupFromFirstPhone());
+  const reason = (value: unknown) => {
+    const result = parseBackup(typeof value === 'string' ? value : JSON.stringify(value));
+    return result.ok ? null : result.reason;
+  };
+
+  it('rejects files that are not Spendly backups', async () => {
+    expect(reason('not json {')).toMatch(/isn't a Spendly backup/);
+    expect(reason({ app: 'other', format: 1 })).toMatch(/isn't a Spendly backup/);
+    expect(reason({ ...(await valid()), expenses: 'nope' })).toMatch(/isn't a Spendly backup/);
+  });
+
+  it('rejects a newer format with a clear reason', async () => {
+    expect(reason({ ...(await valid()), format: BACKUP_FORMAT + 1 })).toMatch(/newer version/);
+  });
+
+  it('rejects the whole file when any record is damaged (never a partial restore)', async () => {
+    const file = await valid();
+    expect(reason({ ...file, expenses: [...file.expenses, { ...file.expenses[0], id: 'x', amountMinor: -5 }] })).toMatch(
+      /1 unreadable expense\b/,
+    );
+    expect(reason({ ...file, expenses: [{ ...file.expenses[0], occurredAt: undefined }] })).toMatch(/unreadable expense/);
+    expect(reason({ ...file, categories: [...file.categories, { ...file.categories[0], icon: 'rocket' }] })).toMatch(
+      /unreadable category/,
+    );
+    expect(reason({ ...file, expenses: [...file.expenses, file.expenses[0]] })).toMatch(/appear twice/);
+    // Its custom category is not in the file (built-in ones always are known)
+    const inCoffee = file.expenses.find((expense: { categoryId: string }) => expense.categoryId === coffee.id);
+    expect(reason({ ...file, categories: [], expenses: [inCoffee] })).toMatch(/missing/);
+  });
+
+  it('accepts a valid file and keeps only known expense fields', async () => {
+    const file = await valid();
+    file.expenses[0].extra = 'ignored';
+    const result = parseBackup(JSON.stringify(file));
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.backup.expenses[0]).not.toHaveProperty('extra');
+  });
+});

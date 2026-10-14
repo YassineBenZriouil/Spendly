@@ -25,7 +25,10 @@ export type ExpenseRepository = {
   /** One transaction and one change notification, for bulk inserts. */
   saveMany(expenses: Expense[]): Promise<void>;
   update(expense: Expense): Promise<void>;
+  /** Soft delete: hidden everywhere at once, recoverable with `restore` until purged (30 days). */
   remove(id: string): Promise<void>;
+  /** Brings back a removed expense exactly as it was. */
+  restore(id: string): Promise<void>;
   get(id: string): Promise<Expense | null>;
   /** Newest first. */
   listBetween(range: IsoRange): Promise<Expense[]>;
@@ -40,6 +43,8 @@ export type ExpenseRepository = {
   amountSuggestions(categoryId: string, currencyCode: string, since: string): Promise<number[]>;
   /** Category and time of every expense since `since` (for time-of-day defaults). */
   categoryTimes(since: string): Promise<CategoryTime[]>;
+  /** Tells subscribers that expenses changed outside this repository (e.g. a restored backup). */
+  notifyChanged(): void;
   /** Called after every successful write. Returns an unsubscribe function. */
   subscribe(listener: () => void): () => void;
 };
@@ -75,7 +80,7 @@ function fromRow(row: ExpenseRow): Expense {
 
 const blankToNull = (value: string | undefined) => (value?.trim() ? value.trim() : null);
 
-function toParams(expense: Expense): SqlValue[] {
+export function expenseParams(expense: Expense): SqlValue[] {
   return [
     expense.id,
     expense.amountMinor,
@@ -90,7 +95,8 @@ function toParams(expense: Expense): SqlValue[] {
   ];
 }
 
-const INSERT_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at)
+/** Insert that skips an id already present: saves are idempotent (also used by backup restore). */
+export const INSERT_EXPENSE_SQL = `INSERT INTO expenses (id, amount_minor, currency_code, category_id, title, note, occurred_at, payment_method, created_at, updated_at)
    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
    ON CONFLICT (id) DO NOTHING`;
 
@@ -104,26 +110,26 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
   return {
     async save(expense) {
       const db = await database();
-      await db.runAsync(INSERT_SQL, toParams(expense));
+      await db.runAsync(INSERT_EXPENSE_SQL, expenseParams(expense));
       changed();
     },
 
     async saveMany(expenses) {
       const db = await database();
       await db.withExclusiveTransactionAsync(async (txn) => {
-        for (const expense of expenses) await txn.runAsync(INSERT_SQL, toParams(expense));
+        for (const expense of expenses) await txn.runAsync(INSERT_EXPENSE_SQL, expenseParams(expense));
       });
       changed();
     },
 
     async update(expense) {
       const db = await database();
-      const [id, ...rest] = toParams(expense);
+      const [id, ...rest] = expenseParams(expense);
       const result = await db.runAsync(
         `UPDATE expenses
          SET amount_minor = ?, currency_code = ?, category_id = ?, title = ?, note = ?,
              occurred_at = ?, payment_method = ?, created_at = ?, updated_at = ?
-         WHERE id = ?`,
+         WHERE id = ? AND deleted_at IS NULL`,
         [...rest, id],
       );
       if (result.changes === 0) throw new Error(`Expense ${expense.id} not found`);
@@ -132,20 +138,31 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
 
     async remove(id) {
       const db = await database();
-      await db.runAsync('DELETE FROM expenses WHERE id = ?', [id]);
+      await db.runAsync('UPDATE expenses SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL', [
+        new Date().toISOString(),
+        id,
+      ]);
       changed();
     },
 
+    async restore(id) {
+      const db = await database();
+      await db.runAsync('UPDATE expenses SET deleted_at = NULL WHERE id = ?', [id]);
+      changed();
+    },
+
+    notifyChanged: changed,
+
     async get(id) {
       const db = await database();
-      const row = await db.getFirstAsync<ExpenseRow>('SELECT * FROM expenses WHERE id = ?', [id]);
+      const row = await db.getFirstAsync<ExpenseRow>('SELECT * FROM live_expenses WHERE id = ?', [id]);
       return row ? fromRow(row) : null;
     },
 
     async listBetween({ start, end }) {
       const db = await database();
       const rows = await db.getAllAsync<ExpenseRow>(
-        'SELECT * FROM expenses WHERE occurred_at >= ? AND occurred_at < ? ORDER BY occurred_at DESC, created_at DESC',
+        'SELECT * FROM live_expenses WHERE occurred_at >= ? AND occurred_at < ? ORDER BY occurred_at DESC, created_at DESC',
         [start, end],
       );
       return rows.map(fromRow);
@@ -167,7 +184,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
       }
       // shortcut: loads every match into memory (fine for thousands of rows); page with LIMIT/OFFSET if histories get far bigger
       const rows = await db.getAllAsync<ExpenseRow>(
-        `SELECT e.* FROM expenses e LEFT JOIN categories c ON c.id = e.category_id
+        `SELECT e.* FROM live_expenses e LEFT JOIN categories c ON c.id = e.category_id
          ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
          ORDER BY e.occurred_at DESC, e.created_at DESC`,
         params,
@@ -178,7 +195,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
     async totalsBetween({ start, end }) {
       const db = await database();
       const rows = await db.getAllAsync<{ currency_code: string; total_minor: number }>(
-        `SELECT currency_code, SUM(amount_minor) AS total_minor FROM expenses
+        `SELECT currency_code, SUM(amount_minor) AS total_minor FROM live_expenses
          WHERE occurred_at >= ? AND occurred_at < ?
          GROUP BY currency_code ORDER BY total_minor DESC`,
         [start, end],
@@ -189,7 +206,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
     async amountSuggestions(categoryId, currencyCode, since) {
       const db = await database();
       const rows = await db.getAllAsync<{ amount_minor: number; uses: number }>(
-        `SELECT amount_minor, COUNT(*) AS uses FROM expenses
+        `SELECT amount_minor, COUNT(*) AS uses FROM live_expenses
          WHERE category_id = ? AND currency_code = ? AND occurred_at >= ?
          GROUP BY amount_minor
          ORDER BY uses DESC, MAX(occurred_at) DESC, amount_minor ASC`,
@@ -203,7 +220,7 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
     async categoryTimes(since) {
       const db = await database();
       const rows = await db.getAllAsync<{ category_id: string; occurred_at: string }>(
-        'SELECT category_id, occurred_at FROM expenses WHERE occurred_at >= ?',
+        'SELECT category_id, occurred_at FROM live_expenses WHERE occurred_at >= ?',
         [since],
       );
       return rows.map((row) => ({ categoryId: row.category_id, occurredAt: row.occurred_at }));
