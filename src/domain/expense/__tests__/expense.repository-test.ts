@@ -2,7 +2,7 @@ import { migrate } from '@/storage/database/migrations';
 import { createTestDatabase } from '@/storage/database/testing/createTestDatabase';
 import { localDayRange } from '@/utils/dates';
 
-import { createSqliteExpenseRepository } from '../expense.repository';
+import { createSqliteExpenseRepository, SUGGESTION_MIN_HISTORY } from '../expense.repository';
 import { createExpense, updateExpense } from '../expense.service';
 
 jest.mock('expo-sqlite', () => ({}));
@@ -113,5 +113,65 @@ describe('SQLite expense repository', () => {
     await repository.saveMany([good, at('2026-10-13T13:00:00.000Z')]);
     expect(await repository.search({})).toHaveLength(2);
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  describe('amountSuggestions', () => {
+    const since = '2026-07-01T00:00:00.000Z';
+    const save = async (repository: Awaited<ReturnType<typeof setup>>, entries: [string, number, string?, string?][]) => {
+      for (const [iso, amount, currency = 'EUR', category = 'food'] of entries) await repository.save(at(iso, amount, currency, category));
+    };
+
+    it('ranks by use, then most recent use, then smallest amount, and returns at most 3', async () => {
+      const repository = await setup();
+      await save(repository, [
+        ['2026-10-01T08:00:00.000Z', 450],
+        ['2026-10-02T08:00:00.000Z', 450],
+        ['2026-10-03T08:00:00.000Z', 450],
+        ['2026-10-01T12:00:00.000Z', 1200], // tie with 900 on uses, used more recently
+        ['2026-10-09T12:00:00.000Z', 1200],
+        ['2026-10-02T12:00:00.000Z', 900],
+        ['2026-10-05T12:00:00.000Z', 900],
+        ['2026-10-04T12:00:00.000Z', 300], // tie with 200 on uses and recency: smaller first
+        ['2026-10-04T12:00:00.000Z', 200],
+      ]);
+      expect(await repository.amountSuggestions('food', 'EUR', since)).toEqual([450, 1200, 900]);
+    });
+
+    it(`stays empty until the category has ${SUGGESTION_MIN_HISTORY} expenses in the window`, async () => {
+      const repository = await setup();
+      await save(repository, [
+        ['2026-06-15T08:00:00.000Z', 450], // before the window
+        ['2026-10-01T08:00:00.000Z', 450],
+        ['2026-10-02T08:00:00.000Z', 500],
+      ]);
+      expect(await repository.amountSuggestions('food', 'EUR', since)).toEqual([]);
+      await save(repository, [['2026-10-03T08:00:00.000Z', 600]]);
+      // Each used once: most recent first
+      expect(await repository.amountSuggestions('food', 'EUR', since)).toEqual([600, 500, 450]);
+    });
+
+    it('keeps currencies and categories apart', async () => {
+      const repository = await setup();
+      await save(repository, [
+        ['2026-10-01T08:00:00.000Z', 450],
+        ['2026-10-02T08:00:00.000Z', 450],
+        ['2026-10-03T08:00:00.000Z', 450, 'USD'],
+        ['2026-10-04T08:00:00.000Z', 450, 'EUR', 'transport'],
+      ]);
+      // Only 2 food expenses in EUR: not enough history
+      expect(await repository.amountSuggestions('food', 'EUR', since)).toEqual([]);
+      await save(repository, [['2026-10-05T08:00:00.000Z', 700]]);
+      expect(await repository.amountSuggestions('food', 'EUR', since)).toEqual([450, 700]);
+      expect(await repository.amountSuggestions('food', 'USD', since)).toEqual([]);
+    });
+  });
+
+  it('lists category and time of expenses since a date', async () => {
+    const repository = await setup();
+    await repository.save(at('2026-09-01T08:00:00.000Z', 100, 'EUR', 'transport'));
+    await repository.save(at('2026-10-01T08:00:00.000Z', 100, 'EUR', 'food'));
+    expect(await repository.categoryTimes('2026-09-15T00:00:00.000Z')).toEqual([
+      { categoryId: 'food', occurredAt: '2026-10-01T08:00:00.000Z' },
+    ]);
   });
 });

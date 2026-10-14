@@ -30,12 +30,13 @@ export type QuickAddEvent =
   | { type: 'amountChanged'; amountMinor: number }
   | { type: 'detailsChanged'; changes: ExpenseDetails }
   | { type: 'saveRequested' }
-  /** `keepCategoryId`: the "Last used" preference keeps the category selected for the next expense. */
-  | { type: 'saveSucceeded'; expenseId: string; keepCategoryId?: string }
+  | { type: 'saveSucceeded'; expenseId: string }
   | { type: 'saveFailed'; message: string }
   | { type: 'savedAcknowledged' }
   /** The recovered draft turned out to be already saved (app was killed right after storing it). */
-  | { type: 'draftDiscarded' };
+  | { type: 'draftDiscarded' }
+  /** A habitual category for this time of day. Applies only to an untouched composer, never over the user's input. */
+  | { type: 'categoryPreset'; categoryId: string };
 
 const emptyDraft: QuickAddDraft = { categoryId: null, amountMinor: 0 };
 
@@ -48,6 +49,10 @@ export const initialQuickAddState: QuickAddState = {
 
 export function canSave(draft: QuickAddDraft) {
   return draft.categoryId !== null && draft.amountMinor > 0;
+}
+
+function isUntouched({ categoryId, amountMinor, details = {} }: QuickAddDraft) {
+  return categoryId === null && amountMinor === 0 && !Object.values(details).some(Boolean);
 }
 
 /** The resting phase a draft implies once nothing is in progress. */
@@ -69,8 +74,7 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
   // While saving, the draft is frozen: only the save outcome is accepted (prevents double saves and lost edits)
   if (state.phase === 'saving') {
     if (event.type === 'saveSucceeded') {
-      const draft = event.keepCategoryId ? { ...emptyDraft, categoryId: event.keepCategoryId } : emptyDraft;
-      return { phase: 'saved', draft, lastSavedId: event.expenseId, error: null };
+      return { phase: 'saved', draft: emptyDraft, lastSavedId: event.expenseId, error: null };
     }
     if (event.type === 'saveFailed') {
       return { ...state, phase: 'error', error: event.message };
@@ -90,6 +94,12 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
       return withDraft(state, { ...state.draft, details: { ...state.draft.details, ...event.changes } });
     case 'saveRequested':
       return canSave(state.draft) ? { ...state, phase: 'saving', error: null } : state;
+    case 'categoryPreset': {
+      if (!isUntouched(state.draft)) return state;
+      const draft = { ...state.draft, categoryId: event.categoryId };
+      // Keeps showing "Saved" until it is acknowledged
+      return state.phase === 'saved' ? { ...state, draft } : withDraft(state, draft);
+    }
     case 'draftDiscarded':
       return initialQuickAddState;
     case 'savedAcknowledged':

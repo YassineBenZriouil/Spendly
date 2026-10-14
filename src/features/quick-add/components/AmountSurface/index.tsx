@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { TextInput, useWindowDimensions, View, type TextInputProps } from 'react-native';
 import { GestureDetector, type PanGesture } from 'react-native-gesture-handler';
 import Animated, {
@@ -12,7 +12,7 @@ import Animated, {
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { ReducedTiming } from '@/animation/tokens';
-import { settleTo } from '@/animation/transitions';
+import { fade, settleTo } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import { formatMoney } from '@/domain/money/money.format';
 import { formatWithPattern, type MoneyPattern } from '@/domain/money/money.pattern';
@@ -37,6 +37,8 @@ type AmountSurfaceProps = {
   pattern: MoneyPattern;
   onIncrement: () => void;
   onDecrement: () => void;
+  /** Shown instead of the drag hint while the amount is zero (e.g. amount suggestions). */
+  accessory?: ReactNode;
 };
 
 export function AmountSurface({
@@ -48,6 +50,7 @@ export function AmountSurface({
   pattern,
   onIncrement,
   onDecrement,
+  accessory,
 }: AmountSurfaceProps) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
@@ -84,20 +87,19 @@ export function AmountSurface({
 
   return (
     <GestureDetector gesture={gesture}>
-      <View
-        style={styles.surface}
-        onLayout={(e) => width.set(e.nativeEvent.layout.width)}
-        accessible
-        accessibilityRole="adjustable"
-        accessibilityLabel="Amount"
-        accessibilityValue={{ text: formatMoney(amountMinor, currencyCode) }}
-        accessibilityHint="Drag up or down to change the amount, or use the keypad"
-        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-        onAccessibilityAction={(event) => {
-          if (event.nativeEvent.actionName === 'increment') onIncrement();
-          if (event.nativeEvent.actionName === 'decrement') onDecrement();
-        }}>
-        <Animated.View style={amountStyle}>
+      <View style={styles.surface} onLayout={(e) => width.set(e.nativeEvent.layout.width)}>
+        <Animated.View
+          style={amountStyle}
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel="Amount"
+          accessibilityValue={{ text: formatMoney(amountMinor, currencyCode) }}
+          accessibilityHint="Drag up or down to change the amount, or use the keypad"
+          accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+          onAccessibilityAction={(event) => {
+            if (event.nativeEvent.actionName === 'increment') onIncrement();
+            if (event.nativeEvent.actionName === 'decrement') onDecrement();
+          }}>
           <AnimatedTextInput
             editable={false}
             maxFontSizeMultiplier={FontScaleCap.control}
@@ -109,11 +111,28 @@ export function AmountSurface({
           />
         </Animated.View>
 
-        <Animated.View style={[styles.hint, hintStyle]}>
-          <Icon name="dragHint" color={colors.textSecondary} size={14} />
-          <Animated.Text style={[styles.hintText, { color: colors.textSecondary }]}>
-            Drag up or down
-          </Animated.Text>
+        {/* Fixed-height slot, so swapping the hint for suggestions never moves the amount */}
+        <Animated.View
+          style={[styles.slot, hintStyle]}
+          pointerEvents={amountMinor === 0 ? 'box-none' : 'none'}
+          accessibilityElementsHidden={amountMinor !== 0}
+          importantForAccessibility={amountMinor === 0 ? 'auto' : 'no-hide-descendants'}>
+          {accessory ? (
+            <Animated.View key="accessory" {...fade} style={styles.slotLayer}>
+              {accessory}
+            </Animated.View>
+          ) : (
+            // The amount's own hint already tells screen readers how to drag
+            <Animated.View
+              key="hint"
+              {...fade}
+              style={[styles.slotLayer, styles.hint]}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants">
+              <Icon name="dragHint" color={colors.textSecondary} size={14} />
+              <Animated.Text style={[styles.hintText, { color: colors.textSecondary }]}>Drag up or down</Animated.Text>
+            </Animated.View>
+          )}
         </Animated.View>
       </View>
     </GestureDetector>

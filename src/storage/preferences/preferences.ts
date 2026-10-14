@@ -13,8 +13,6 @@ export type AppPreferences = {
   theme: 'system' | 'light' | 'dark';
   hapticsEnabled: boolean;
   reducedMotion: 'system' | 'on' | 'off';
-  defaultCategoryMode: 'none' | 'lastUsed';
-  lastUsedCategoryId?: string;
   dragSensitivity: DragSensitivity;
   amountIncrement: AmountIncrement;
   /** The first-launch introduction has been shown (it can be replayed from Settings). */
@@ -29,7 +27,6 @@ function defaults(): AppPreferences {
     theme: 'system',
     hapticsEnabled: true,
     reducedMotion: 'system',
-    defaultCategoryMode: 'none',
     dragSensitivity: 'balanced',
     amountIncrement: 1,
     onboardingSeen: false,
@@ -41,8 +38,6 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   theme: (v) => v === 'system' || v === 'light' || v === 'dark',
   hapticsEnabled: (v) => typeof v === 'boolean',
   reducedMotion: (v) => v === 'system' || v === 'on' || v === 'off',
-  defaultCategoryMode: (v) => v === 'none' || v === 'lastUsed',
-  lastUsedCategoryId: (v) => typeof v === 'string',
   dragSensitivity: (v) => v === 'precise' || v === 'balanced' || v === 'fast',
   amountIncrement: (v) => v === 1 || v === 5 || v === 10 || v === 50,
   onboardingSeen: (v) => typeof v === 'boolean',

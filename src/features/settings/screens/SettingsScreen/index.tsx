@@ -93,17 +93,6 @@ export function SettingsScreen() {
           </Section>
 
           <Section title="Quick Add">
-            <Setting label="Default category">
-              <OptionGroup<AppPreferences['defaultCategoryMode']>
-                accessibilityLabel="Default category"
-                options={[
-                  { value: 'none', label: 'None' },
-                  { value: 'lastUsed', label: 'Last used' },
-                ]}
-                value={preferences.defaultCategoryMode}
-                onChange={(defaultCategoryMode) => updatePreferences({ defaultCategoryMode })}
-              />
-            </Setting>
             <ListRow
               label="Haptics"
               caption="Subtle taps when picking, dragging and saving"

@@ -14,6 +14,10 @@ Spendly opens straight onto the Add screen, so you're always one tap away from l
 2. **Set the amount.** Drag the number **up to increase** it and down to decrease it. Small movements make small changes; a quicker drag moves faster. The amount snaps to clean steps, and you'll feel a soft tick as it passes each one.
 3. **Tap Save.** You'll feel a short confirmation buzz, the button briefly says **Saved**, and you can start the next expense right away.
 
+**Your usual amounts, one tap away.** Once you've logged a category a few times, Spendly shows up to three amounts you use most for it, right under the number. Tap one and you're ready to save.
+
+**Your usual category, already picked.** If you log the same thing at the same time of day (coffee every morning, lunch at noon), Spendly selects that category for you when you open the app. It only does this when the habit is clear, it's always shown on screen, and tapping another category changes it instantly.
+
 Prefer not to drag? You don't have to:
 
 - **− and +** buttons step the amount down and up.
@@ -95,7 +99,6 @@ Every setting applies instantly and is remembered.
 - **Amount step:** how much each step of the drag and the − / + buttons is worth (1, 5, 10 or 50 in your currency).
 
 **Quick Add**
-- **Default category:** start each expense with nothing selected, or with the category you used last.
 - **Haptics:** turn the vibration feedback on or off. You'll feel a small tap when you switch it on.
 
 **Appearance**

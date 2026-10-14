@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Keyboard, ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
@@ -28,6 +28,7 @@ import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { FontScaleCap } from '@/theme/tokens';
 
+import { AmountSuggestions } from '../../components/AmountSuggestions';
 import { AmountSurface } from '../../components/AmountSurface';
 import { CategoryGrid } from '../../components/CategoryGrid';
 import { Keypad } from '../../components/Keypad';
@@ -35,6 +36,7 @@ import { MorphChip } from '../../components/MorphChip';
 import { SaveAction } from '../../components/SaveAction';
 import { useAmountDrag } from '../../hooks/useAmountDrag';
 import { useCategoryMorph } from '../../hooks/useCategoryMorph';
+import { useAmountSuggestions } from '../../hooks/useAmountSuggestions';
 import { useQuickAdd } from '../../hooks/useQuickAdd';
 import { useTodayTotal } from '../../hooks/useTodayTotal';
 import { canSave } from '../../state/quickAddReducer';
@@ -100,15 +102,20 @@ export function QuickAddScreen() {
     ? `${formatMoney(undoable.amountMinor, undoable.currencyCode)}, ${allCategories.find((c) => c.id === undoable.categoryId)?.name ?? ''}`
     : null;
 
-  // A draft recovered on launch has no tapped tile: show its chip once the anchor can be measured and its
-  // category has loaded (custom categories arrive from the database after the first layout)
-  const restorePending = useRef(draft.categoryId !== null);
+  // A category selected without a tapped tile (draft restored on launch, preselected for this time of day) gets
+  // its chip at the anchor once the anchor can be measured and the category has loaded (custom categories arrive
+  // from the database after the first layout). Tapped tiles already show their own chip.
   const [anchorLaidOut, setAnchorLaidOut] = useState(false);
+  const activeChipCategoryId = chips.find((chip) => chip.state === 'active')?.category.id;
   useEffect(() => {
-    if (!restorePending.current || !anchorLaidOut || !selected) return;
-    restorePending.current = false;
-    if (chips.length === 0) show(selected, null);
-  }, [anchorLaidOut, selected, chips.length, show]);
+    if (anchorLaidOut && selected && activeChipCategoryId !== selected.id) show(selected, null);
+  }, [anchorLaidOut, selected, activeChipCategoryId, show]);
+
+  const suggestions = useAmountSuggestions(draft.categoryId, currencyCode);
+  const pickSuggestion = (amountMinor: number) => {
+    haptics.select();
+    setAmount(amountMinor);
+  };
 
   const todayLabel =
     todayTotals.length > 0
@@ -167,6 +174,11 @@ export function QuickAddScreen() {
             pattern={pattern}
             onIncrement={() => setAmount(draft.amountMinor + config.stepMinor)}
             onDecrement={() => setAmount(draft.amountMinor - config.stepMinor)}
+            accessory={
+              suggestions.length > 0 && !busy ? (
+                <AmountSuggestions amounts={suggestions} currencyCode={currencyCode} onPick={pickSuggestion} />
+              ) : undefined
+            }
           />
 
           <View style={styles.controls}>
@@ -178,12 +190,14 @@ export function QuickAddScreen() {
             />
             <IconButton
               icon={panel === 'keypad' ? 'close' : 'keypad'}
+              variant="plain"
               accessibilityLabel={panel === 'keypad' ? 'Close keypad' : 'Type amount with keypad'}
               disabled={busy}
               onPress={() => togglePanel('keypad')}
             />
             <IconButton
               icon={panel === 'details' ? 'close' : 'details'}
+              variant="plain"
               accessibilityLabel={
                 panel === 'details' ? 'Close details' : hasDetails ? 'Edit details (added)' : 'Add details'
               }
@@ -192,6 +206,7 @@ export function QuickAddScreen() {
             />
             <IconButton
               icon="reset"
+              variant="plain"
               accessibilityLabel="Reset amount to zero"
               disabled={busy || draft.amountMinor === 0}
               onPress={() => setAmount(0)}

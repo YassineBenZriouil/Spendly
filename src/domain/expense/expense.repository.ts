@@ -6,6 +6,12 @@ import type { Expense, PaymentMethod } from './expense.types';
 
 export type CurrencyTotal = { currencyCode: string; totalMinor: number };
 
+export type CategoryTime = { categoryId: string; occurredAt: string };
+
+/** Amount suggestions appear once a category has this many expenses in the currency. */
+export const SUGGESTION_MIN_HISTORY = 3;
+const SUGGESTION_LIMIT = 3;
+
 export type ExpenseFilter = {
   /** Matched against title, note and category name (SQLite LIKE: case-insensitive for ASCII only). */
   text?: string;
@@ -27,6 +33,13 @@ export type ExpenseRepository = {
   search(filter: ExpenseFilter): Promise<Expense[]>;
   /** Per currency: amounts in different currencies are never added together. */
   totalsBetween(range: IsoRange): Promise<CurrencyTotal[]>;
+  /**
+   * Up to 3 amounts most often logged for a category in one currency since `since`: most used first, then most
+   * recently used, then smallest. Empty until the category has `SUGGESTION_MIN_HISTORY` expenses in that window.
+   */
+  amountSuggestions(categoryId: string, currencyCode: string, since: string): Promise<number[]>;
+  /** Category and time of every expense since `since` (for time-of-day defaults). */
+  categoryTimes(since: string): Promise<CategoryTime[]>;
   /** Called after every successful write. Returns an unsubscribe function. */
   subscribe(listener: () => void): () => void;
 };
@@ -171,6 +184,29 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
         [start, end],
       );
       return rows.map((row) => ({ currencyCode: row.currency_code, totalMinor: row.total_minor }));
+    },
+
+    async amountSuggestions(categoryId, currencyCode, since) {
+      const db = await database();
+      const rows = await db.getAllAsync<{ amount_minor: number; uses: number }>(
+        `SELECT amount_minor, COUNT(*) AS uses FROM expenses
+         WHERE category_id = ? AND currency_code = ? AND occurred_at >= ?
+         GROUP BY amount_minor
+         ORDER BY uses DESC, MAX(occurred_at) DESC, amount_minor ASC`,
+        [categoryId, currencyCode, since],
+      );
+      const history = rows.reduce((sum, row) => sum + row.uses, 0);
+      if (history < SUGGESTION_MIN_HISTORY) return [];
+      return rows.slice(0, SUGGESTION_LIMIT).map((row) => row.amount_minor);
+    },
+
+    async categoryTimes(since) {
+      const db = await database();
+      const rows = await db.getAllAsync<{ category_id: string; occurred_at: string }>(
+        'SELECT category_id, occurred_at FROM expenses WHERE occurred_at >= ?',
+        [since],
+      );
+      return rows.map((row) => ({ categoryId: row.category_id, occurredAt: row.occurred_at }));
     },
 
     subscribe(listener) {

@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { Spacing, Typography } from '@/theme/tokens';
+import { MinTouchTarget, Spacing, Typography } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
   surface: {
@@ -17,9 +17,17 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     padding: 0,
   },
+  slot: {
+    alignSelf: 'stretch',
+    height: MinTouchTarget,
+  },
+  slotLayer: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   hint: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: Spacing.xs,
   },
   hintText: Typography.caption,

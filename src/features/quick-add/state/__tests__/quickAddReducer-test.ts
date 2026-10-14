@@ -97,4 +97,29 @@ describe('quickAddReducer', () => {
     const saving = quickAddReducer(readyToSave, { type: 'saveRequested' });
     expect(quickAddReducer(saving, { type: 'draftDiscarded' })).toBe(saving);
   });
+
+  describe('categoryPreset', () => {
+    const preset = { type: 'categoryPreset', categoryId: 'food' } as const;
+
+    it('selects the category on an untouched composer', () => {
+      const state = run([preset]);
+      expect(state.draft.categoryId).toBe('food');
+      expect(state.phase).toBe('categorySelected');
+    });
+
+    it('never overrides anything the user has done', () => {
+      expect(run([{ type: 'selectCategory', categoryId: 'bills' }, preset]).draft.categoryId).toBe('bills');
+      expect(run([{ type: 'amountChanged', amountMinor: 500 }, preset]).draft.categoryId).toBeNull();
+      expect(run([{ type: 'detailsChanged', changes: { note: 'x' } }, preset]).draft.categoryId).toBeNull();
+      expect(run([{ type: 'saveRequested' }, preset], readyToSave).draft.categoryId).toBe('food');
+    });
+
+    it('keeps the saved confirmation showing, then rests on the preset category', () => {
+      const saved = run([{ type: 'saveRequested' }, { type: 'saveSucceeded', expenseId: 'e1' }], readyToSave);
+      const presetWhileSaved = quickAddReducer(saved, { type: 'categoryPreset', categoryId: 'transport' });
+      expect(presetWhileSaved.phase).toBe('saved');
+      expect(presetWhileSaved.draft.categoryId).toBe('transport');
+      expect(quickAddReducer(presetWhileSaved, { type: 'savedAcknowledged' }).phase).toBe('categorySelected');
+    });
+  });
 });

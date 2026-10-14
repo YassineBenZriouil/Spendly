@@ -22,7 +22,6 @@ import {
 } from '@/domain/category/category.service';
 import { CategoryIcons } from '@/domain/category/category.types';
 import { useCategories } from '@/features/categories/hooks/useCategories';
-import { getPreferences, updatePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { CategoryColorToken } from '@/theme/tokens';
 
@@ -73,10 +72,6 @@ export function CategoryEditorScreen() {
       const input = { name: form.name, icon: form.icon, colorToken: form.colorToken };
       if (existing) {
         await categoryRepository.update({ ...editCategory(existing, input), isVisible: form.isVisible });
-        // "Last used" must not preselect a category that's hidden from Quick Add
-        if (!form.isVisible && getPreferences().lastUsedCategoryId === existing.id) {
-          updatePreferences({ lastUsedCategoryId: undefined });
-        }
       } else {
         await categoryRepository.add({ ...createCategory(input, categories.length), isVisible: form.isVisible });
       }
