@@ -13,6 +13,24 @@
 > change---no matter how small---transitions instead of snapping. An
 > instant visual state change is treated as a bug.
 
+> **Where the built app differs from this blueprint** (decided in `PHASES.md` /
+> `PHASES-2.md`; the rest of this document still describes the product):
+>
+> - **Expo, not bare React Native** (Expo Router, `expo-sqlite`, `expo-haptics`…);
+>   preferences live in `expo-sqlite/kv-store` instead of MMKV.
+> - **Numbers use Space Grotesk** (embedded font, rolling per-digit animation);
+>   all other text uses the system font as specified here.
+> - **Default category:** no None / Last used setting; a habitual category for the
+>   time of day is preselected when the habit is clear.
+> - **Amount drag:** speed-aware (exact single steps when slow, acceleration only
+>   when fast), with amount suggestions per category.
+> - **Languages:** English and Arabic (right-to-left), following the phone or chosen
+>   in Settings.
+> - **Data safety:** deleted expenses are recoverable for 30 days, Undo survives a
+>   restart, and backup / restore to a file exists (still no backend).
+> - **Insights:** plain-language highlights against your usual spending lead the
+>   screen.
+
 ---
 
 ## 1. Product identity

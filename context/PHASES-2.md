@@ -20,6 +20,18 @@ done criteria**. "Feels better" is never a done criterion.
    (*feedback* animation, not decoration; see Phase 7), reduced motion, shared
    components and tokens, haptics only through `haptics`.
 
+## Status
+
+| Phase | In code | Still to do |
+| --- | --- | --- |
+| 1 — Logging under 2 s | Built | Time 20 entries per phone (dev log `[timing]`) |
+| 2 — Amount drag | Built | Target-amount accuracy run; frame profiling |
+| 3 — Visual identity | Built | Light/dark screenshot review |
+| 4 — Zero data loss | Built | Kill tests, Undo after restart, backup across phones |
+| 5 — Insights | Built | VoiceOver / TalkBack read-through |
+| 6 — Accessibility & language | Built (+ in-app Language setting) | The full `ACCESSIBILITY.md` matrix |
+| 7 — Remove what doesn't earn its place | Not started | A first attempt was reverted at the user's request; the Reduce motion setting stays |
+
 **Suggested order:** 4 (data safety first) → 7 (cut before polishing) → 1 → 2 → 3 →
 5 → 6. Accessibility (6) is also checked inside every other phase; Phase 6 is the
 final, complete pass.
@@ -354,6 +366,8 @@ matrix.
   with reduced motion (Activity rows, category bars, Save button, edit screen); the onboarding instruction fades
   out and back in place.
 - `context/ACCESSIBILITY.md`: the test matrix, the gesture alternatives and the haptic counterparts.
+- Added afterwards: **Settings → Language** (System / English / العربية). The choice is stored on its own and read
+  at launch; switching restarts the app (`reloadAppAsync`) because text and layout direction are fixed per run.
 
 **Done when**
 

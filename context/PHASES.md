@@ -4,6 +4,12 @@ Source of truth for product, design and motion: [`IDENTITY.md`](./IDENTITY.md).
 This file defines **build order** and **what "done" means per phase**. At the
 end of Phase 7 the app is feature-complete and installable for testing.
 
+> **Status:** all 7 phases are built in code. Still open: the Phase 7 acceptance
+> checklist on an installed build (device testing is done by the user). The follow-up
+> plan is [`PHASES-2.md`](./PHASES-2.md); where it changed something specified here,
+> it wins (e.g. the *Default category: None / Last used* setting was replaced by a
+> time-of-day preselection in PHASES-2 Phase 1).
+
 ---
 
 ## Ground rules (apply to every phase)
@@ -149,7 +155,7 @@ stays smooth with seeded bulk data.
   - Theme: System / Light / Dark
   - Haptics on/off
   - Reduced motion: System / On / Off
-  - Default category: None / Last used
+  - Default category: None / Last used *(replaced in PHASES-2 Phase 1)*
   - Drag sensitivity (precise / balanced / fast) and increment (currency-aware)
   - **Data** section: Export (wired in Phase 5) and **Sync data — disabled,
     "Coming soon"**

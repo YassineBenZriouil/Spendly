@@ -26,7 +26,7 @@ text-size rows). Phase 6 of `PHASES-2.md` is done when every cell passes.
 | Increase Contrast | Increase Contrast | High contrast text | Borders and secondary text remain visible. |
 | Switch access | Switch Control | Switch Access | Every flow above is reachable without touch gestures. |
 | Voice | Voice Control | Voice Access | Every control can be activated by its spoken name. |
-| Language | Arabic (right-to-left) | Arabic (right-to-left) | Text translated, layout mirrored, numbers still read left-to-right, chevrons point the right way. |
+| Language | Arabic (right-to-left) | Arabic (right-to-left) | Text translated, layout mirrored, numbers still read left-to-right, chevrons point the right way. Test both ways: the phone in Arabic with Settings → Language on System, and Settings → Language switched between English and العربية (the app restarts each time). |
 
 ## Every gesture has an alternative
 

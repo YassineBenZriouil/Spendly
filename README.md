@@ -101,7 +101,7 @@ Open **Settings → Categories**, or press and hold any category on the Add scre
 Every setting applies instantly and is remembered.
 
 **Money**
-- **Currency:** used for new expenses. Expenses you already recorded keep their own currency. Each option shows a preview of how amounts will look.
+- **Currency:** starts as your phone's region currency, and is used for new expenses. Expenses you already recorded keep their own currency. Each option shows a preview of how amounts will look.
 - **Drag sensitivity:** Precise, Balanced or Fast.
 - **Amount step:** how much each step of the drag and the − / + buttons is worth (1, 5, 10 or 50 in your currency).
 
@@ -109,10 +109,12 @@ Every setting applies instantly and is remembered.
 - **Haptics:** turn the vibration feedback on or off. You'll feel a small tap when you switch it on.
 
 **Appearance**
+- **Language:** System (follows your phone), English or العربية. Spendly restarts to switch; nothing you entered is lost.
 - **Theme:** System, Light or Dark. The switch fades smoothly instead of flashing.
 - **Reduce motion:** System, On or Off. With it on, movement and zooming are replaced by gentle fades.
 
 **Data**
+- **Back up** and **Restore from backup** (see *Back up and restore* below).
 - **Export to CSV** (see below).
 - **Sync data:** coming soon.
 
@@ -166,8 +168,9 @@ The first time you open Spendly, a short, hands-on introduction shows you the th
 - Supports **large text sizes** without cutting off amounts or buttons.
 - Buttons and controls are **large enough to tap comfortably**.
 - **Color is never the only signal.** Selections and states also use shapes, labels or icons.
-- **English and Arabic.** Spendly follows your phone's language, and in Arabic the whole layout reads right to left (amounts stay left to right, as digits are written).
-- **Speaks your format.** Currency symbols, decimal separators, dates, and the first day of the week all follow your phone's settings.
+- **English and Arabic.** Spendly follows your phone's language (or the one you pick in Settings), and in Arabic the whole layout reads right to left (amounts stay left to right, as digits are written).
+- **Speaks your format.** Currency symbols, decimal separators, dates, and the first day of the week always follow your phone's region settings.
+- **Follows your phone by default.** Language, theme and Reduce motion start on *System* and can each be changed in Settings.
 
 ---
 
@@ -182,7 +185,7 @@ The first time you open Spendly, a short, hands-on introduction shows you the th
 
 **Settings → Back up** saves all your expenses, categories and settings to a single file. Keep it in Files, iCloud Drive, Google Drive or email it to yourself. On a new phone, **Settings → Restore from backup** brings everything back.
 
-- Restoring **adds** what's in the file. Nothing already on your phone is changed or removed, and restoring the same file twice doesn't create duplicates.
+- Restoring **adds** what's in the file. Nothing already on your phone is changed or removed, and restoring the same file twice doesn't create duplicates. The settings saved in the backup replace your current ones.
 - The whole file is checked first. If any part of it is damaged, nothing is restored and Spendly tells you why.
 
 ### Built not to lose anything

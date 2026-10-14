@@ -1,4 +1,6 @@
 import { getLocales } from 'expo-localization';
+import Storage from 'expo-sqlite/kv-store';
+import { I18nManager } from 'react-native';
 
 import { ar } from './locales/ar';
 import { en, type MessageKey } from './locales/en';
@@ -10,20 +12,50 @@ export type { Language } from './plural';
 
 const catalogs: Record<Language, Partial<Record<MessageKey, Message>>> = { en, ar };
 
-/** The first of the device's preferred languages that Spendly speaks; English otherwise. Read once at launch. */
-function detectLanguage(): Language {
-  try {
-    for (const locale of getLocales()) {
-      if (locale.languageCode === 'ar') return 'ar';
-      if (locale.languageCode === 'en') return 'en';
-    }
-  } catch {
-    // Fall through to English
-  }
-  return 'en';
+/** The user's choice in Settings: follow the phone, or a fixed language. */
+export type LanguagePreference = 'system' | Language;
+
+const PREFERENCE_KEY = 'language';
+const SUPPORTED: Language[] = ['en', 'ar'];
+
+/** The language to use: the chosen one, or the first of the device's languages Spendly speaks (English otherwise). */
+export function resolveLanguage(preference: LanguagePreference, deviceLanguages: (string | null)[]): Language {
+  if (preference !== 'system') return preference;
+  return (deviceLanguages.find((code) => SUPPORTED.includes(code as Language)) as Language | undefined) ?? 'en';
 }
 
-export const language: Language = detectLanguage();
+function readPreference(): LanguagePreference {
+  try {
+    const stored = Storage.getItemSync(PREFERENCE_KEY);
+    return stored === 'en' || stored === 'ar' ? stored : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+function deviceLanguages(): (string | null)[] {
+  try {
+    return getLocales().map((locale) => locale.languageCode);
+  } catch {
+    return [];
+  }
+}
+
+/** Read once at launch: every screen (and module-level text) uses it; changing it restarts the app. */
+export const languagePreference: LanguagePreference = readPreference();
+export const language: Language = resolveLanguage(languagePreference, deviceLanguages());
+
+/**
+ * Stores the choice and sets the layout direction it needs; both take effect on the next start, so the caller
+ * restarts the app (`reloadAppAsync`). Right-to-left is forced for Arabic, refused for English, and left to the
+ * phone for "system".
+ */
+export function setLanguagePreference(preference: LanguagePreference) {
+  if (preference === 'system') Storage.removeItemSync(PREFERENCE_KEY);
+  else Storage.setItemSync(PREFERENCE_KEY, preference);
+  I18nManager.allowRTL(preference !== 'en');
+  I18nManager.forceRTL(preference === 'ar');
+}
 
 type Params = Record<string, string | number>;
 

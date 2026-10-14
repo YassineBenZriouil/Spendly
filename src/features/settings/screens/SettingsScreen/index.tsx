@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { reloadAppAsync } from 'expo';
 import { router } from 'expo-router';
 import { useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Alert, ScrollView, Switch, Text, View } from 'react-native';
@@ -29,7 +30,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
 import { formatDay } from '@/utils/dateFormat';
 import { writeFailureMessage } from '@/storage/database/errors';
-import { t } from '@/i18n';
+import { languagePreference, type LanguagePreference, setLanguagePreference, t } from '@/i18n';
 
 import { styles } from './styles';
 
@@ -40,6 +41,23 @@ export function SettingsScreen() {
   const entering = useEnterTransition();
   const preferences = usePreferences();
   const saveError = usePreferencesSaveError();
+
+  // Language is read once at launch (every screen and the layout direction depend on it), so a change restarts
+  const changeLanguage = (next: LanguagePreference) => {
+    if (next === languagePreference) return;
+    Alert.alert(t('settings.language.restartTitle'), t('settings.language.restartMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.language.restart'),
+        onPress: () => {
+          setLanguagePreference(next);
+          reloadAppAsync().catch(() => {
+            // Applied on the next start anyway
+          });
+        },
+      },
+    ]);
+  };
   // One backup or restore at a time (the share sheet and picker are modal, but taps can land before they open)
   const dataBusy = useRef(false);
 
@@ -192,6 +210,18 @@ export function SettingsScreen() {
           </Section>
 
           <Section title={t('settings.section.appearance')}>
+            <Setting label={t('settings.language.label')}>
+              <OptionGroup<LanguagePreference>
+                accessibilityLabel={t('settings.language.label')}
+                options={[
+                  { value: 'system', label: t('settings.language.system') },
+                  { value: 'en', label: t('settings.language.english') },
+                  { value: 'ar', label: t('settings.language.arabic') },
+                ]}
+                value={languagePreference}
+                onChange={changeLanguage}
+              />
+            </Setting>
             <Setting label={t('settings.theme.label')}>
               <OptionGroup<AppPreferences['theme']>
                 accessibilityLabel={t('settings.theme.label')}
