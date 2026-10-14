@@ -14,6 +14,7 @@ import { AnimatedNumber } from '@/components/AnimatedNumber';
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
 import { deviceLocale, formatMoney } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 import { FontScaleCap } from '@/theme/tokens';
 import { formatDay } from '@/utils/dateFormat';
@@ -50,16 +51,16 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
     day.state === 'spent'
       ? formatMoney(day.totalMinor, currencyCode)
       : day.state === 'zero'
-        ? 'Nothing spent'
-        : 'No data';
+        ? t('insights.chart.nothingSpent')
+        : t('insights.chart.noData');
 
   const readout = selectedDay
-    ? `${formatDay(selectedDay.day)} · ${describe(selectedDay)}`
+    ? t('insights.chart.readout', { label: formatDay(selectedDay.day), value: describe(selectedDay) })
     : max > 0
-      ? `Highest day · ${formatMoney(max, currencyCode)}`
-      : 'No spending yet in this period';
+      ? t('insights.chart.readout', { label: t('insights.chart.highestDay'), value: formatMoney(max, currencyCode) })
+      : t('insights.chart.noSpendingYet');
   // Shown as a label that cross-fades plus an amount that rolls from one day to the next
-  const readoutLabel = selectedDay ? formatDay(selectedDay.day) : max > 0 ? 'Highest day' : readout;
+  const readoutLabel = selectedDay ? formatDay(selectedDay.day) : max > 0 ? t('insights.chart.highestDay') : readout;
   const readoutAmount = selectedDay ? (selectedDay.state === 'spent' ? selectedDay.totalMinor : null) : max > 0 ? max : null;
   const readoutNote = selectedDay && selectedDay.state !== 'spent' ? describe(selectedDay) : null;
 
@@ -67,8 +68,7 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
     <View style={styles.chart}>
       <View style={styles.readoutSlot} accessible accessibilityLabel={readout} accessibilityLiveRegion="polite">
         <Animated.Text key={readoutLabel} {...fade} numberOfLines={1} style={[styles.readout, { color: colors.textPrimary }]}>
-          {readoutLabel}
-          {readoutAmount !== null || readoutNote ? ' ·' : ''}
+          {readoutAmount !== null || readoutNote ? t('insights.chart.readoutPrefix', { label: readoutLabel }) : readoutLabel}
         </Animated.Text>
         {readoutAmount !== null && (
           <Animated.View {...fade}>
@@ -95,7 +95,7 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
               width={barWidth}
               dimmed={selected !== null && selected !== index}
               selected={selected === index}
-              accessibilityLabel={`${formatDay(day.day)}, ${describe(day)}`}
+              accessibilityLabel={t('insights.chart.barLabel', { day: formatDay(day.day), value: describe(day) })}
               onPress={() => setSelected(selected === index ? null : index)}
             />
           ))}
@@ -111,13 +111,13 @@ export function TrendChart({ days, kind, currencyCode }: TrendChartProps) {
       </View>
 
       <View style={styles.legend} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <LegendItem label="Spent">
+        <LegendItem label={t('insights.chart.spent')}>
           <View style={[styles.keyBar, { backgroundColor: colors.chart }]} />
         </LegendItem>
-        <LegendItem label="Nothing spent">
+        <LegendItem label={t('insights.chart.nothingSpent')}>
           <View style={[styles.keyStub, { backgroundColor: colors.chart }]} />
         </LegendItem>
-        <LegendItem label="No data">
+        <LegendItem label={t('insights.chart.noData')}>
           <View style={[styles.keyRing, { borderColor: colors.textSecondary }]} />
         </LegendItem>
       </View>

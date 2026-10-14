@@ -11,6 +11,7 @@ import { deviceCurrency, formatMoney } from '@/domain/money/money.format';
 import { updatePreferences, usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
+import { t } from '@/i18n';
 
 import { styles } from './styles';
 
@@ -28,7 +29,7 @@ export function CurrencyScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           <Text style={[styles.note, { color: colors.textSecondary }]}>
-            New expenses use this currency. Expenses you already recorded keep theirs.
+            {t('settings.currency.note')}
           </Text>
         }
         renderItem={({ item }) => {
@@ -37,7 +38,7 @@ export function CurrencyScreen() {
             <ListRow
               label={item.name}
               caption={`${item.code} · ${formatMoney(1234, item.code)}`}
-              accessibilityHint={selected ? 'Selected' : undefined}
+              accessibilityHint={selected ? t('settings.currency.selected') : undefined}
               accessory={
                 selected && (
                   <Animated.View {...fade}>

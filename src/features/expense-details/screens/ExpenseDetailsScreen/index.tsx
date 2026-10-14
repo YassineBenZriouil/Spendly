@@ -2,11 +2,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, Keyboard, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
-import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration } from '@/animation/tokens';
-import { fade, useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition, useLayoutTransition } from '@/animation/transitions';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
@@ -19,6 +17,7 @@ import { updateExpense, type ExpenseDetails } from '@/domain/expense/expense.ser
 import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { getMoneyPattern } from '@/domain/money/money.pattern';
+import { t } from '@/i18n';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { CategoryGrid } from '@/features/quick-add/components/CategoryGrid';
 import { Keypad } from '@/features/quick-add/components/Keypad';
@@ -43,7 +42,7 @@ export function ExpenseDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const entering = useEnterTransition();
-  const reducedMotion = useReducedMotion();
+  const layout = useLayoutTransition();
   const allCategories = useCategories();
 
   /** undefined: loading, null: not found (or deleted elsewhere). */
@@ -76,9 +75,9 @@ export function ExpenseDetailsScreen() {
       <Screen edges={['bottom']}>
         <EmptyState
           icon={loadFailed ? 'error' : 'activity'}
-          title={loadFailed ? "Couldn't load this expense" : 'Expense not found'}
-          message={loadFailed ? 'Your data is still on this device. Go back and try again.' : 'It may have been deleted.'}
-          action={{ label: 'Back to Activity', onPress: () => router.back() }}
+          title={t(loadFailed ? 'expense.loadFailed.title' : 'expense.notFound.title')}
+          message={t(loadFailed ? 'expense.loadFailed.message' : 'expense.notFound.message')}
+          action={{ label: t('expense.backToActivity'), onPress: () => router.back() }}
         />
       </Screen>
     );
@@ -131,25 +130,25 @@ export function ExpenseDetailsScreen() {
       await expenseRepository.update(updateExpense(expense, changes));
       // The version before the edit, so Activity can offer Undo (even after a restart)
       undoStore.offer('edited', expense);
-      AccessibilityInfo.announceForAccessibility('Changes saved. Undo is available in Activity.');
+      AccessibilityInfo.announceForAccessibility(t('expense.save.done'));
       router.back();
-    }, "Couldn't save changes. Your edits are still here.");
+    }, t('expense.save.failed'));
   };
 
   const confirmDelete = () => {
     Keyboard.dismiss();
-    Alert.alert('Delete this expense?', `${amountLabel} will be removed from your history.`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('expense.delete.confirmTitle'), t('expense.delete.confirmMessage', { amount: amountLabel }), [
+      { text: t('expense.delete.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('expense.delete.confirm'),
         style: 'destructive',
         onPress: () =>
           run(async () => {
             await expenseRepository.remove(expense.id);
             undoStore.offer('deleted', expense);
-            AccessibilityInfo.announceForAccessibility('Expense deleted. Undo is available in Activity.');
+            AccessibilityInfo.announceForAccessibility(t('expense.delete.done'));
             router.back();
-          }, "Couldn't delete. Try again."),
+          }, t('expense.delete.failed')),
       },
     ]);
   };
@@ -167,14 +166,14 @@ export function ExpenseDetailsScreen() {
           <View style={styles.amountRow}>
             <View
               accessible
-              accessibilityLabel={`Amount, ${amountLabel}`}
+              accessibilityLabel={t('expense.amount.label', { amount: amountLabel })}
               accessibilityLiveRegion="polite"
               style={styles.amountSlot}>
               <AnimatedNumber value={form.amountMinor} currencyCode={currencyCode} size="hero" hero fit accessible={false} />
             </View>
             <IconButton
               icon={keypadOpen ? 'close' : 'keypad'}
-              accessibilityLabel={keypadOpen ? 'Close keypad' : 'Change amount with keypad'}
+              accessibilityLabel={t(keypadOpen ? 'expense.keypad.close' : 'expense.keypad.open')}
               onPress={() => {
                 Keyboard.dismiss();
                 setKeypadOpen((open) => !open);
@@ -192,18 +191,18 @@ export function ExpenseDetailsScreen() {
             </Animated.View>
           )}
 
-          {/* Slides to make room as the keypad opens and closes; under reduced motion the keypad fade is enough */}
+          {/* Slides to make room as the keypad opens and closes (cross-fades with reduced motion) */}
           <Animated.View
-            layout={reducedMotion ? undefined : LinearTransition.duration(Duration.standard)}
+            layout={layout}
             style={styles.sections}>
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Category</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('expense.section.category')}</Text>
             <CategoryGrid
               categories={categories}
               selectedId={form.categoryId}
               onSelect={(category) => setForm({ ...form, categoryId: category.id })}
             />
 
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Details</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('expense.section.details')}</Text>
             <DetailsFields
               details={form.details}
               onChange={(detailChanges) => setForm({ ...form, details: { ...form.details, ...detailChanges } })}
@@ -214,8 +213,8 @@ export function ExpenseDetailsScreen() {
             )}
 
             <View style={styles.actions}>
-              <Button label="Save changes" disabled={!canSave} onPress={save} />
-              <Button label="Delete expense" variant="secondary" disabled={busy} onPress={confirmDelete} />
+              <Button label={t('expense.save')} disabled={!canSave} onPress={save} />
+              <Button label={t('expense.delete')} variant="secondary" disabled={busy} onPress={confirmDelete} />
             </View>
           </Animated.View>
         </Animated.View>

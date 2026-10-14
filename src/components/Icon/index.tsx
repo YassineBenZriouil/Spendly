@@ -1,5 +1,5 @@
 import { SymbolView } from 'expo-symbols';
-import type { ColorValue } from 'react-native';
+import { I18nManager, Platform, StyleSheet, type ColorValue } from 'react-native';
 
 /** Stable icon keys -> SF Symbols (iOS) / Material Symbols (Android, web). Outline variants only. */
 const icons = {
@@ -65,6 +65,22 @@ type IconProps = {
   size?: number;
 };
 
+/** Icons that point along the reading direction, so they flip in right-to-left languages. */
+const DIRECTIONAL = new Set<IconName>(['chevronLeft', 'chevronRight']);
+// SF Symbols mirror directional symbols in right-to-left layouts on their own; Material Symbols don't
+const mirror = I18nManager.isRTL && Platform.OS !== 'ios';
+
 export function Icon({ name, color, size = 24 }: IconProps) {
-  return <SymbolView name={icons[name]} tintColor={color} size={size} />;
+  return (
+    <SymbolView
+      name={icons[name]}
+      tintColor={color}
+      size={size}
+      style={mirror && DIRECTIONAL.has(name) ? styles.mirrored : undefined}
+    />
+  );
 }
+
+const styles = StyleSheet.create({
+  mirrored: { transform: [{ scaleX: -1 }] },
+});

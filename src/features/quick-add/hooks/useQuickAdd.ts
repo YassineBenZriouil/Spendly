@@ -10,6 +10,7 @@ import { undoStore } from '@/features/undo/state/undoStore';
 import { haptics } from '@/haptics/haptics.service';
 import { writeFailureMessage } from '@/storage/database/errors';
 import { createId } from '@/utils/ids';
+import { t } from '@/i18n';
 
 import { loadDraft, loadPendingExpenseId, saveDraft } from '../state/draftStorage';
 import {
@@ -117,9 +118,11 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
       undoStore.offer('saved', expense);
       haptics.success();
       // iOS has no live regions: say it out loud for VoiceOver
-      AccessibilityInfo.announceForAccessibility(`Saved ${formatMoney(amountMinor, currencyCode)}. Undo is available.`);
+      AccessibilityInfo.announceForAccessibility(
+        t('quickAdd.save.announcement', { amount: formatMoney(amountMinor, currencyCode) }),
+      );
     } catch (error) {
-      const message = writeFailureMessage(error, "Couldn't save. Your entry is still here.");
+      const message = writeFailureMessage(error, t('quickAdd.save.failed'));
       dispatch({ type: 'saveFailed', message });
       AccessibilityInfo.announceForAccessibility(message);
     } finally {

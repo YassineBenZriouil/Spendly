@@ -1,4 +1,4 @@
-// Test-only: the slice of Node's fs/path the tokens test uses (the app itself has no Node types).
+// Test-only: the slice of Node's fs/path that the source-scanning tests use (the app itself has no Node types).
 declare module 'node:fs' {
   export function readdirSync(path: string): string[];
   export function readFileSync(path: string, encoding: 'utf8'): string;

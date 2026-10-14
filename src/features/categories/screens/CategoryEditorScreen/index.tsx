@@ -21,18 +21,17 @@ import {
   type CategoryInput,
 } from '@/domain/category/category.service';
 import { CategoryIcons } from '@/domain/category/category.types';
+import { categoryDisplayName } from '@/domain/category/categoryName';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
 import type { CategoryColorToken } from '@/theme/tokens';
 import { EdgeToEdge } from '@/theme/tokens';
 import { writeFailureMessage } from '@/storage/database/errors';
+import { t, type MessageKey } from '@/i18n';
 
 import { styles } from './styles';
 
 type Form = CategoryInput & { isVisible: boolean };
-
-/** "fitness" -> "Fitness": icon and color keys read aloud as words. */
-const readable = (key: string) => key.charAt(0).toUpperCase() + key.slice(1);
 
 /** Add (`id` = "new") or edit a category: name, icon, color, visibility. */
 export function CategoryEditorScreen() {
@@ -40,8 +39,10 @@ export function CategoryEditorScreen() {
   const isNew = id === 'new';
   const { colors, categoryColors } = useTheme();
   const entering = useEnterTransition();
-  const categories = useCategories();
+  // Stored names: the form shows the display name, but an untouched name field must save the stored one unchanged
+  const categories = useCategories({ displayNames: false });
   const existing = categories.find((category) => category.id === id);
+  const displayName = existing ? categoryDisplayName(existing) : '';
 
   const [form, setForm] = useState<Form | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,12 +52,12 @@ export function CategoryEditorScreen() {
   if (!form && (isNew || existing)) {
     setForm(
       existing
-        ? { name: existing.name, icon: existing.icon, colorToken: existing.colorToken, isVisible: existing.isVisible }
+        ? { name: displayName, icon: existing.icon, colorToken: existing.colorToken, isVisible: existing.isVisible }
         : { name: '', icon: 'other', colorToken: 'neutral', isVisible: true },
     );
   }
 
-  const title = isNew ? 'New category' : 'Edit category';
+  const title = isNew ? t('categories.editor.newTitle') : t('categories.editor.editTitle');
   if (!form) return <Screen edges={['bottom']}>{<Stack.Screen options={{ title }} />}</Screen>;
 
   const nameError = validateCategoryName(form.name);
@@ -71,7 +72,8 @@ export function CategoryEditorScreen() {
     setSaving(true);
     setError(null);
     try {
-      const input = { name: form.name, icon: form.icon, colorToken: form.colorToken };
+      const name = existing && form.name.trim() === displayName ? existing.name : form.name;
+      const input = { name, icon: form.icon, colorToken: form.colorToken };
       if (existing) {
         await categoryRepository.update({ ...editCategory(existing, input), isVisible: form.isVisible });
       } else {
@@ -79,7 +81,7 @@ export function CategoryEditorScreen() {
       }
       router.back();
     } catch (error) {
-      setError(writeFailureMessage(error, "Couldn't save the category. Your changes are still here."));
+      setError(writeFailureMessage(error, t('categories.editor.saveFailed')));
     } finally {
       setSaving(false);
     }
@@ -96,7 +98,7 @@ export function CategoryEditorScreen() {
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
           {/* Live preview of the tile; keyed so icon/color changes cross-fade */}
-          <View style={styles.previewSlot} accessible accessibilityLabel={`Preview: ${form.name || 'Unnamed'}`}>
+          <View style={styles.previewSlot} accessible accessibilityLabel={t('categories.editor.preview', { name: form.name || t('categories.editor.unnamed') })}>
             <Animated.View
               key={`${form.icon}-${form.colorToken}`}
               {...fade}
@@ -106,8 +108,8 @@ export function CategoryEditorScreen() {
           </View>
 
           <TextField
-            accessibilityLabel="Category name"
-            placeholder="Name"
+            accessibilityLabel={t('categories.editor.nameLabel')}
+            placeholder={t('categories.editor.namePlaceholder')}
             value={form.name}
             onChangeText={(name) => setForm({ ...form, name })}
             maxLength={MAX_CATEGORY_NAME_LENGTH}
@@ -115,12 +117,12 @@ export function CategoryEditorScreen() {
             returnKeyType="done"
           />
 
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Icon</Text>
-          <View accessibilityRole="radiogroup" accessibilityLabel="Icon" style={styles.grid}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('categories.editor.icon')}</Text>
+          <View accessibilityRole="radiogroup" accessibilityLabel={t('categories.editor.icon')} style={styles.grid}>
             {CategoryIcons.map((icon) => (
               <Swatch
                 key={icon}
-                accessibilityLabel={`${readable(icon)} icon`}
+                accessibilityLabel={t(`categories.icon.${icon}` as MessageKey)}
                 selected={form.icon === icon}
                 onPress={() => setForm({ ...form, icon })}>
                 <Icon name={icon} color={tint} size={20} />
@@ -128,12 +130,12 @@ export function CategoryEditorScreen() {
             ))}
           </View>
 
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Color</Text>
-          <View accessibilityRole="radiogroup" accessibilityLabel="Color" style={styles.grid}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('categories.editor.color')}</Text>
+          <View accessibilityRole="radiogroup" accessibilityLabel={t('categories.editor.color')} style={styles.grid}>
             {(Object.keys(categoryColors) as CategoryColorToken[]).map((token) => (
               <Swatch
                 key={token}
-                accessibilityLabel={`${readable(token)} color`}
+                accessibilityLabel={t(`categories.color.${token}` as MessageKey)}
                 color={categoryColors[token]}
                 selected={form.colorToken === token}
                 onPress={() => setForm({ ...form, colorToken: token })}
@@ -142,11 +144,11 @@ export function CategoryEditorScreen() {
           </View>
 
           <ListRow
-            label="Show in Quick Add"
-            caption={lastVisible ? 'At least one category has to stay visible.' : undefined}
+            label={t('categories.editor.showInQuickAdd')}
+            caption={lastVisible ? t('categories.editor.lastVisible') : undefined}
             accessory={
               <Switch
-                accessibilityLabel="Show in Quick Add"
+                accessibilityLabel={t('categories.editor.showInQuickAdd')}
                 value={form.isVisible}
                 disabled={lastVisible}
                 onValueChange={(isVisible) => setForm({ ...form, isVisible })}
@@ -159,7 +161,7 @@ export function CategoryEditorScreen() {
 
           {existing?.isBuiltIn && (
             <Text style={[styles.note, { color: colors.textSecondary }]}>
-              Built-in category. Restore defaults brings back its original name and look.
+              {t('categories.editor.builtInNote')}
             </Text>
           )}
 
@@ -168,7 +170,7 @@ export function CategoryEditorScreen() {
           )}
 
           <Button
-            label={isNew ? 'Add category' : 'Save changes'}
+            label={isNew ? t('categories.editor.add') : t('categories.editor.save')}
             disabled={!!nameError || saving}
             accessibilityHint={nameError ?? undefined}
             onPress={save}

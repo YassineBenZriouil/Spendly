@@ -9,6 +9,7 @@ import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
 import { formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
+import { t } from '@/i18n';
 
 import { styles } from './styles';
 
@@ -72,9 +73,9 @@ export function AmountSurface({
           style={[styles.amount, amountStyle]}
           accessible
           accessibilityRole="adjustable"
-          accessibilityLabel="Amount"
+          accessibilityLabel={t('quickAdd.amount.label')}
           accessibilityValue={{ text: formatMoney(amountMinor, currencyCode) }}
-          accessibilityHint="Drag up or down to change the amount, or use the keypad"
+          accessibilityHint={t('quickAdd.amount.hint')}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={(event) => {
             if (event.nativeEvent.actionName === 'increment') onIncrement();
@@ -111,7 +112,9 @@ export function AmountSurface({
               accessibilityElementsHidden
               importantForAccessibility="no-hide-descendants">
               <Icon name="dragHint" color={colors.textSecondary} size={14} />
-              <Animated.Text style={[styles.hintText, { color: colors.textSecondary }]}>Drag up or down</Animated.Text>
+              <Animated.Text style={[styles.hintText, { color: colors.textSecondary }]}>
+                {t('quickAdd.amount.dragHint')}
+              </Animated.Text>
             </Animated.View>
           )}
         </Animated.View>

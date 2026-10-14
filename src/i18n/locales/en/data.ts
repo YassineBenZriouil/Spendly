@@ -1,0 +1,41 @@
+import type { Message } from '../../types';
+
+/** Backup, restore, storage errors and data health. */
+export const data = {
+  'data.backUp.label': 'Back up',
+  'data.backUp.caption': 'Save all your expenses, categories and settings to a file you keep (or move to a new phone)',
+  'data.backUp.ready': 'Backup of {expenses} ready to save',
+  'data.backUp.failedTitle': "Couldn't back up",
+  'data.backUp.failedMessage': 'Nothing was shared. Try again.',
+  'data.backUp.shareTitle': 'Save your Spendly backup',
+  'data.restore.label': 'Restore from backup',
+  'data.restore.caption': "Adds what's in a backup file. Nothing on this phone is changed or removed.",
+  'data.restore.confirmTitle': 'Restore this backup?',
+  'data.restore.confirmMessage':
+    "It has {expenses} from {date}. They're added to what's on this phone; nothing here is changed or removed. Its settings replace your current ones.",
+  'data.restore.confirmButton': 'Restore',
+  'data.restore.doneTitle': 'Backup restored',
+  'data.restore.summary': 'Added {expenses} and {categories}.',
+  'data.restore.summaryWithExisting': 'Added {expenses} and {categories} ({existing} were already here).',
+  'data.restore.announcement': 'Backup restored. {summary}',
+  'data.restore.failedTitle': "Couldn't restore",
+  'data.restore.cantRestoreTitle': "Can't restore this file",
+  'data.restore.openFailedTitle': "Couldn't open the file",
+  'data.restore.openFailedMessage': 'Nothing was changed. Try another file.',
+  'data.export.label': 'Export to CSV',
+  'data.export.caption': 'Pick a date range and share the file',
+  'data.parse.notABackup': "This file isn't a Spendly backup.",
+  'data.parse.newerVersion': 'This backup was made by a newer version of Spendly. Update the app, then try again.',
+  'data.parse.damaged': 'This backup is damaged ({detail}). Nothing was restored.',
+  'data.parse.dateUnreadable': 'its date is unreadable',
+  'data.parse.unreadableCategories': { one: '{count} unreadable category', other: '{count} unreadable categories' },
+  'data.parse.unreadableExpenses': { one: '{count} unreadable expense', other: '{count} unreadable expenses' },
+  'data.parse.duplicates': 'some records appear twice',
+  'data.parse.missingCategories': 'some expenses refer to categories that are missing',
+  'data.storageFull': "Your phone's storage is full, so nothing was saved. Free up some space and try again.",
+  'data.health.title': 'Your data needs attention',
+  'data.health.message':
+    'Spendly found a problem in its data file and left it exactly as it is. If anything looks wrong, restore your latest backup (Settings → Data).',
+  'data.health.notNow': 'Not now',
+  'data.health.openSettings': 'Open Settings',
+} as const satisfies Record<`data.${string}`, Message>;

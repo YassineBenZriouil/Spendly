@@ -1,6 +1,6 @@
 import type { Tabs } from 'expo-router';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { I18nManager, Pressable, View } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -44,7 +44,8 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: TabBa
   const indicatorStyle = useAnimatedStyle(() => ({
     width: tabWidth,
     opacity: indicatorOpacity.get(),
-    transform: [{ translateX: position.get() * tabWidth }],
+    // Right-to-left: tabs run from the right, so the pill slides the other way (transforms are never mirrored)
+    transform: [{ translateX: (I18nManager.isRTL ? -1 : 1) * position.get() * tabWidth }],
   }));
 
   return (

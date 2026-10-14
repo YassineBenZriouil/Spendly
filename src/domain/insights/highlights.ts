@@ -1,4 +1,5 @@
 import { formatMoney } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 
 import type { CategorySpend } from './insights.repository';
 import type { PeriodKind } from './period';
@@ -91,7 +92,7 @@ type Candidate = Highlight & { tier: number; score: number };
 export function buildHighlights(input: HighlightInput): Highlight[] {
   const { kind, currencyCode, isCurrent, current, baseline, days, minimumMinor, categoryName, dayName } = input;
   const money = (amountMinor: number) => formatMoney(amountMinor, currencyCode);
-  const thisPeriod = `${isCurrent ? 'this' : 'that'} ${kind}`;
+  const tense = isCurrent ? 'current' : 'past';
   const enoughHistory = baseline.length >= MIN_BASELINE_PERIODS;
   const candidates: Candidate[] = [];
 
@@ -104,7 +105,7 @@ export function buildHighlights(input: HighlightInput): Highlight[] {
       candidates.push({
         id: 'total',
         kind: up ? 'totalUp' : 'totalDown',
-        text: `${isCurrent ? "You've spent" : 'You spent'} ${change.percent}% ${up ? 'more' : 'less'} than in a usual ${kind}`,
+        text: t(`insights.highlight.${up ? 'totalUp' : 'totalDown'}.${tense}.${kind}`, { percent: change.percent }),
         tier: 1,
         score: Math.abs(current.totalMinor - usualTotal) * 1.2,
       });
@@ -121,7 +122,7 @@ export function buildHighlights(input: HighlightInput): Highlight[] {
             id: `missing:${categoryId}`,
             kind: 'missing',
             categoryId,
-            text: `${isCurrent ? "You haven't spent" : "You didn't spend"} on ${name} ${thisPeriod}`,
+            text: t(`insights.highlight.missing.${tense}.${kind}`, { name }),
             tier: 1,
             score: usualMinor,
           });
@@ -133,7 +134,7 @@ export function buildHighlights(input: HighlightInput): Highlight[] {
           id: `category:${categoryId}`,
           kind: up ? 'categoryUp' : 'categoryDown',
           categoryId,
-          text: `${name} ${isCurrent ? 'is' : 'was'} ${up ? 'up' : 'down'} ${change.percent}% compared with your usual ${kind}`,
+          text: t(`insights.highlight.${up ? 'categoryUp' : 'categoryDown'}.${tense}.${kind}`, { name, percent: change.percent }),
           tier: 1,
           score: Math.abs(spent - usualMinor),
         });
@@ -156,7 +157,7 @@ export function buildHighlights(input: HighlightInput): Highlight[] {
     candidates.push({
       id: 'biggestDay',
       kind: 'biggestDay',
-      text: `Biggest day: ${dayName(biggest.day)}, ${money(biggest.totalMinor)}`,
+      text: t('insights.highlight.biggestDay', { day: dayName(biggest.day), amount: money(biggest.totalMinor) }),
       tier: 0,
       score: biggest.totalMinor,
     });
@@ -172,7 +173,7 @@ export function buildHighlights(input: HighlightInput): Highlight[] {
       id: `frequent:${frequent.categoryId}`,
       kind: 'frequent',
       categoryId: frequent.categoryId,
-      text: `${categoryName(frequent.categoryId)} ${isCurrent ? 'is' : 'was'} your most frequent category (${frequent.count} expenses)`,
+      text: t(`insights.highlight.frequent.${tense}`, { name: categoryName(frequent.categoryId), count: frequent.count }),
       tier: 0,
       score: 0,
     });
@@ -186,7 +187,7 @@ export function buildHighlights(input: HighlightInput): Highlight[] {
 
   return [
     enoughHistory
-      ? { id: 'normal', kind: 'normal', text: `A normal ${kind}: nothing stands out` }
-      : { id: 'learning', kind: 'learning', text: `After a few ${kind}s of history, Spendly will point out what's unusual` },
+      ? { id: 'normal', kind: 'normal', text: t(`insights.highlight.normal.${kind}`) }
+      : { id: 'learning', kind: 'learning', text: t(`insights.highlight.learning.${kind}`) },
   ];
 }

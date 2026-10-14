@@ -8,6 +8,8 @@ export const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    // Number pads keep 1 2 3 left to right in right-to-left languages too
+    direction: 'ltr',
     gap: Spacing.sm,
   },
   keyCell: {

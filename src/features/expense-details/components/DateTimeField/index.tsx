@@ -5,6 +5,7 @@ import Animated from 'react-native-reanimated';
 import { fade } from '@/animation/transitions';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 import { formatDayTime } from '@/utils/dateFormat';
 
@@ -22,7 +23,7 @@ type DateTimeFieldProps = {
 export function DateTimeField({ value, onChange, resettable = false }: DateTimeFieldProps) {
   const { colors, scheme } = useTheme();
   const date = value ? new Date(value) : new Date();
-  const label = value ? formatDayTime(date) : 'Now';
+  const label = value ? formatDayTime(date) : t('expense.field.now');
 
   // Android has no combined date+time picker: open the system date dialog, then the time dialog
   const openAndroid = () => {
@@ -52,15 +53,15 @@ export function DateTimeField({ value, onChange, resettable = false }: DateTimeF
             maximumDate={new Date()}
             themeVariant={scheme}
             accentColor={colors.textPrimary}
-            accessibilityLabel="Date and time"
+            accessibilityLabel={t('expense.field.dateTime')}
             onValueChange={(_event, picked) => onChange(clampToNow(picked).toISOString())}
           />
         </View>
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Date and time: ${label}`}
-          accessibilityHint="Opens date and time pickers"
+          accessibilityLabel={t('expense.field.dateTimeValue', { value: label })}
+          accessibilityHint={t('expense.field.dateTimeHint')}
           onPress={openAndroid}
           style={styles.value}>
           {/* Keyed so a new date cross-fades in */}
@@ -74,7 +75,7 @@ export function DateTimeField({ value, onChange, resettable = false }: DateTimeF
       <View style={styles.trailing}>
         {resettable && value && (
           <Animated.View {...fade}>
-            <IconButton icon="reset" variant="plain" accessibilityLabel="Set to now" onPress={() => onChange(undefined)} />
+            <IconButton icon="reset" variant="plain" accessibilityLabel={t('expense.field.setToNow')} onPress={() => onChange(undefined)} />
           </Animated.View>
         )}
       </View>

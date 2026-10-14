@@ -339,12 +339,28 @@ matrix.
   slides, are resolved).
 - **Haptics are never the only signal:** every haptic has a visible counterpart.
 
+**Decisions made while building it**
+
+- Own small catalog (`src/i18n/`), no new dependency: `t(key, params)`, `{placeholder}` filling, plural rules written
+  per language (Hermes' `Intl.PluralRules` is unreliable on iOS). Language = first device language Spendly speaks,
+  read at launch. English + Arabic: Arabic proves both the second-language pipeline and right-to-left, and its six
+  plural forms exercise the plural rules.
+- ~410 strings moved, whole sentences per key (e.g. highlights have one key per type × current/past × week/month).
+  Built-in category names are translated for display only; renaming one stores the user's text.
+- Right-to-left: iOS declares `en`/`ar` (`CFBundleLocalizations`), RN mirrors the layout; fixed what mirroring can't
+  reach (MorphChip position, tab bar pill direction), numbers and keypad stay left-to-right, chevrons flip on Android
+  (SF Symbols mirror themselves on iOS).
+- Reduced motion: the last exceptions are gone. `useLayoutTransition()` slides moving items, or cross-fades them
+  with reduced motion (Activity rows, category bars, Save button, edit screen); the onboarding instruction fades
+  out and back in place.
+- `context/ACCESSIBILITY.md`: the test matrix, the gesture alternatives and the haptic counterparts.
+
 **Done when**
 
-- [ ] The full flow (add → edit → delete → undo → insights → export → backup) is completed with each item of the test matrix.
-- [ ] No string in components outside the translation catalog (enforced by lint or test).
-- [ ] The second language and an RTL language pass a full screenshot review.
-- [ ] Largest text size: no clipped or overlapping text on any screen of the smallest supported phone.
+- [ ] The full flow (add → edit → delete → undo → insights → export → backup) is completed with each item of the test matrix. *Device: `context/ACCESSIBILITY.md`.*
+- [x] No string in components outside the translation catalog (enforced by lint or test). *(`noHardcodedText-test`, `catalog-test`)*
+- [ ] The second language and an RTL language pass a full screenshot review. *Device (Arabic covers both).*
+- [ ] Largest text size: no clipped or overlapping text on any screen of the smallest supported phone. *Device.*
 
 ---
 

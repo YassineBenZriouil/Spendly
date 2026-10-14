@@ -29,6 +29,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
 import { formatDay } from '@/utils/dateFormat';
 import { writeFailureMessage } from '@/storage/database/errors';
+import { t } from '@/i18n';
 
 import { styles } from './styles';
 
@@ -41,16 +42,15 @@ export function SettingsScreen() {
   const saveError = usePreferencesSaveError();
   // One backup or restore at a time (the share sheet and picker are modal, but taps can land before they open)
   const dataBusy = useRef(false);
-  const plural = (count: number, one: string, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
   const backUp = async () => {
     if (dataBusy.current) return;
     dataBusy.current = true;
     try {
       const count = await shareBackup();
-      AccessibilityInfo.announceForAccessibility(`Backup of ${plural(count, 'expense')} ready to save`);
+      AccessibilityInfo.announceForAccessibility(t('data.backUp.ready', { expenses: t('common.expenseCount', { count }) }));
     } catch (error) {
-      Alert.alert("Couldn't back up", writeFailureMessage(error, 'Nothing was shared. Try again.'));
+      Alert.alert(t('data.backUp.failedTitle'), writeFailureMessage(error, t('data.backUp.failedMessage')));
     } finally {
       dataBusy.current = false;
     }
@@ -59,12 +59,21 @@ export function SettingsScreen() {
   const runRestore = async (backup: Backup) => {
     try {
       const result = await applyBackup(backup);
-      const already = result.expensesAlreadyHere > 0 ? ` (${plural(result.expensesAlreadyHere, 'expense')} were already here)` : '';
-      const summary = `Added ${plural(result.expensesAdded, 'expense')} and ${plural(result.categoriesAdded, 'category', 'categories')}${already}.`;
-      Alert.alert('Backup restored', summary);
-      AccessibilityInfo.announceForAccessibility(`Backup restored. ${summary}`);
+      const counts = {
+        expenses: t('common.expenseCount', { count: result.expensesAdded }),
+        categories: t('common.categoryCount', { count: result.categoriesAdded }),
+      };
+      const summary =
+        result.expensesAlreadyHere > 0
+          ? t('data.restore.summaryWithExisting', {
+              ...counts,
+              existing: t('common.expenseCount', { count: result.expensesAlreadyHere }),
+            })
+          : t('data.restore.summary', counts);
+      Alert.alert(t('data.restore.doneTitle'), summary);
+      AccessibilityInfo.announceForAccessibility(t('data.restore.announcement', { summary }));
     } catch (error) {
-      Alert.alert("Couldn't restore", writeFailureMessage(error, 'Nothing was changed. Try again.'));
+      Alert.alert(t('data.restore.failedTitle'), writeFailureMessage(error, t('common.error.nothingChanged')));
     }
   };
 
@@ -75,20 +84,23 @@ export function SettingsScreen() {
       const result = await pickBackup();
       if (!result) return;
       if (!result.ok) {
-        Alert.alert("Can't restore this file", result.reason);
+        Alert.alert(t('data.restore.cantRestoreTitle'), result.reason);
         return;
       }
       const { backup } = result;
       Alert.alert(
-        'Restore this backup?',
-        `It has ${plural(backup.expenses.length, 'expense')} from ${formatDay(new Date(backup.createdAt))}. They're added to what's on this phone; nothing here is changed or removed. Its settings replace your current ones.`,
+        t('data.restore.confirmTitle'),
+        t('data.restore.confirmMessage', {
+          expenses: t('common.expenseCount', { count: backup.expenses.length }),
+          date: formatDay(new Date(backup.createdAt)),
+        }),
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Restore', onPress: () => runRestore(backup) },
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('data.restore.confirmButton'), onPress: () => runRestore(backup) },
         ],
       );
     } catch {
-      Alert.alert("Couldn't open the file", 'Nothing was changed. Try another file.');
+      Alert.alert(t('data.restore.openFailedTitle'), t('data.restore.openFailedMessage'));
     } finally {
       dataBusy.current = false;
     }
@@ -100,9 +112,9 @@ export function SettingsScreen() {
     setSeeding(true);
     try {
       await expenseRepository.saveMany(sampleExpenses(1000, currencyCode));
-      Alert.alert('Added 1,000 sample expenses', 'Their note is "Sample data", so you can search for them.');
+      Alert.alert(t('settings.developer.samplesAddedTitle'), t('settings.developer.samplesAddedMessage'));
     } catch {
-      Alert.alert("Couldn't add sample expenses");
+      Alert.alert(t('settings.developer.samplesFailed'));
     } finally {
       setSeeding(false);
     }
@@ -116,38 +128,38 @@ export function SettingsScreen() {
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
           {saveError && <ErrorBanner message={saveError} />}
-          <Section title="Categories">
+          <Section title={t('settings.section.categories')}>
             <ListRow
               icon="other"
-              label="Manage categories"
-              caption="Reorder, hide, rename or add your own"
+              label={t('settings.manageCategories.label')}
+              caption={t('settings.manageCategories.caption')}
               onPress={() => router.push('/categories')}
             />
           </Section>
 
-          <Section title="Money">
+          <Section title={t('settings.section.money')}>
             <ListRow
               icon="savings"
-              label="Currency"
-              caption="For new expenses. Past expenses keep their own currency."
+              label={t('settings.currency.label')}
+              caption={t('settings.currency.caption')}
               value={currencyCode}
               onPress={() => router.push('/settings/currency')}
             />
-            <Setting label="Drag sensitivity">
+            <Setting label={t('settings.dragSensitivity.label')}>
               <OptionGroup<DragSensitivity>
-                accessibilityLabel="Drag sensitivity"
+                accessibilityLabel={t('settings.dragSensitivity.label')}
                 options={[
-                  { value: 'precise', label: 'Precise' },
-                  { value: 'balanced', label: 'Balanced' },
-                  { value: 'fast', label: 'Fast' },
+                  { value: 'precise', label: t('settings.dragSensitivity.precise') },
+                  { value: 'balanced', label: t('settings.dragSensitivity.balanced') },
+                  { value: 'fast', label: t('settings.dragSensitivity.fast') },
                 ]}
                 value={preferences.dragSensitivity}
                 onChange={(dragSensitivity) => updatePreferences({ dragSensitivity })}
               />
             </Setting>
-            <Setting label="Amount step">
+            <Setting label={t('settings.amountStep.label')}>
               <OptionGroup<AmountIncrement>
-                accessibilityLabel="Amount step"
+                accessibilityLabel={t('settings.amountStep.label')}
                 options={INCREMENTS.map((increment) => ({
                   value: increment,
                   label: formatMoney(baseStepMinor(currencyCode) * increment, currencyCode),
@@ -158,13 +170,13 @@ export function SettingsScreen() {
             </Setting>
           </Section>
 
-          <Section title="Quick Add">
+          <Section title={t('settings.section.quickAdd')}>
             <ListRow
-              label="Haptics"
-              caption="Subtle taps when picking, dragging and saving"
+              label={t('settings.haptics.label')}
+              caption={t('settings.haptics.caption')}
               accessory={
                 <Switch
-                  accessibilityLabel="Haptics"
+                  accessibilityLabel={t('settings.haptics.label')}
                   value={preferences.hapticsEnabled}
                   onValueChange={(hapticsEnabled) => {
                     updatePreferences({ hapticsEnabled });
@@ -179,26 +191,26 @@ export function SettingsScreen() {
             />
           </Section>
 
-          <Section title="Appearance">
-            <Setting label="Theme">
+          <Section title={t('settings.section.appearance')}>
+            <Setting label={t('settings.theme.label')}>
               <OptionGroup<AppPreferences['theme']>
-                accessibilityLabel="Theme"
+                accessibilityLabel={t('settings.theme.label')}
                 options={[
-                  { value: 'system', label: 'System' },
-                  { value: 'light', label: 'Light' },
-                  { value: 'dark', label: 'Dark' },
+                  { value: 'system', label: t('settings.theme.system') },
+                  { value: 'light', label: t('settings.theme.light') },
+                  { value: 'dark', label: t('settings.theme.dark') },
                 ]}
                 value={preferences.theme}
                 onChange={(theme) => updatePreferences({ theme })}
               />
             </Setting>
-            <Setting label="Reduce motion" caption="On: movement is replaced by short fades.">
+            <Setting label={t('settings.reduceMotion.label')} caption={t('settings.reduceMotion.caption')}>
               <OptionGroup<AppPreferences['reducedMotion']>
-                accessibilityLabel="Reduce motion"
+                accessibilityLabel={t('settings.reduceMotion.label')}
                 options={[
-                  { value: 'system', label: 'System' },
-                  { value: 'on', label: 'On' },
-                  { value: 'off', label: 'Off' },
+                  { value: 'system', label: t('settings.reduceMotion.system') },
+                  { value: 'on', label: t('settings.reduceMotion.on') },
+                  { value: 'off', label: t('settings.reduceMotion.off') },
                 ]}
                 value={preferences.reducedMotion}
                 onChange={(reducedMotion) => updatePreferences({ reducedMotion })}
@@ -206,51 +218,50 @@ export function SettingsScreen() {
             </Setting>
           </Section>
 
-          <Section title="Data">
+          <Section title={t('settings.section.data')}>
             <ListRow
               icon="backup"
-              label="Back up"
-              caption="Save all your expenses, categories and settings to a file you keep (or move to a new phone)"
+              label={t('data.backUp.label')}
+              caption={t('data.backUp.caption')}
               onPress={backUp}
             />
             <ListRow
               icon="restore"
-              label="Restore from backup"
-              caption="Adds what's in a backup file. Nothing on this phone is changed or removed."
+              label={t('data.restore.label')}
+              caption={t('data.restore.caption')}
               onPress={restore}
             />
             <ListRow
               icon="export"
-              label="Export to CSV"
-              caption="Pick a date range and share the file"
+              label={t('data.export.label')}
+              caption={t('data.export.caption')}
               onPress={() => router.push('/settings/export')}
             />
             <View style={styles.dataRow}>
-              <Button label="Sync data" variant="secondary" disabled accessibilityHint="Coming soon" />
+              <Button label={t('settings.sync.label')} variant="secondary" disabled accessibilityHint={t('settings.sync.hint')} />
             </View>
-            <Text style={[styles.note, { color: colors.textSecondary }]}>Sync is coming soon.</Text>
+            <Text style={[styles.note, { color: colors.textSecondary }]}>{t('settings.sync.note')}</Text>
           </Section>
 
-          <Section title="About">
+          <Section title={t('settings.section.about')}>
             <ListRow
               icon="dragHint"
-              label="Replay introduction"
-              caption="The 3-step practice from the first launch"
+              label={t('settings.replayIntro.label')}
+              caption={t('settings.replayIntro.caption')}
               onPress={() => router.push('/onboarding')}
             />
             <Text style={[styles.note, { color: colors.textSecondary }]}>
-              Spendly keeps everything on this device. There is no account, nothing is uploaded, and nothing is
-              tracked.
+              {t('settings.about.privacy')}
             </Text>
             <Text style={[styles.note, { color: colors.textSecondary }]}>
-              Version {Constants.expoConfig?.version ?? '1.0.0'}
+              {t('settings.about.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
             </Text>
           </Section>
 
           {__DEV__ && (
-            <Section title="Developer">
+            <Section title={t('settings.section.developer')}>
               <View style={styles.dataRow}>
-                <Button label="Add 1,000 sample expenses" variant="secondary" disabled={seeding} onPress={seed} />
+                <Button label={t('settings.developer.addSamples')} variant="secondary" disabled={seeding} onPress={seed} />
               </View>
             </Section>
           )}

@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import type { AnimatedRef } from 'react-native-reanimated';
 
 import type { ExpenseCategory } from '@/domain/category/category.types';
+import { t } from '@/i18n';
 
 import { CategoryTile } from '../CategoryTile';
 import { styles } from './styles';
@@ -22,7 +23,7 @@ export function CategoryGrid({ categories, selectedId, onSelect, onLongPress }: 
   for (let i = 0; i < categories.length; i += COLUMNS) rows.push(categories.slice(i, i + COLUMNS));
 
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel="Category" style={styles.grid}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={t('quickAdd.categoryGrid.label')} style={styles.grid}>
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
           {row.map((category, column) => {

@@ -7,18 +7,18 @@ import Animated, {
   FadeOutRight,
   interpolate,
   interpolateColor,
-  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming } from '@/animation/tokens';
-import { fade, settleTo } from '@/animation/transitions';
+import { Duration } from '@/animation/tokens';
+import { fade, settleTo, useLayoutTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
 import { FontScaleCap } from '@/theme/tokens';
+import { t } from '@/i18n';
 
 import type { QuickAddPhase } from '../../state/quickAddReducer';
 import { styles } from './styles';
@@ -33,9 +33,9 @@ type SaveActionProps = {
 };
 
 const labels: Partial<Record<QuickAddPhase, string>> = {
-  saving: 'Saving…',
-  saved: 'Saved',
-  error: 'Try again',
+  saving: t('quickAdd.save.saving'),
+  saved: t('quickAdd.save.saved'),
+  error: t('quickAdd.save.tryAgain'),
 };
 
 export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveActionProps) {
@@ -67,18 +67,18 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
     return { color: interpolateColor(saved.get(), [0, 1], [idle, colors.surface]) };
   });
 
-  const label = labels[phase] ?? 'Save';
+  const label = labels[phase] ?? t('quickAdd.save.label');
   const labelFade = reducedMotion
     ? fade
     : { entering: FadeIn.duration(Duration.quick), exiting: FadeOut.duration(Duration.micro) };
-  const layout = LinearTransition.duration(Duration.standard).reduceMotion(ReducedTiming.reduceMotion);
+  const layout = useLayoutTransition();
 
   return (
     <View style={styles.row}>
       <Animated.View layout={layout} style={styles.saveCell}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={phase === 'error' ? 'Try saving again' : 'Save expense'}
+          accessibilityLabel={phase === 'error' ? t('quickAdd.save.retryAccessibilityLabel') : t('quickAdd.save.accessibilityLabel')}
           accessibilityState={{ disabled: !canSave, busy: phase === 'saving' }}
           disabled={!canSave}
           onPress={onSave}
@@ -99,7 +99,10 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
           layout={layout}
           entering={reducedMotion ? labelFade.entering : FadeInRight.duration(Duration.standard)}
           exiting={reducedMotion ? labelFade.exiting : FadeOutRight.duration(Duration.quick)}>
-          <Button label="Undo" variant="secondary" onPress={onUndo} accessibilityHint={`Removes ${undoLabel}`} />
+          <Button label={t('quickAdd.undo.label')}
+            variant="secondary"
+            onPress={onUndo}
+            accessibilityHint={t('quickAdd.undo.hint', { expense: undoLabel })} />
         </Animated.View>
       )}
     </View>

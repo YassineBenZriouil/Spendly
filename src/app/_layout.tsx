@@ -12,6 +12,7 @@ import { ThemeFade } from '@/components/ThemeFade';
 import { databaseHealth } from '@/storage/database/health';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
+import { t } from '@/i18n';
 
 export default function RootLayout() {
   return (
@@ -36,11 +37,11 @@ function ThemedNavigation() {
   useEffect(() => {
     if (!damaged) return;
     Alert.alert(
-      'Your data needs attention',
-      'Spendly found a problem in its data file and left it exactly as it is. If anything looks wrong, restore your latest backup (Settings → Data).',
+      t('data.health.title'),
+      t('data.health.message'),
       [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => router.push('/settings') },
+        { text: t('data.health.notNow'), style: 'cancel' },
+        { text: t('data.health.openSettings'), onPress: () => router.push('/settings') },
       ],
     );
   }, [damaged]);
@@ -63,12 +64,12 @@ function ThemedNavigation() {
           previous screen is often the tabs group, whose route name ("(tabs)") would otherwise show as its title */}
       <Stack screenOptions={{ animation: reducedMotion ? 'fade' : 'default', headerBackButtonDisplayMode: 'minimal' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
-        <Stack.Screen name="settings/currency" options={{ title: 'Currency' }} />
-        <Stack.Screen name="settings/export" options={{ title: 'Export' }} />
-        <Stack.Screen name="categories/index" options={{ title: 'Categories' }} />
-        <Stack.Screen name="categories/[id]" options={{ title: 'Category' }} />
-        <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
+        <Stack.Screen name="settings/index" options={{ title: t('common.screen.settings') }} />
+        <Stack.Screen name="settings/currency" options={{ title: t('common.screen.currency') }} />
+        <Stack.Screen name="settings/export" options={{ title: t('common.screen.export') }} />
+        <Stack.Screen name="categories/index" options={{ title: t('common.screen.categories') }} />
+        <Stack.Screen name="categories/[id]" options={{ title: t('common.screen.category') }} />
+        <Stack.Screen name="expense/[id]" options={{ title: t('common.screen.expense') }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
       </Stack>
       <ThemeFade />

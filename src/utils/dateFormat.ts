@@ -1,6 +1,7 @@
 import { getCalendars } from 'expo-localization';
 
 import { deviceLocale } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 
 import { startOfLocalDay } from './dates';
 
@@ -15,8 +16,8 @@ export function localDaysAgo(date: Date, now: Date): number {
 /** "Today", "Yesterday", "Mon, Oct 12", or with the year when it isn't this year. */
 export function formatDay(date: Date, now = new Date(), locale = deviceLocale()): string {
   const ago = localDaysAgo(date, now);
-  if (ago === 0) return 'Today';
-  if (ago === 1) return 'Yesterday';
+  if (ago === 0) return t('expense.date.today');
+  if (ago === 1) return t('expense.date.yesterday');
   return new Intl.DateTimeFormat(locale, {
     weekday: 'short',
     month: 'short',
@@ -31,7 +32,7 @@ export function formatTime(date: Date, locale = deviceLocale()): string {
 
 /** "Today, 14:32" */
 export function formatDayTime(date: Date, now = new Date(), locale = deviceLocale()): string {
-  return `${formatDay(date, now, locale)}, ${formatTime(date, locale)}`;
+  return t('expense.date.dayTime', { day: formatDay(date, now, locale), time: formatTime(date, locale) });
 }
 
 /** First day of the week for the device locale: 1 = Sunday … 7 = Saturday. */

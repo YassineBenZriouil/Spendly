@@ -7,6 +7,7 @@ import { Duration } from '@/animation/tokens';
 import { AnimatedTabBar } from '@/components/AnimatedTabBar';
 import { Icon } from '@/components/Icon';
 import { getPreferences } from '@/storage/preferences/preferences';
+import { t } from '@/i18n';
 
 export default function TabLayout() {
   const reducedMotion = useReducedMotion();
@@ -31,21 +32,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Add',
+          title: t('common.tab.add'),
           tabBarIcon: ({ color, size }) => <Icon name="add" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="activity"
         options={{
-          title: 'Activity',
+          title: t('common.tab.activity'),
           tabBarIcon: ({ color, size }) => <Icon name="activity" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
-          title: 'Insights',
+          title: t('common.tab.insights'),
           tabBarIcon: ({ color, size }) => <Icon name="insights" color={color} size={size} />,
         }}
       />

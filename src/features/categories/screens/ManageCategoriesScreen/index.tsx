@@ -15,11 +15,12 @@ import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
 import { writeFailureMessage } from '@/storage/database/errors';
+import { t } from '@/i18n';
 
 import { styles } from './styles';
 
-const failed = (action: string) => (error: unknown) =>
-  Alert.alert(`Couldn't ${action}`, writeFailureMessage(error, 'Nothing was changed. Try again.'));
+const failed = (title: string) => (error: unknown) =>
+  Alert.alert(title, writeFailureMessage(error, t('common.error.nothingChanged')));
 
 export function ManageCategoriesScreen() {
   const { colors, categoryColors } = useTheme();
@@ -32,20 +33,27 @@ export function ManageCategoriesScreen() {
     if (!next) return;
     categoryRepository
       .reorder(next)
-      .then(() => AccessibilityInfo.announceForAccessibility(`${category.name}, position ${next.indexOf(category.id) + 1} of ${next.length}`))
-      .catch(failed('reorder'));
+      .then(() => AccessibilityInfo.announceForAccessibility(
+          t('categories.manage.position', {
+            name: category.name,
+            position: next.indexOf(category.id) + 1,
+            total: next.length,
+          }),
+        ),
+      )
+      .catch(failed(t('categories.manage.reorderFailed')));
   };
 
   const restoreDefaults = () => {
     Alert.alert(
-      'Restore default categories?',
-      'Built-in categories get their original names, icons, colors and order back, and are shown again. Your own categories are kept.',
+      t('categories.manage.restoreTitle'),
+      t('categories.manage.restoreMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Restore',
+          text: t('categories.manage.restoreButton'),
           style: 'destructive',
-          onPress: () => categoryRepository.restoreDefaults().catch(failed('restore defaults')),
+          onPress: () => categoryRepository.restoreDefaults().catch(failed(t('categories.manage.restoreFailed'))),
         },
       ],
     );
@@ -58,13 +66,13 @@ export function ManageCategoriesScreen() {
         style={EdgeToEdge.scroll}
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Text style={[styles.note, { color: colors.textSecondary }]}>
-          Hold a category and drag to reorder. Hidden categories disappear from Quick Add; expenses already in them keep showing their category.
+          {t('categories.manage.note')}
         </Text>
 
         <Animated.View entering={entering}>
           <SortableList
             items={categories}
-            onReorder={(next) => categoryRepository.reorder(next).catch(failed('reorder'))}
+            onReorder={(next) => categoryRepository.reorder(next).catch(failed(t('categories.manage.reorderFailed')))}
             renderItem={(category) => {
               const index = ids.indexOf(category.id);
               return (
@@ -72,13 +80,13 @@ export function ManageCategoriesScreen() {
                   icon={category.icon}
                   iconColor={categoryColors[category.colorToken]}
                   label={category.name}
-                  caption={category.isVisible ? undefined : 'Hidden from Quick Add'}
-                  accessibilityHint="Opens the category to rename, restyle or hide it"
+                  caption={category.isVisible ? undefined : t('categories.manage.hidden')}
+                  accessibilityHint={t('categories.manage.rowHint')}
                   onPress={() => router.push({ pathname: '/categories/[id]', params: { id: category.id } })}
                   // Screen-reader alternative to dragging
                   accessibilityActions={[
-                    ...(index > 0 ? [{ name: 'moveUp', label: 'Move up' }] : []),
-                    ...(index < ids.length - 1 ? [{ name: 'moveDown', label: 'Move down' }] : []),
+                    ...(index > 0 ? [{ name: 'moveUp', label: t('categories.manage.moveUp') }] : []),
+                    ...(index < ids.length - 1 ? [{ name: 'moveDown', label: t('categories.manage.moveDown') }] : []),
                   ]}
                   onAccessibilityAction={(event) => move(category, event.nativeEvent.actionName === 'moveUp' ? -1 : 1)}
                 />
@@ -88,8 +96,8 @@ export function ManageCategoriesScreen() {
         </Animated.View>
 
         <View style={styles.actions}>
-          <Button label="Add category" onPress={() => router.push({ pathname: '/categories/[id]', params: { id: 'new' } })} />
-          <Button label="Restore defaults" variant="secondary" onPress={restoreDefaults} />
+          <Button label={t('categories.manage.add')} onPress={() => router.push({ pathname: '/categories/[id]', params: { id: 'new' } })} />
+          <Button label={t('categories.manage.restoreDefaults')} variant="secondary" onPress={restoreDefaults} />
         </View>
       </ScrollView>
     </Screen>

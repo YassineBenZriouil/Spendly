@@ -28,6 +28,7 @@ import { haptics } from '@/haptics/haptics.service';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge, FontScaleCap } from '@/theme/tokens';
+import { t } from '@/i18n';
 
 import { AmountSuggestions } from '../../components/AmountSuggestions';
 import { AmountSurface } from '../../components/AmountSurface';
@@ -100,7 +101,10 @@ export function QuickAddScreen() {
 
   const selected = allCategories.find((category) => category.id === draft.categoryId);
   const savedExpense = undoable
-    ? `${formatMoney(undoable.amountMinor, undoable.currencyCode)}, ${allCategories.find((c) => c.id === undoable.categoryId)?.name ?? ''}`
+    ? t('quickAdd.undo.expense', {
+        amount: formatMoney(undoable.amountMinor, undoable.currencyCode),
+        category: allCategories.find((c) => c.id === undoable.categoryId)?.name ?? '',
+      })
     : null;
 
   // A category selected without a tapped tile (draft restored on launch, preselected for this time of day) gets
@@ -120,8 +124,12 @@ export function QuickAddScreen() {
 
   const todayLabel =
     todayTotals.length > 0
-      ? `Today, spent ${todayTotals.map((total) => formatMoney(total.totalMinor, total.currencyCode)).join(' and ')}`
-      : 'Today';
+      ? t('quickAdd.today.spentLabel', {
+          amounts: todayTotals
+            .map((total) => formatMoney(total.totalMinor, total.currencyCode))
+            .join(t('quickAdd.today.amountsSeparator')),
+        })
+      : t('quickAdd.today.label');
 
   const placeholderVisible = useSharedValue(selected ? 0 : 1);
   useEffect(() => {
@@ -141,7 +149,7 @@ export function QuickAddScreen() {
       <View style={styles.header}>
         {/* Today's total: digits roll as it changes */}
         <View accessible accessibilityLabel={todayLabel} style={styles.today}>
-          <Text style={[styles.date, { color: colors.textSecondary }]}>Today</Text>
+          <Text style={[styles.date, { color: colors.textSecondary }]}>{t('quickAdd.today.label')}</Text>
           {todayTotals.length > 0 && (
             <Animated.Text {...fade} style={[styles.date, { color: colors.textSecondary }]}>
               ·
@@ -149,7 +157,7 @@ export function QuickAddScreen() {
           )}
           <MoneyTotals totals={todayTotals} size="label" color={colors.textSecondary} />
         </View>
-        <IconButton icon="settings" variant="plain" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
+        <IconButton icon="settings" variant="plain" accessibilityLabel={t('quickAdd.settingsButton.label')} onPress={() => router.push('/settings')} />
       </View>
 
       {/* Only the details panel opens the keyboard: the stage shrinks (amount area first) to keep it in view */}
@@ -160,10 +168,10 @@ export function QuickAddScreen() {
             collapsable={false}
             onLayout={() => setAnchorLaidOut(true)}
             accessible
-            accessibilityLabel={selected ? `Category: ${selected.name}` : 'No category selected'}
+            accessibilityLabel={selected ? t('quickAdd.anchor.selectedLabel', { category: selected.name }) : t('quickAdd.anchor.emptyLabel')}
             style={[styles.anchor, { borderColor: colors.borderSubtle }]}>
             <Animated.Text maxFontSizeMultiplier={FontScaleCap.control} style={[styles.placeholder, { color: colors.textSecondary }, placeholderStyle]}>
-              Choose a category
+              {t('quickAdd.anchor.placeholder')}
             </Animated.Text>
           </View>
 
@@ -187,14 +195,14 @@ export function QuickAddScreen() {
           <View style={styles.controls}>
             <IconButton
               icon="minus"
-              accessibilityLabel="Decrease amount"
+              accessibilityLabel={t('quickAdd.controls.decrease')}
               disabled={busy || draft.amountMinor === 0}
               onPress={() => setAmount(draft.amountMinor - config.stepMinor)}
             />
             <IconButton
               icon={panel === 'keypad' ? 'close' : 'keypad'}
               variant="plain"
-              accessibilityLabel={panel === 'keypad' ? 'Close keypad' : 'Type amount with keypad'}
+              accessibilityLabel={panel === 'keypad' ? t('quickAdd.controls.closeKeypad') : t('quickAdd.controls.openKeypad')}
               disabled={busy}
               onPress={() => togglePanel('keypad')}
             />
@@ -202,7 +210,11 @@ export function QuickAddScreen() {
               icon={panel === 'details' ? 'close' : 'details'}
               variant="plain"
               accessibilityLabel={
-                panel === 'details' ? 'Close details' : hasDetails ? 'Edit details (added)' : 'Add details'
+                panel === 'details'
+                  ? t('quickAdd.controls.closeDetails')
+                  : hasDetails
+                    ? t('quickAdd.controls.editDetails')
+                    : t('quickAdd.controls.addDetails')
               }
               disabled={busy}
               onPress={() => togglePanel('details')}
@@ -210,13 +222,13 @@ export function QuickAddScreen() {
             <IconButton
               icon="reset"
               variant="plain"
-              accessibilityLabel="Reset amount to zero"
+              accessibilityLabel={t('quickAdd.controls.resetAmount')}
               disabled={busy || draft.amountMinor === 0}
               onPress={() => setAmount(0)}
             />
             <IconButton
               icon="plus"
-              accessibilityLabel="Increase amount"
+              accessibilityLabel={t('quickAdd.controls.increase')}
               disabled={busy || draft.amountMinor >= config.maxAmountMinor}
               onPress={() => setAmount(draft.amountMinor + config.stepMinor)}
             />
@@ -273,7 +285,7 @@ export function QuickAddScreen() {
       {phase === 'error' && (
         <View style={styles.error}>
           <ErrorBanner
-            message={state.error ?? "Couldn't save. Your entry is still here."}
+            message={state.error ?? t('quickAdd.save.failed')}
             entering={panelEnter}
             exiting={reducedMotion ? panelExit : FadeOutUp.duration(Duration.quick)}
           />

@@ -11,7 +11,12 @@
       "bundleIdentifier": "com.yassinebenzriouil.spendly",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": [
+          "en",
+          "ar"
+        ],
+        "CFBundleDevelopmentRegion": "en"
       }
     },
     "android": {

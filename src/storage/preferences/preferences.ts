@@ -2,6 +2,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
 import { deviceCurrency } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 import { isStorageFull } from '@/storage/database/errors';
 
 export type DragSensitivity = 'precise' | 'balanced' | 'fast';
@@ -84,8 +85,8 @@ export function updatePreferences(changes: Partial<AppPreferences>) {
   } catch (error) {
     // Still applied for this session; the next change retries the write. Never silent: settings screens show it.
     saveError = isStorageFull(error)
-      ? "Your phone's storage is full, so this setting couldn't be saved. It applies until you close the app."
-      : "This setting couldn't be saved. It applies until you close the app.";
+      ? t('settings.saveError.storageFull')
+      : t('settings.saveError.generic');
   }
   listeners.forEach((listener) => listener());
 }

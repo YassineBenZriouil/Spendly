@@ -4,21 +4,22 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeOutDown,
-  LinearTransition,
   type BaseAnimationBuilder,
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { Duration } from '@/animation/tokens';
-import { fade, useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition, useLayoutTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import type { Expense } from '@/domain/expense/expense.types';
+import type { UndoKind } from '@/features/undo/state/undoStore';
 import { formatMoney } from '@/domain/money/money.format';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useUndo } from '@/features/undo/hooks/useUndo';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
 
@@ -75,18 +76,14 @@ export function ActivityScreen() {
 
   // Delete or edit from the edit screen: Undo here (still offered after a restart, within the window)
   const { action: undoable, undo, error: undoError } = useUndo(['deleted', 'edited']);
-  const undoLabel = undoable
-    ? `${undoable.kind === 'deleted' ? 'Deleted' : 'Edited'} ${formatMoney(undoable.expense.amountMinor, undoable.expense.currencyCode)}${
-        undoable.expense.title ? `, ${undoable.expense.title}` : ''
-      }`
-    : '';
+  const undoLabel = undoable ? describeUndo(undoable.kind, undoable.expense) : '';
 
   const categoryById = new Map(categories.map((category) => [category.id, category]));
   const filterCategories = categories.filter((category) => category.isVisible || category.id === categoryId);
 
   // Only rows that just appeared animate in; rows mounted by scrolling must not
   const rowEntering: BaseAnimationBuilder = reducedMotion ? fade.entering : FadeInDown.duration(Duration.standard);
-  const layout = LinearTransition.duration(Duration.standard);
+  const layout = useLayoutTransition();
 
   const openExpense = (expense: Expense) => router.push({ pathname: '/expense/[id]', params: { id: expense.id } });
 
@@ -106,9 +103,9 @@ export function ActivityScreen() {
         body: (
           <EmptyState
             icon="error"
-            title="Couldn't load expenses"
-            message="Your data is still on this device. Try again."
-            action={{ label: 'Try again', onPress: retry }}
+            title={t('activity.error.title')}
+            message={t('activity.error.message')}
+            action={{ label: t('activity.error.retry'), onPress: retry }}
           />
         ),
       };
@@ -118,7 +115,7 @@ export function ActivityScreen() {
         key: 'loading',
         body: (
           <Animated.View entering={fade.entering.delay(LOADING_DELAY_MS)} style={styles.loading}>
-            <ActivityIndicator color={colors.textSecondary} accessibilityLabel="Loading expenses" />
+            <ActivityIndicator color={colors.textSecondary} accessibilityLabel={t('activity.loading')} />
           </Animated.View>
         ),
       };
@@ -129,10 +126,10 @@ export function ActivityScreen() {
         body: (
           <EmptyState
             icon="search"
-            title="No matches"
-            message="Try a different search or category."
+            title={t('activity.noMatches.title')}
+            message={t('activity.noMatches.message')}
             action={{
-              label: 'Clear filters',
+              label: t('activity.noMatches.clear'),
               onPress: () => {
                 setQuery('');
                 setCategoryId(undefined);
@@ -148,9 +145,9 @@ export function ActivityScreen() {
         body: (
           <EmptyState
             icon="activity"
-            title="No expenses yet"
-            message="Expenses you record will show up here, grouped by day."
-            action={{ label: 'Add an expense', onPress: () => router.navigate('/') }}
+            title={t('activity.empty.title')}
+            message={t('activity.empty.message')}
+            action={{ label: t('activity.empty.add'), onPress: () => router.navigate('/') }}
           />
         ),
       };
@@ -182,15 +179,15 @@ export function ActivityScreen() {
   return (
     <Screen>
       <Text accessibilityRole="header" style={[styles.title, { color: colors.textPrimary }]}>
-        Activity
+        {t('activity.title')}
       </Text>
 
       <View style={styles.filters}>
         <TextField
           icon="search"
           clearable
-          accessibilityLabel="Search expenses"
-          placeholder="Search title, note or category"
+          accessibilityLabel={t('activity.search.label')}
+          placeholder={t('activity.search.placeholder')}
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
@@ -200,11 +197,11 @@ export function ActivityScreen() {
           showsHorizontalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           accessibilityRole="radiogroup"
-          accessibilityLabel="Filter by category"
+          accessibilityLabel={t('activity.filter.label')}
           style={EdgeToEdge.scroll}
           contentContainerStyle={[styles.chips, EdgeToEdge.content]}>
           <Button
-            label="All"
+            label={t('activity.filter.all')}
             variant="secondary"
             selected={categoryId === undefined}
             onPress={() => setCategoryId(undefined)}
@@ -242,13 +239,21 @@ export function ActivityScreen() {
             {undoError ?? undoLabel}
           </Animated.Text>
           <Button
-            label="Undo"
+            label={t('activity.undo.button')}
             variant="secondary"
             onPress={undo}
-            accessibilityHint={undoable.kind === 'deleted' ? 'Restores the deleted expense' : 'Puts back the previous version'}
+            accessibilityHint={t(undoable.kind === 'deleted' ? 'activity.undo.deletedHint' : 'activity.undo.editedHint')}
           />
         </Animated.View>
       )}
     </Screen>
   );
+}
+
+/** "Deleted $4.50, Coffee": one whole message per case, since word order differs between languages. */
+function describeUndo(kind: UndoKind, expense: Expense) {
+  const amount = formatMoney(expense.amountMinor, expense.currencyCode);
+  const { title } = expense;
+  if (kind === 'deleted') return title ? t('activity.undo.deletedWithTitle', { amount, title }) : t('activity.undo.deleted', { amount });
+  return title ? t('activity.undo.editedWithTitle', { amount, title }) : t('activity.undo.edited', { amount });
 }

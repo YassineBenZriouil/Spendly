@@ -1,19 +1,20 @@
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import type { Expense } from '@/domain/expense/expense.types';
 import { currencyExponent } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 
 /** Columns, in order. Shown on the export screen so people know what leaves the app. */
 export const CsvFields = [
-  'Date',
-  'Time',
-  'Amount',
-  'Currency',
-  'Category',
-  'Title',
-  'Note',
-  'Payment method',
-  'Occurred at (UTC)',
-] as const;
+  t('exportCsv.column.date'),
+  t('exportCsv.column.time'),
+  t('exportCsv.column.amount'),
+  t('exportCsv.column.currency'),
+  t('exportCsv.column.category'),
+  t('exportCsv.column.title'),
+  t('exportCsv.column.note'),
+  t('exportCsv.column.paymentMethod'),
+  t('exportCsv.column.occurredAt'),
+];
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -52,5 +53,5 @@ export function expensesToCsv(expenses: Expense[], categories: ExpenseCategory[]
         expense.occurredAt,
       ].join(',');
     });
-  return `﻿${[CsvFields.join(','), ...rows].join('\r\n')}\r\n`;
+  return `﻿${[CsvFields.map((field) => cell(field)).join(','), ...rows].join('\r\n')}\r\n`;
 }

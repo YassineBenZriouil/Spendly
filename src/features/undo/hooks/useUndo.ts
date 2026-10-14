@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { AccessibilityInfo } from 'react-native';
 
 import { expenseRepository, type ExpenseRepository } from '@/domain/expense/expense.repository';
+import { t } from '@/i18n';
 import { writeFailureMessage } from '@/storage/database/errors';
 
 import { undoStore, type UndoAction, type UndoKind } from '../state/undoStore';
@@ -9,9 +10,9 @@ import { undoStore, type UndoAction, type UndoKind } from '../state/undoStore';
 const getUndo = () => undoStore.get();
 
 const DONE: Record<UndoKind, string> = {
-  saved: 'Expense removed',
-  deleted: 'Expense restored',
-  edited: 'Changes undone',
+  saved: t('activity.undo.done.saved'),
+  deleted: t('activity.undo.done.deleted'),
+  edited: t('activity.undo.done.edited'),
 };
 
 /** Reverses an action in the database. */
@@ -45,7 +46,7 @@ export function useUndo(kinds: UndoKind[], repository: ExpenseRepository = expen
       AccessibilityInfo.announceForAccessibility(DONE[action.kind]);
     } catch (error) {
       undoStore.reinstate(action);
-      const message = writeFailureMessage(error, "Couldn't undo. Try again.");
+      const message = writeFailureMessage(error, t('activity.undo.failed'));
       setFailure({ action, message });
       AccessibilityInfo.announceForAccessibility(message);
     }

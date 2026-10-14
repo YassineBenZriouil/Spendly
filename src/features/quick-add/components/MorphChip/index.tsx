@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { View } from 'react-native';
+import { I18nManager, type View } from 'react-native';
 import Animated, {
   interpolate,
   measure,
@@ -24,9 +24,15 @@ type Rect = { x: number; y: number; width: number; height: number };
 
 const ZERO: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
+/** Right-to-left layouts mirror `left` (it counts from the right edge); measurements are always from the left. */
+const IS_RTL = I18nManager.isRTL;
+
+/** `view`'s box inside `stage`, with `x` measured from the side the chip's `left` style counts from. */
 function relativeTo(view: MeasuredDimensions, stage: MeasuredDimensions): Rect {
   'worklet';
-  return { x: view.pageX - stage.pageX, y: view.pageY - stage.pageY, width: view.width, height: view.height };
+  const fromLeft = view.pageX - stage.pageX;
+  const x = IS_RTL ? stage.width - fromLeft - view.width : fromLeft;
+  return { x, y: view.pageY - stage.pageY, width: view.width, height: view.height };
 }
 
 type MorphChipProps = {

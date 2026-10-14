@@ -7,6 +7,7 @@ import { restoreBackup, type RestoreResult } from '@/domain/backup/backup.reposi
 import { categoryRepository } from '@/domain/category/category.repository';
 import { expenseRepository } from '@/domain/expense/expense.repository';
 import { getDatabase } from '@/storage/database/connection';
+import { t } from '@/i18n';
 import { getPreferences, sanitizePreferences, updatePreferences } from '@/storage/preferences/preferences';
 
 /** Writes a backup of everything and hands it to the share sheet (Files, AirDrop, email…). Returns the expense count. */
@@ -18,7 +19,7 @@ export async function shareBackup(): Promise<number> {
   const file = new File(Paths.cache, `spendly-backup-${backup.createdAt.slice(0, 10)}.json`);
   file.create({ overwrite: true });
   file.write(JSON.stringify(backup));
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: 'Save your Spendly backup' });
+  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: t('data.backUp.shareTitle') });
   return expenses.length;
 }
 

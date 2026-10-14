@@ -166,6 +166,7 @@ The first time you open Spendly, a short, hands-on introduction shows you the th
 - Supports **large text sizes** without cutting off amounts or buttons.
 - Buttons and controls are **large enough to tap comfortably**.
 - **Color is never the only signal.** Selections and states also use shapes, labels or icons.
+- **English and Arabic.** Spendly follows your phone's language, and in Arabic the whole layout reads right to left (amounts stay left to right, as digits are written).
 - **Speaks your format.** Currency symbols, decimal separators, dates, and the first day of the week all follow your phone's settings.
 
 ---

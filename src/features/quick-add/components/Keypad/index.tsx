@@ -14,6 +14,7 @@ import { applyKeypadKey, inputToMinor, minorToInput, type KeypadKey } from '@/do
 import type { MoneyPattern } from '@/domain/money/money.pattern';
 import { useTheme } from '@/theme/ThemeProvider';
 import { FontScaleCap } from '@/theme/tokens';
+import { t } from '@/i18n';
 
 import { styles } from './styles';
 
@@ -83,7 +84,11 @@ function Key({ keyName, pattern, onPress }: { keyName: KeypadKey; pattern: Money
   return (
     <Pressable
       accessibilityRole="keyboardkey"
-      accessibilityLabel={keyName === 'decimal' ? 'Decimal point' : keyName === 'backspace' ? 'Delete' : keyName}
+      accessibilityLabel={keyName === 'decimal'
+          ? t('quickAdd.keypad.decimal')
+          : keyName === 'backspace'
+            ? t('quickAdd.keypad.delete')
+            : keyName}
       onPress={onPress}
       onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}

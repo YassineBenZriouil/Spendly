@@ -18,6 +18,7 @@ import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { FontScaleCap } from '@/theme/tokens';
+import { t } from '@/i18n';
 
 import { styles } from './styles';
 
@@ -81,7 +82,7 @@ export function CategoryTile({
         accessibilityRole="radio"
         accessibilityLabel={category.name}
         accessibilityState={{ checked: selected }}
-        accessibilityHint={onLongPress ? 'Long press to manage categories' : undefined}
+        accessibilityHint={onLongPress ? t('quickAdd.categoryTile.manageHint') : undefined}
         onPress={() => onSelect(category, tileRef)}
         onLongPress={onLongPress}
         onPressIn={() => pressed.set(settleTo(1, reducedMotion))}

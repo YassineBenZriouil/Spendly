@@ -1,4 +1,4 @@
-import { FadeIn, FadeInDown, FadeOut, withSpring, withTiming } from 'react-native-reanimated';
+import { FadeIn, FadeInDown, FadeOut, FadingTransition, LinearTransition, withSpring, withTiming } from 'react-native-reanimated';
 
 import { useReducedMotion } from './reducedMotion';
 import { Duration, ReducedTiming, Springs } from './tokens';
@@ -22,4 +22,15 @@ export function settleTo(value: number, reducedMotion: boolean) {
 export function useEnterTransition() {
   const reducedMotion = useReducedMotion();
   return reducedMotion ? fade.entering : FadeInDown.duration(Duration.standard);
+}
+
+/**
+ * `layout` animation for items that move when their neighbours change (a row added or removed, a bar re-sorted, a
+ * button resizing): they slide; with reduced motion they cross-fade into place instead of sliding or snapping.
+ */
+export function useLayoutTransition() {
+  const reducedMotion = useReducedMotion();
+  return reducedMotion
+    ? FadingTransition.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)
+    : LinearTransition.duration(Duration.standard);
 }

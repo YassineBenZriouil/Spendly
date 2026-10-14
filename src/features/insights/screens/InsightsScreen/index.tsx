@@ -14,6 +14,7 @@ import { buildHighlights, MIN_BASELINE_PERIODS, usualByCategory, type Highlight,
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
 import { deviceLocale, formatMoney } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -41,8 +42,8 @@ export function InsightsScreen() {
   const { insights, failed, retry } = useInsights(kind, offset, currency ?? preferences.currencyCode);
 
   const periodLabel = (() => {
-    if (offset === 0) return kind === 'week' ? 'This week' : 'This month';
-    if (offset === -1) return kind === 'week' ? 'Last week' : 'Last month';
+    if (offset === 0) return kind === 'week' ? t('insights.period.thisWeek') : t('insights.period.thisMonth');
+    if (offset === -1) return kind === 'week' ? t('insights.period.lastWeek') : t('insights.period.lastMonth');
     if (!insights) return '';
     const { start, end } = insights.period;
     return kind === 'week' ? formatDayRange(start, addLocalDays(end, -1)) : formatMonth(start);
@@ -55,9 +56,9 @@ export function InsightsScreen() {
         node: (
           <EmptyState
             icon="error"
-            title="Couldn't load insights"
-            message="Your data is still on this device. Try again."
-            action={{ label: 'Try again', onPress: retry }}
+            title={t('insights.error.title')}
+            message={t('insights.error.message')}
+            action={{ label: t('insights.error.retry'), onPress: retry }}
           />
         ),
       };
@@ -67,7 +68,7 @@ export function InsightsScreen() {
         key: 'loading',
         node: (
           <Animated.View entering={fade.entering.delay(LOADING_DELAY_MS)} style={styles.loading}>
-            <ActivityIndicator color={colors.textSecondary} accessibilityLabel="Loading insights" />
+            <ActivityIndicator color={colors.textSecondary} accessibilityLabel={t('insights.loading')} />
           </Animated.View>
         ),
       };
@@ -78,9 +79,9 @@ export function InsightsScreen() {
         node: (
           <EmptyState
             icon="insights"
-            title="Nothing to show yet"
-            message="Weekly and monthly summaries appear once you have some expenses."
-            action={{ label: 'Add an expense', onPress: () => router.navigate('/') }}
+            title={t('insights.empty.title')}
+            message={t('insights.empty.message')}
+            action={{ label: t('insights.empty.action'), onPress: () => router.navigate('/') }}
           />
         ),
       };
@@ -91,15 +92,15 @@ export function InsightsScreen() {
   return (
     <Screen>
       <Text accessibilityRole="header" style={[styles.title, { color: colors.textPrimary }]}>
-        Insights
+        {t('insights.title')}
       </Text>
 
       <View style={styles.controls}>
         <OptionGroup<PeriodKind>
-          accessibilityLabel="Period"
+          accessibilityLabel={t('insights.period.label')}
           options={[
-            { value: 'week', label: 'Week' },
-            { value: 'month', label: 'Month' },
+            { value: 'week', label: t('insights.period.week') },
+            { value: 'month', label: t('insights.period.month') },
           ]}
           value={kind}
           onChange={(next) => {
@@ -111,7 +112,7 @@ export function InsightsScreen() {
           <IconButton
             icon="chevronLeft"
             variant="plain"
-            accessibilityLabel={`Previous ${kind}`}
+            accessibilityLabel={t(`insights.period.previous.${kind}`)}
             onPress={() => setOffset(offset - 1)}
           />
           <View style={styles.periodSlot} accessibilityLiveRegion="polite">
@@ -122,7 +123,7 @@ export function InsightsScreen() {
           <IconButton
             icon="chevronRight"
             variant="plain"
-            accessibilityLabel={`Next ${kind}`}
+            accessibilityLabel={t(`insights.period.next.${kind}`)}
             disabled={offset === 0}
             onPress={() => setOffset(Math.min(0, offset + 1))}
           />
@@ -130,7 +131,7 @@ export function InsightsScreen() {
         {insights && insights.currencies.length > 1 && (
           <Animated.View {...fade}>
             <OptionGroup<string>
-              accessibilityLabel="Currency"
+              accessibilityLabel={t('insights.currency.label')}
               options={insights.currencies.map((code) => ({ value: code, label: code }))}
               value={insights.currencyCode}
               onChange={setCurrency}
@@ -158,8 +159,8 @@ type InsightsContentProps = {
 function InsightsContent({ insights, kind, offset, categories }: InsightsContentProps) {
   const { colors } = useTheme();
   const { currencyCode, totalMinor, previousTotalMinor } = insights;
-  const total = totalMinor > 0 ? formatMoney(totalMinor, currencyCode) : 'Nothing spent';
-  const nameOf = (categoryId: string) => categories.find((c) => c.id === categoryId)?.name ?? 'Unknown category';
+  const total = totalMinor > 0 ? formatMoney(totalMinor, currencyCode) : t('insights.nothingSpent');
+  const nameOf = (categoryId: string) => categories.find((c) => c.id === categoryId)?.name ?? t('insights.unknownCategory');
   const weekday = new Intl.DateTimeFormat(deviceLocale(), { weekday: 'long' });
   const highlights = buildHighlights({
     kind,
@@ -185,7 +186,7 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
         style={EdgeToEdge.scroll}
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
       <Card>
-        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Highlights</Text>
+        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.highlights')}</Text>
         <View style={styles.highlights}>
           {highlights.map((highlight) => (
             // Keyed: a highlight that changes with the period fades in
@@ -200,8 +201,8 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
       </Card>
 
       <Card>
-        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Total spent</Text>
-        <View style={styles.totalSlot} accessible accessibilityLabel={`Total spent, ${total}`}>
+        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.total')}</Text>
+        <View style={styles.totalSlot} accessible accessibilityLabel={t('insights.total.label', { total })}>
           {/* Digits roll as the total changes; switching to and from "Nothing spent" fades */}
           {totalMinor > 0 ? (
             <Animated.View key="total" entering={fade.entering}>
@@ -209,7 +210,7 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
             </Animated.View>
           ) : (
             <Animated.Text key="none" entering={fade.entering} style={[styles.noTotal, { color: colors.textSecondary }]}>
-              Nothing spent
+              {t('insights.nothingSpent')}
             </Animated.Text>
           )}
         </View>
@@ -217,17 +218,18 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
           totalMinor={totalMinor}
           previousTotalMinor={previousTotalMinor}
           currencyCode={currencyCode}
-          against={offset === 0 ? `the same days last ${kind}` : `the ${kind} before`}
+          kind={kind}
+          against={offset === 0 ? 'sameDays' : 'before'}
         />
       </Card>
 
       <Card>
-        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Daily spending</Text>
+        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.daily')}</Text>
         <TrendChart key={chartKey} days={insights.days} kind={kind} currencyCode={currencyCode} />
       </Card>
 
       <Card>
-        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>By category</Text>
+        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.byCategory')}</Text>
         {insights.byCategory.length > 0 ? (
           <CategoryBreakdown
             key={chartKey}
@@ -242,7 +244,7 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
         ) : (
           // In flow (the card sizes to it), so it fades in rather than cross-fading over the breakdown
           <Animated.Text entering={fade.entering} style={[styles.note, { color: colors.textSecondary }]}>
-            No spending in this period.
+            {t('insights.noSpendingInPeriod')}
           </Animated.Text>
         )}
       </Card>
@@ -275,7 +277,7 @@ function HighlightRow({ highlight, onPress }: { highlight: Highlight; onPress?: 
   );
   if (!onPress) return <View accessible>{content}</View>;
   return (
-    <Pressable accessibilityRole="button" accessibilityHint="Shows these expenses in Activity" onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityHint={t('insights.showExpensesHint')} onPress={onPress}>
       {content}
     </Pressable>
   );
@@ -285,19 +287,23 @@ type ComparisonProps = {
   totalMinor: number;
   previousTotalMinor: number | null;
   currencyCode: string;
-  against: string;
+  kind: PeriodKind;
+  /** Compared with the same days of the previous period (current period) or the whole one before (past period). */
+  against: 'sameDays' | 'before';
 };
 
 /** Direction is spelled out and shown with an arrow, never by color alone. */
-function Comparison({ totalMinor, previousTotalMinor, currencyCode, against }: ComparisonProps) {
+function Comparison({ totalMinor, previousTotalMinor, currencyCode, kind, against }: ComparisonProps) {
   const { colors } = useTheme();
   const difference = previousTotalMinor === null ? null : totalMinor - previousTotalMinor;
   const text =
     difference === null
-      ? `No data from ${against} to compare with`
+      ? t(`insights.comparison.noData.${against}.${kind}`)
       : difference === 0
-        ? `Same as ${against}`
-        : `${formatMoney(Math.abs(difference), currencyCode)} ${difference > 0 ? 'more' : 'less'} than ${against}`;
+        ? t(`insights.comparison.same.${against}.${kind}`)
+        : t(`insights.comparison.${difference > 0 ? 'more' : 'less'}.${against}.${kind}`, {
+            amount: formatMoney(Math.abs(difference), currencyCode),
+          });
 
   return (
     <Animated.View key={text} {...fade} style={styles.comparison}>

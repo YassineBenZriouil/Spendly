@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
-  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -9,14 +8,15 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Duration, ReducedTiming } from '@/animation/tokens';
-import { fade, settleTo } from '@/animation/transitions';
+import { ReducedTiming } from '@/animation/tokens';
+import { fade, settleTo, useLayoutTransition } from '@/animation/transitions';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { changeVsUsual, type Change } from '@/domain/insights/highlights';
 import type { CategorySpend } from '@/domain/insights/insights.repository';
 import { formatMoney } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { styles } from './styles';
@@ -37,10 +37,9 @@ type CategoryBreakdownProps = {
  * longest = largest category. Every row is labelled, so this list doubles as the data table.
  */
 export function CategoryBreakdown({ items, categories, totalMinor, currencyCode, usual, minimumMinor, onPressCategory }: CategoryBreakdownProps) {
-  const reducedMotion = useReducedMotion();
   const byId = new Map(categories.map((category) => [category.id, category]));
   const max = items[0]?.totalMinor ?? 0;
-  const layout = reducedMotion ? undefined : LinearTransition.duration(Duration.standard);
+  const layout = useLayoutTransition();
 
   return (
     <View style={styles.list}>
@@ -75,8 +74,6 @@ type CategoryRowProps = {
   onPress: () => void;
 };
 
-const CHANGE_WORDS = { up: 'up', down: 'down', same: 'about usual' } as const;
-
 function CategoryRow({ item, category, ratio, share, currencyCode, change, onPress }: CategoryRowProps) {
   const { colors, categoryColors } = useTheme();
   const reducedMotion = useReducedMotion();
@@ -99,17 +96,21 @@ function CategoryRow({ item, category, ratio, share, currencyCode, change, onPre
     opacity: opacity.get(),
   }));
 
-  const name = category?.name ?? 'Unknown category';
+  const name = category?.name ?? t('insights.unknownCategory');
   const amount = formatMoney(item.totalMinor, currencyCode);
-  const count = `${item.count} ${item.count === 1 ? 'expense' : 'expenses'}`;
+  const count = t('common.expenseCount', { count: item.count });
   // Direction in words plus an arrow, never by color alone
-  const changeText = change ? (change.direction === 'same' ? CHANGE_WORDS.same : `${CHANGE_WORDS[change.direction]} ${change.percent}% vs usual`) : null;
+  const changeText = change ? t(`insights.category.change.${change.direction}`, { percent: change.percent }) : null;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${amount}, ${share} percent, ${count}${changeText ? `, ${changeText}` : ''}`}
-      accessibilityHint="Shows these expenses in Activity"
+      accessibilityLabel={
+        changeText
+          ? t('insights.category.labelWithChange', { name, amount, share, count, change: changeText })
+          : t('insights.category.label', { name, amount, share, count })
+      }
+      accessibilityHint={t('insights.showExpensesHint')}
       onPress={onPress}
       style={styles.row}>
       <View style={[styles.icon, { backgroundColor: colors.surfaceSecondary }]}>

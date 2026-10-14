@@ -5,6 +5,8 @@ import { NumberFont } from '@/theme/tokens';
 export const styles = StyleSheet.create({
   container: {
     overflow: 'visible',
+    // Digits always run left to right (also in right-to-left languages); the layout below assumes it
+    direction: 'ltr',
   },
   fill: {
     ...StyleSheet.absoluteFill,

@@ -8,6 +8,7 @@ import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 import { FontScaleCap } from '@/theme/tokens';
 import { formatTime } from '@/utils/dateFormat';
@@ -27,7 +28,7 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
   const reducedMotion = useReducedMotion();
   const pressed = useSharedValue(0);
 
-  const categoryName = category?.name ?? 'Unknown category';
+  const categoryName = category?.name ?? t('activity.row.unknownCategory');
   const time = formatTime(new Date(expense.occurredAt));
   const amount = formatMoney(expense.amountMinor, expense.currencyCode);
   const tint = category ? categoryColors[category.colorToken] : colors.textSecondary;
@@ -40,8 +41,12 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${expense.title ? `${expense.title}, ` : ''}${categoryName}, ${amount}, ${time}`}
-      accessibilityHint="Opens the expense to edit or delete it"
+      accessibilityLabel={
+        expense.title
+          ? t('activity.row.labelWithTitle', { title: expense.title, category: categoryName, amount, time })
+          : t('activity.row.label', { category: categoryName, amount, time })
+      }
+      accessibilityHint={t('activity.row.hint')}
       onPress={() => onPress(expense)}
       onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>
@@ -54,7 +59,7 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
             {expense.title ?? categoryName}
           </Text>
           <Text maxFontSizeMultiplier={FontScaleCap.control} numberOfLines={1} style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {expense.title ? `${categoryName} · ${time}` : time}
+            {expense.title ? t('activity.row.subtitle', { category: categoryName, time }) : time}
           </Text>
         </View>
         <AnimatedNumber value={expense.amountMinor} currencyCode={expense.currencyCode} size="label" accessible={false} />

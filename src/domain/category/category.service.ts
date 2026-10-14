@@ -1,4 +1,5 @@
 import type { CategoryColorToken } from '@/theme/tokens';
+import { t } from '@/i18n';
 import { createId } from '@/utils/ids';
 
 import type { CategoryIcon, ExpenseCategory } from './category.types';
@@ -9,8 +10,8 @@ export type CategoryInput = { name: string; icon: CategoryIcon; colorToken: Cate
 
 export function validateCategoryName(name: string): string | null {
   const trimmed = name.trim();
-  if (!trimmed) return 'Name is required';
-  if (trimmed.length > MAX_CATEGORY_NAME_LENGTH) return `Name must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`;
+  if (!trimmed) return t('categories.name.required');
+  if (trimmed.length > MAX_CATEGORY_NAME_LENGTH) return t('categories.name.tooLong', { max: MAX_CATEGORY_NAME_LENGTH });
   return null;
 }
 

@@ -2,6 +2,7 @@ import { View } from 'react-native';
 
 import { TextField } from '@/components/TextField';
 import type { ExpenseDetails } from '@/domain/expense/expense.service';
+import { t } from '@/i18n';
 
 import { DateTimeField } from '../DateTimeField';
 import { PaymentMethodPicker } from '../PaymentMethodPicker';
@@ -19,8 +20,8 @@ export function DetailsFields({ details, onChange, dateResettable = false }: Det
   return (
     <View style={styles.fields}>
       <TextField
-        accessibilityLabel="Title or merchant"
-        placeholder="Title or merchant"
+        accessibilityLabel={t('expense.field.title')}
+        placeholder={t('expense.field.title')}
         value={details.title ?? ''}
         onChangeText={(title) => onChange({ title })}
         maxLength={80}
@@ -28,8 +29,8 @@ export function DetailsFields({ details, onChange, dateResettable = false }: Det
         autoCapitalize="sentences"
       />
       <TextField
-        accessibilityLabel="Note"
-        placeholder="Note"
+        accessibilityLabel={t('expense.field.note')}
+        placeholder={t('expense.field.note')}
         value={details.note ?? ''}
         onChangeText={(note) => onChange({ note })}
         maxLength={240}

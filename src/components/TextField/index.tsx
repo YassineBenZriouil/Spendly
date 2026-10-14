@@ -7,6 +7,7 @@ import { ReducedTiming } from '@/animation/tokens';
 import { settleTo, useEnterTransition } from '@/animation/transitions';
 import { Icon, type IconName } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { styles } from './styles';
@@ -55,7 +56,7 @@ export function TextField({ icon, clearable, accessibilityLabel, value, onChange
       <View style={clearable ? styles.clearSlot : styles.trailingSpace}>
         {clearable && !!value && (
           <Animated.View entering={entering} exiting={FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)}>
-            <IconButton icon="close" variant="plain" accessibilityLabel="Clear" onPress={() => onChangeText?.('')} />
+            <IconButton icon="close" variant="plain" accessibilityLabel={t('common.clear')} onPress={() => onChangeText?.('')} />
           </Animated.View>
         )}
       </View>

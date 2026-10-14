@@ -10,8 +10,10 @@ import { Icon } from '@/components/Icon';
 import { OptionGroup } from '@/components/OptionGroup';
 import { Screen } from '@/components/Screen';
 import { categoryRepository } from '@/domain/category/category.repository';
+import { withDisplayNames } from '@/domain/category/categoryName';
 import { expenseRepository } from '@/domain/expense/expense.repository';
 import { CsvFields, expensesToCsv } from '@/domain/export/csv';
+import { t } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 import { addLocalMonths, startOfLocalMonth, type IsoRange } from '@/utils/dates';
 import { formatDay } from '@/utils/dateFormat';
@@ -22,10 +24,10 @@ import { styles } from './styles';
 type RangeKey = 'month' | 'quarter' | 'year' | 'all';
 
 const RANGES: { value: RangeKey; label: string }[] = [
-  { value: 'month', label: 'This month' },
-  { value: 'quarter', label: 'Last 3 months' },
-  { value: 'year', label: 'This year' },
-  { value: 'all', label: 'All time' },
+  { value: 'month', label: t('exportCsv.range.month') },
+  { value: 'quarter', label: t('exportCsv.range.quarter') },
+  { value: 'year', label: t('exportCsv.range.year') },
+  { value: 'all', label: t('exportCsv.range.all') },
 ];
 
 /** Half-open ISO ranges compare as strings in SQL; "all" spans every possible timestamp. */
@@ -73,22 +75,22 @@ export function ExportScreen() {
       // Cache directory: the system may clear it later; the shared copy is wherever the user sends it
       const file = new File(Paths.cache, `spendly-${new Date().toISOString().slice(0, 10)}.csv`);
       file.create({ overwrite: true });
-      file.write(expensesToCsv(expenses, categories));
+      file.write(expensesToCsv(expenses, withDisplayNames(categories)));
       await Sharing.shareAsync(file.uri, {
         mimeType: 'text/csv',
         UTI: 'public.comma-separated-values-text',
-        dialogTitle: 'Export expenses',
+        dialogTitle: t('exportCsv.shareTitle'),
       });
-      setMessage({ error: false, text: `Exported ${expenses.length} ${expenses.length === 1 ? 'expense' : 'expenses'}.` });
+      setMessage({ error: false, text: t('exportCsv.success', { count: expenses.length }) });
     } catch {
-      setMessage({ error: true, text: "Couldn't export. Nothing was shared; try again." });
+      setMessage({ error: true, text: t('exportCsv.error') });
     } finally {
       setBusy(false);
     }
   };
 
   const countLabel =
-    count === null ? ' ' : count === 0 ? 'No expenses in this range' : `${count} ${count === 1 ? 'expense' : 'expenses'} will be exported`;
+    count === null ? ' ' : count === 0 ? t('exportCsv.count.none') : t('exportCsv.count.willExport', { count });
 
   return (
     <Screen edges={['bottom']}>
@@ -97,8 +99,8 @@ export function ExportScreen() {
         style={EdgeToEdge.scroll}
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
         <Animated.View entering={entering} style={styles.sections}>
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Date range</Text>
-          <OptionGroup<RangeKey> accessibilityLabel="Date range" options={RANGES} value={range} onChange={setRange} />
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('exportCsv.range.label')}</Text>
+          <OptionGroup<RangeKey> accessibilityLabel={t('exportCsv.range.label')} options={RANGES} value={range} onChange={setRange} />
           <View style={styles.countSlot} accessibilityLiveRegion="polite">
             <Animated.Text key={countLabel} {...fade} style={[styles.body, styles.countText, { color: colors.textPrimary }]}>
               {countLabel}
@@ -106,21 +108,19 @@ export function ExportScreen() {
           </View>
           {range !== 'all' && (
             <Animated.Text {...fade} style={[styles.note, { color: colors.textSecondary }]}>
-              From {formatDay(new Date(rangeFor(range).start))} to today.
+              {t('exportCsv.range.from', { date: formatDay(new Date(rangeFor(range).start)) })}
             </Animated.Text>
           )}
 
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Fields included</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('exportCsv.fields.title')}</Text>
           <Text style={[styles.body, { color: colors.textPrimary }]}>{CsvFields.join(', ')}</Text>
           <Text style={[styles.note, { color: colors.textSecondary }]}>
-            Amounts use a dot as the decimal separator; dates and times are in this device&apos;s time zone. Each
-            expense keeps its own currency.
+            {t('exportCsv.fields.note')}
           </Text>
 
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Where it goes</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('exportCsv.destination.title')}</Text>
           <Text style={[styles.note, { color: colors.textSecondary }]}>
-            Spendly writes a CSV file on this device and opens the share sheet. The file only goes where you send it, such
-            as Files, email or a spreadsheet app. Nothing is uploaded by Spendly.
+            {t('exportCsv.destination.note')}
           </Text>
 
           {message && (
@@ -134,7 +134,7 @@ export function ExportScreen() {
             </Animated.View>
           )}
 
-          <Button label="Export CSV" disabled={busy || count === 0} onPress={exportCsv} />
+          <Button label={t('exportCsv.button')} disabled={busy || count === 0} onPress={exportCsv} />
         </Animated.View>
       </ScrollView>
     </Screen>
