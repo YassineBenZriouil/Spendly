@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { fade, useEnterTransition } from '@/animation/transitions';
@@ -10,9 +10,10 @@ import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { OptionGroup } from '@/components/OptionGroup';
 import { Screen } from '@/components/Screen';
+import { buildHighlights, MIN_BASELINE_PERIODS, usualByCategory, type Highlight, type HighlightKind } from '@/domain/insights/highlights';
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
-import { formatMoney } from '@/domain/money/money.format';
+import { deviceLocale, formatMoney } from '@/domain/money/money.format';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -156,9 +157,25 @@ type InsightsContentProps = {
 
 function InsightsContent({ insights, kind, offset, categories }: InsightsContentProps) {
   const { colors } = useTheme();
-  const { currencyCode, totalMinor, previousTotalMinor, mostFrequent } = insights;
+  const { currencyCode, totalMinor, previousTotalMinor } = insights;
   const total = totalMinor > 0 ? formatMoney(totalMinor, currencyCode) : 'Nothing spent';
-  const mostFrequentCategory = mostFrequent && categories.find((c) => c.id === mostFrequent.categoryId);
+  const nameOf = (categoryId: string) => categories.find((c) => c.id === categoryId)?.name ?? 'Unknown category';
+  const weekday = new Intl.DateTimeFormat(deviceLocale(), { weekday: 'long' });
+  const highlights = buildHighlights({
+    kind,
+    currencyCode,
+    isCurrent: insights.isCurrent,
+    current: { totalMinor, byCategory: insights.byCategory },
+    baseline: insights.baseline,
+    days: insights.days,
+    minimumMinor: insights.minimumMinor,
+    categoryName: nameOf,
+    dayName: (day) => weekday.format(day),
+  });
+  // Per-category "vs usual" only once there is enough history to know what usual is
+  const usual = insights.baseline.length >= MIN_BASELINE_PERIODS ? usualByCategory(insights.baseline) : null;
+  // Tap through to the expenses behind a highlight or a category
+  const openCategory = (categoryId: string) => router.navigate({ pathname: '/activity', params: { categoryId } });
   // Charts restart (bars grow from the baseline) when the period or currency changes
   const chartKey = `${insights.period.start.toISOString()}-${currencyCode}`;
 
@@ -167,6 +184,21 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
         showsVerticalScrollIndicator={false}
         style={EdgeToEdge.scroll}
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
+      <Card>
+        <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Highlights</Text>
+        <View style={styles.highlights}>
+          {highlights.map((highlight) => (
+            // Keyed: a highlight that changes with the period fades in
+            <Animated.View key={highlight.id} entering={fade.entering}>
+              <HighlightRow
+                highlight={highlight}
+                onPress={highlight.categoryId ? () => openCategory(highlight.categoryId!) : undefined}
+              />
+            </Animated.View>
+          ))}
+        </View>
+      </Card>
+
       <Card>
         <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Total spent</Text>
         <View style={styles.totalSlot} accessible accessibilityLabel={`Total spent, ${total}`}>
@@ -203,6 +235,9 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
             categories={categories}
             totalMinor={totalMinor}
             currencyCode={currencyCode}
+            usual={usual}
+            minimumMinor={insights.minimumMinor}
+            onPressCategory={openCategory}
           />
         ) : (
           // In flow (the card sizes to it), so it fades in rather than cross-fading over the breakdown
@@ -212,18 +247,37 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
         )}
       </Card>
 
-      {mostFrequent && (
-        <Animated.View {...fade}>
-          <Card>
-            <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>Most frequent</Text>
-            <Text style={[styles.highlight, { color: colors.textPrimary }]}>
-              {mostFrequentCategory?.name ?? 'Unknown category'} · {mostFrequent.count}{' '}
-              {mostFrequent.count === 1 ? 'expense' : 'expenses'}
-            </Text>
-          </Card>
-        </Animated.View>
-      )}
     </ScrollView>
+  );
+}
+
+const HIGHLIGHT_ICONS: Record<HighlightKind, 'arrowUp' | 'arrowDown' | 'calendar' | 'insight' | 'check'> = {
+  totalUp: 'arrowUp',
+  categoryUp: 'arrowUp',
+  totalDown: 'arrowDown',
+  categoryDown: 'arrowDown',
+  missing: 'insight',
+  biggestDay: 'calendar',
+  frequent: 'insight',
+  normal: 'check',
+  learning: 'insight',
+};
+
+/** One highlight sentence; the direction is in the words, the icon only repeats it. Tappable when it is about a category. */
+function HighlightRow({ highlight, onPress }: { highlight: Highlight; onPress?: () => void }) {
+  const { colors } = useTheme();
+  const content = (
+    <View style={styles.highlightRow}>
+      <Icon name={HIGHLIGHT_ICONS[highlight.kind]} color={colors.textSecondary} size={16} />
+      <Text style={[styles.highlightText, { color: colors.textPrimary }]}>{highlight.text}</Text>
+      {onPress && <Icon name="chevronRight" color={colors.textSecondary} size={14} />}
+    </View>
+  );
+  if (!onPress) return <View accessible>{content}</View>;
+  return (
+    <Pressable accessibilityRole="button" accessibilityHint="Shows these expenses in Activity" onPress={onPress}>
+      {content}
+    </Pressable>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
@@ -14,6 +14,7 @@ import { fade, settleTo } from '@/animation/transitions';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { Icon } from '@/components/Icon';
 import type { ExpenseCategory } from '@/domain/category/category.types';
+import { changeVsUsual, type Change } from '@/domain/insights/highlights';
 import type { CategorySpend } from '@/domain/insights/insights.repository';
 import { formatMoney } from '@/domain/money/money.format';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -25,13 +26,17 @@ type CategoryBreakdownProps = {
   categories: ExpenseCategory[];
   totalMinor: number;
   currencyCode: string;
+  /** Usual spending per category; null until there is enough history. */
+  usual: Map<string, number> | null;
+  minimumMinor: number;
+  onPressCategory: (categoryId: string) => void;
 };
 
 /**
  * Spending by category as one series: bars share one ink color (identity is the labelled icon, not the bar),
  * longest = largest category. Every row is labelled, so this list doubles as the data table.
  */
-export function CategoryBreakdown({ items, categories, totalMinor, currencyCode }: CategoryBreakdownProps) {
+export function CategoryBreakdown({ items, categories, totalMinor, currencyCode, usual, minimumMinor, onPressCategory }: CategoryBreakdownProps) {
   const reducedMotion = useReducedMotion();
   const byId = new Map(categories.map((category) => [category.id, category]));
   const max = items[0]?.totalMinor ?? 0;
@@ -50,6 +55,8 @@ export function CategoryBreakdown({ items, categories, totalMinor, currencyCode 
             ratio={max > 0 ? item.totalMinor / max : 0}
             share={totalMinor > 0 ? Math.round((item.totalMinor / totalMinor) * 100) : 0}
             currencyCode={currencyCode}
+            change={usual ? changeVsUsual(item.totalMinor, usual.get(item.categoryId) ?? 0, minimumMinor) : null}
+            onPress={() => onPressCategory(item.categoryId)}
           />
         </Animated.View>
       ))}
@@ -63,9 +70,14 @@ type CategoryRowProps = {
   ratio: number;
   share: number;
   currencyCode: string;
+  /** Compared with usual; null when there is no usual to compare with. */
+  change: Change | null;
+  onPress: () => void;
 };
 
-function CategoryRow({ item, category, ratio, share, currencyCode }: CategoryRowProps) {
+const CHANGE_WORDS = { up: 'up', down: 'down', same: 'about usual' } as const;
+
+function CategoryRow({ item, category, ratio, share, currencyCode, change, onPress }: CategoryRowProps) {
   const { colors, categoryColors } = useTheme();
   const reducedMotion = useReducedMotion();
   const trackWidth = useSharedValue(0);
@@ -90,9 +102,16 @@ function CategoryRow({ item, category, ratio, share, currencyCode }: CategoryRow
   const name = category?.name ?? 'Unknown category';
   const amount = formatMoney(item.totalMinor, currencyCode);
   const count = `${item.count} ${item.count === 1 ? 'expense' : 'expenses'}`;
+  // Direction in words plus an arrow, never by color alone
+  const changeText = change ? (change.direction === 'same' ? CHANGE_WORDS.same : `${CHANGE_WORDS[change.direction]} ${change.percent}% vs usual`) : null;
 
   return (
-    <View accessible accessibilityLabel={`${name}, ${amount}, ${share} percent, ${count}`} style={styles.row}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${name}, ${amount}, ${share} percent, ${count}${changeText ? `, ${changeText}` : ''}`}
+      accessibilityHint="Shows these expenses in Activity"
+      onPress={onPress}
+      style={styles.row}>
       <View style={[styles.icon, { backgroundColor: colors.surfaceSecondary }]}>
         <Icon name={category?.icon ?? 'other'} color={category ? categoryColors[category.colorToken] : colors.textSecondary} size={16} />
       </View>
@@ -111,7 +130,15 @@ function CategoryRow({ item, category, ratio, share, currencyCode }: CategoryRow
           </View>
           <Text style={[styles.share, { color: colors.textSecondary }]}>{share}%</Text>
         </View>
+        {changeText && (
+          <View style={styles.line}>
+            {change && change.direction !== 'same' && (
+              <Icon name={change.direction === 'up' ? 'arrowUp' : 'arrowDown'} color={colors.textSecondary} size={12} />
+            )}
+            <Text style={[styles.change, { color: colors.textSecondary }]}>{changeText}</Text>
+          </View>
+        )}
       </View>
-    </View>
+    </Pressable>
   );
 }

@@ -43,6 +43,7 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 4,
     borderBottomRightRadius: 4,
   },
+  change: Typography.caption,
   share: {
     ...Typography.caption,
     fontVariant: ['tabular-nums'],

@@ -66,12 +66,18 @@ Everything you've recorded, newest first.
 
 A quick, honest look at where your money goes.
 
+**Highlights come first:** up to three short sentences about what's different, like *"Food is up 45% compared with your usual week"*, *"You haven't spent on Transport this week"* or *"Biggest day: Saturday, €82.00"*. Tap one about a category to see those expenses in Activity.
+
+- **"Usual" means your usual,** not just last week: it's your typical spending over your last eight weeks or months, counted over the same days. One odd week doesn't throw it off.
+- **No drama over small amounts.** A change is mentioned only when it's both big in percent and big enough in money: going from €2 to €4 is not "up 100%".
+- **Honest when there's nothing to say:** a normal week is called a normal week. Until you have a few weeks of history, Spendly doesn't claim anything is unusual.
+
 - Switch between **Week** and **Month**, and step back through earlier weeks and months.
 - **Total spent** for the period.
 - **Comparison with the previous period.** For the current week or month, it compares against the same days last time, so it's a fair comparison even halfway through.
 - **Daily spending chart.** Tap a day to see its exact amount. Days you spent nothing look different from days before you started using Spendly or still in the future, so "I spent nothing" is never confused with "no data yet".
-- **Spending by category**, with each category's share of the total.
-- **Your most frequent category.**
+- **Spending by category**, with each category's share of the total and whether it's up, down or about usual (always in words, not just color). Tap a category to see its expenses.
+- **Your most frequent category** shows up as a highlight when one category clearly dominates.
 - **Multiple currencies?** Totals are kept separate per currency and never converted. Pick which currency to look at.
 
 ---

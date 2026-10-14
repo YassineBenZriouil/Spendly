@@ -283,12 +283,26 @@ interpret everything themselves.
 - **Remove what nobody reads:** "Most frequent category" folds into the highlights;
   the chart stays only if it earns its place in Phase 7.
 
+**Decisions made while building it**
+
+- Rules (`domain/insights/highlights.ts`): overall change vs usual (only when something was spent), per-category
+  up/down, a usual category with nothing spent, the biggest day (≥ 40% of the period, ≥ 2 spent days), the most
+  frequent category (≥ 3 expenses and ≥ 40% of them). Changes always rank above facts, then by money; ties by id.
+- Baseline (`baselineWindows`): up to 8 earlier periods, each cut to the days the current one has had, and only
+  periods that started after the first expense (a half-tracked first period would drag "usual" down).
+- Minimum change: 10 major units (10 €, 10 $, 10 MAD), 1,000 for zero-decimal currencies. It's a rule by currency
+  exponent, not real value (noted as a shortcut in the code).
+- Fallbacks: "A normal week: nothing stands out" with enough history; "After a few weeks of history…" without.
+- Category rows say "up 45% vs usual" / "down 30% vs usual" / "about usual" with an arrow, once there is a usual.
+- Tap-through: Activity's category filter (it has no date filter, so the period isn't carried over).
+- "Most frequent category" card removed: it's a highlight now. The daily chart stays until Phase 7 decides.
+
 **Done when**
 
-- [ ] Highlight rules are pure functions with tests for every rule, thresholds, ties, short history, multiple currencies, DST weeks.
-- [ ] Every highlight number matches a hand-calculated value on seeded data.
-- [ ] A new user with < 4 periods of history sees no "unusual" claims.
-- [ ] Every highlight is read out correctly by VoiceOver and TalkBack.
+- [x] Highlight rules are pure functions with tests for every rule, thresholds, ties, short history, multiple currencies, DST weeks. *(`highlights-test`, `baseline-test`)*
+- [x] Every highlight number matches a hand-calculated value on seeded data. *(`baseline-test`: 150 € vs a usual 100 € = +50%, real SQL)*
+- [x] A new user with < 4 periods of history sees no "unusual" claims.
+- [ ] Every highlight is read out correctly by VoiceOver and TalkBack. *Device.*
 
 ---
 

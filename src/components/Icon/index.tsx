@@ -53,6 +53,7 @@ const icons = {
   arrowDown: { ios: 'arrow.down', android: 'arrow_downward', web: 'arrow_downward' },
   hidden: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
   backup: { ios: 'archivebox', android: 'archive', web: 'archive' },
+  insight: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
   restore: { ios: 'clock.arrow.circlepath', android: 'settings_backup_restore', web: 'settings_backup_restore' },
 } as const;
 

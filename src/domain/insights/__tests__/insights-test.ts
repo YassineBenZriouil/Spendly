@@ -84,7 +84,6 @@ describe('loadInsights', () => {
       { categoryId: 'groceries', totalMinor: 3000, count: 1 },
       { categoryId: 'food', totalMinor: 1250, count: 2 },
     ]);
-    expect(insights.mostFrequent?.categoryId).toBe('food');
     expect(insights.days.map((d) => d.totalMinor)).toEqual([1250, 0, 3000, 0, 0, 0, 0]);
     // Thu–Sun haven't happened yet: no data, not zero
     expect(insights.days.map((d) => d.state)).toEqual(['spent', 'zero', 'spent', 'noData', 'noData', 'noData', 'noData']);

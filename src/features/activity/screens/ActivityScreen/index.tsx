@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Animated, {
@@ -41,6 +41,21 @@ export function ActivityScreen() {
   const [query, setQuery] = useState('');
   const [text, setText] = useState('');
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
+
+  // Opened from Insights with a category: show just those expenses (adjusted during render, not in an effect),
+  // then clear the request so it applies once and the same category can be requested again later
+  const { categoryId: requestedCategoryId } = useLocalSearchParams<{ categoryId?: string }>();
+  const [appliedRequest, setAppliedRequest] = useState<string | undefined>(undefined);
+  if (requestedCategoryId !== appliedRequest) {
+    setAppliedRequest(requestedCategoryId);
+    if (requestedCategoryId) {
+      setCategoryId(requestedCategoryId);
+      setQuery('');
+    }
+  }
+  useEffect(() => {
+    if (requestedCategoryId) router.setParams({ categoryId: undefined });
+  }, [requestedCategoryId]);
   useEffect(() => {
     const timer = setTimeout(() => setText(query), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);

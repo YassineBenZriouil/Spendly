@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { Radius, Spacing, Typography } from '@/theme/tokens';
+import { MinTouchTarget, Radius, Spacing, Typography } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
   title: {
@@ -62,5 +62,17 @@ export const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   note: Typography.caption,
-  highlight: Typography.body,
+  highlights: {
+    gap: Spacing.md,
+  },
+  highlightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    minHeight: MinTouchTarget,
+  },
+  highlightText: {
+    ...Typography.body,
+    flex: 1,
+  },
 });
