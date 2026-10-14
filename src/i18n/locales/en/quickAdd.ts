@@ -38,4 +38,9 @@ export const quickAdd = {
   'quickAdd.undo.label': 'Undo',
   'quickAdd.undo.hint': 'Removes {expense}',
   'quickAdd.undo.expense': '{amount}, {category}',
+  'quickAdd.link.saved': "Saved {amount}, {category}. Undo is available.",
+  'quickAdd.link.problem.amount': "The link's amount couldn't be read, so nothing was saved. Set it here.",
+  'quickAdd.link.problem.currency': "The link's currency isn't one Spendly knows, so nothing was saved.",
+  'quickAdd.link.problem.category': "The link's category wasn't found, so nothing was saved. Pick one here.",
+  'quickAdd.link.problem.noQuickLog': "Quick log isn't set up yet: Settings → Shortcuts.",
 } as const satisfies Record<`quickAdd.${string}`, Message>;

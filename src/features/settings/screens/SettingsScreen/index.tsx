@@ -246,6 +246,14 @@ export function SettingsScreen() {
             <ReminderSettings />
           </Section>
 
+          <Section title={t('settings.section.shortcuts')}>
+            <ListRow
+              label={t('settings.shortcuts.label')}
+              caption={t('settings.shortcuts.caption')}
+              onPress={() => router.push('/settings/shortcuts')}
+            />
+          </Section>
+
           <Section title={t('settings.section.appearance')}>
             <Setting label={t('settings.language.label')}>
               <OptionGroup<LanguagePreference>

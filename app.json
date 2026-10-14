@@ -72,7 +72,29 @@
           "faceIDPermission": "Spendly uses Face ID to unlock the app when App lock is on."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./assets/fonts/SpaceGrotesk-SemiBold.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "Today",
+              "label": "Spendly",
+              "description": "Today's spending. Tap to add an expense.",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ],
+      "./plugins/withQuickLogTile"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -304,6 +304,18 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 
 **Goal:** see today and log something without opening the app first.
 
+> **Status (2026-10-14): built in code**; device checks pending. **Decided:** a free Apple account (Personal Team)
+> can't use App Groups, so there is **no iOS widget** (the plan's fallback). iOS gets the deep links, used from Siri /
+> Shortcuts ("Open URLs"). "Log 20 Food" **opens the app, saves at once** and offers Undo (no background save: that
+> would need native code writing the database). Android: home-screen widget with `react-native-android-widget`
+> (its background task reads today's totals straight from the database, so no separate snapshot; refreshed after
+> every write, on return to the app and every 30 minutes, which covers midnight), and the quick settings tile
+> "Quick log" from a local config plugin (`plugins/withQuickLogTile.js`, a small Kotlin `TileService` that opens
+> `spendly://add?quick=1`). Links: `domain/links/addLink.ts` (pure, tested), route `src/app/add.tsx` → Add
+> (`useAddLink`). Settings → Shortcuts sets up the Quick log and shares the links. App entry is now `index.js`
+> (registers the widget's task). **Known limits:** the widget picker's label isn't translated; the tile's Kotlin was
+> checked by generating the project, not compiled (your build is the first compile).
+
 **Today:** the app opens straight onto Add; everything lives inside the app.
 
 **Work**
@@ -328,7 +340,9 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 - [ ] Widget shows the right total after save, undo, edit, delete and at midnight. *Device.*
 - [ ] "Log 20 Food" works from Siri / Shortcuts and the Android tile, and the expense appears in Activity with
       Undo available. *Device.*
-- [ ] Deep-link parsing is a pure, tested function (amount, currency, category name in English or Arabic).
+- [x] Deep-link parsing is a pure, tested function (amount, currency, category name in English or Arabic).
+      (`domain/links/__tests__/addLink-test.ts`.)
+- New native modules: `react-native-android-widget`, and the tile plugin (new build).
 
 ---
 

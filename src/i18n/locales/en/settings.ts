@@ -79,4 +79,7 @@ export const settings = {
   'settings.developer.samplesFailed': "Couldn't add sample expenses",
   'settings.section.security': "Security",
   'settings.section.reminder': "Reminder",
+  'settings.section.shortcuts': "Shortcuts",
+  'settings.shortcuts.label': "Quick log and shortcuts",
+  'settings.shortcuts.caption': "Log in one step from Siri, Shortcuts, a widget or the quick settings panel",
 } as const satisfies Record<`settings.${string}`, Message>;

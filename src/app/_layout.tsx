@@ -13,6 +13,7 @@ import { LockScreen } from '@/features/lock/components/LockScreen';
 import { useAppLock } from '@/features/lock/hooks/useAppLock';
 import { cleanUpPhotos } from '@/features/photos/cleanUpPhotos';
 import { useReminder } from '@/features/reminder/useReminder';
+import { useWidgetSync } from '@/features/widget/useWidgetSync';
 import { databaseHealth } from '@/storage/database/health';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -51,6 +52,7 @@ function ThemedNavigation() {
   }, [damaged]);
   const lockStatus = useAppLock();
   useReminder();
+  useWidgetSync();
 
   // Housekeeping once per launch: photo files nothing refers to any more
   useEffect(() => {
@@ -86,6 +88,7 @@ function ThemedNavigation() {
           <Stack.Screen name="settings/currency" options={{ title: t('common.screen.currency') }} />
           <Stack.Screen name="settings/budget" options={{ title: t('common.screen.budget') }} />
           <Stack.Screen name="settings/export" options={{ title: t('common.screen.export') }} />
+          <Stack.Screen name="settings/shortcuts" options={{ title: t('common.screen.shortcuts') }} />
           <Stack.Screen name="categories/index" options={{ title: t('common.screen.categories') }} />
           <Stack.Screen name="categories/[id]" options={{ title: t('common.screen.category') }} />
           <Stack.Screen name="expense/[id]" options={{ title: t('common.screen.expense') }} />

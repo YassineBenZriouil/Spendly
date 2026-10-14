@@ -80,4 +80,7 @@ export const settings: Translation<typeof english> = {
   'settings.developer.samplesFailed': 'تعذّرت إضافة المصروفات التجريبية',
   'settings.section.security': "الأمان",
   'settings.section.reminder': "التذكير",
+  'settings.section.shortcuts': "الاختصارات",
+  'settings.shortcuts.label': "التسجيل السريع والاختصارات",
+  'settings.shortcuts.caption': "سجّل بخطوة واحدة من Siri أو الاختصارات أو أداة الشاشة الرئيسية أو لوحة الإعدادات السريعة",
 };

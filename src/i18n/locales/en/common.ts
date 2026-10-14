@@ -17,4 +17,5 @@ export const common = {
   'common.cancel': 'Cancel',
   'common.clear': 'Clear',
   'common.error.nothingChanged': 'Nothing was changed. Try again.',
+  'common.screen.shortcuts': "Shortcuts",
 } as const satisfies Record<`common.${string}`, Message>;

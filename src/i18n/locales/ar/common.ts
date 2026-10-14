@@ -31,4 +31,5 @@ export const common: Translation<typeof english> = {
   'common.cancel': 'إلغاء',
   'common.clear': 'مسح',
   'common.error.nothingChanged': 'لم يتغيّر شيء. حاول مرة أخرى.',
+  'common.screen.shortcuts': "الاختصارات",
 };

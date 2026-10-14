@@ -36,6 +36,7 @@ import { CategoryGrid } from '../../components/CategoryGrid';
 import { Keypad } from '../../components/Keypad';
 import { MorphChip } from '../../components/MorphChip';
 import { SaveAction } from '../../components/SaveAction';
+import { useAddLink } from '../../hooks/useAddLink';
 import { useAmountDrag } from '../../hooks/useAmountDrag';
 import { useCategoryMorph } from '../../hooks/useCategoryMorph';
 import { useAmountSuggestions } from '../../hooks/useAmountSuggestions';
@@ -56,6 +57,8 @@ export function QuickAddScreen() {
   const config = dragConfigFor(currencyCode, { sensitivity: dragSensitivity, increment: amountIncrement });
 
   const { state, dispatch, save, undo, undoable, undoError } = useQuickAdd(currencyCode);
+  // spendly://add links (widget, tile, Siri / Shortcuts): pre-fill, or save at once
+  const linkMessage = useAddLink({ categories: allCategories, loaded: categoriesLoaded, currencyCode, dispatch });
   const { draft, phase } = state;
   const { stageRef, anchorRef, chips, show, hide, remove } = useCategoryMorph();
   /** What the bottom panel shows. Navigation-ish UI state, not part of the draft. */
@@ -303,6 +306,12 @@ export function QuickAddScreen() {
       {undoError && (
         <View style={styles.error}>
           <ErrorBanner message={undoError} />
+        </View>
+      )}
+
+      {linkMessage && (
+        <View style={styles.error}>
+          <ErrorBanner message={linkMessage} />
         </View>
       )}
 

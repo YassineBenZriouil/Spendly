@@ -37,4 +37,9 @@ export const quickAdd: Translation<typeof english> = {
   'quickAdd.undo.label': 'تراجع',
   'quickAdd.undo.hint': 'يحذف {expense}',
   'quickAdd.undo.expense': '{amount}، {category}',
+  'quickAdd.link.saved': "تم حفظ {amount}، {category}. يمكنك التراجع.",
+  'quickAdd.link.problem.amount': "تعذّرت قراءة المبلغ في الرابط، لذا لم يُحفظ شيء. حدّده هنا.",
+  'quickAdd.link.problem.currency': "عملة الرابط غير معروفة لـ Spendly، لذا لم يُحفظ شيء.",
+  'quickAdd.link.problem.category': "لم يُعثر على فئة الرابط، لذا لم يُحفظ شيء. اختر فئة هنا.",
+  'quickAdd.link.problem.noQuickLog': "لم يتم إعداد التسجيل السريع بعد: الإعدادات ← الاختصارات.",
 };

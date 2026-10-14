@@ -10,6 +10,7 @@ import { categories } from './categories';
 import { data } from './data';
 import { lock } from './lock';
 import { reminder } from './reminder';
+import { shortcuts } from './shortcuts';
 
 /** English: the source catalog. Every key lives here first; other languages translate it. */
 export const en = {
@@ -25,6 +26,7 @@ export const en = {
   ...data,
   ...lock,
   ...reminder,
+  ...shortcuts,
 };
 
 export type MessageKey = keyof typeof en;

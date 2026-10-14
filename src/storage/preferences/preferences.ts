@@ -2,6 +2,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 
 import { parseBudget, type Budget } from '@/domain/budget/budget';
+import { isQuickLog, type QuickLog } from '@/domain/links/addLink';
 import { deviceCurrency } from '@/domain/money/money.format';
 import { isReminderTime, type ReminderTime } from '@/domain/reminder/reminder';
 import { t } from '@/i18n';
@@ -35,6 +36,8 @@ export type AppPreferences = {
   lockGraceSeconds: LockGraceSeconds;
   /** Daily reminder time; absent: off (the default). This phone only, never restored from a backup. */
   reminder?: ReminderTime;
+  /** The expense `spendly://add?quick=1` saves (Siri / Shortcuts, the Android tile). Absent: not set up. */
+  quickLog?: QuickLog;
 };
 
 export type LockGraceSeconds = 0 | 60;
@@ -74,6 +77,7 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   appLock: (v) => typeof v === 'boolean',
   lockGraceSeconds: (v) => v === 0 || v === 60,
   reminder: isReminderTime,
+  quickLog: isQuickLog,
 };
 
 /** Only the known, valid preference values in `value` (from disk or a backup file); anything else is dropped. */
