@@ -2,6 +2,7 @@ import { BuiltInCategories } from '@/domain/category/builtInCategories';
 import { createSqliteCategoryRepository } from '@/domain/category/category.repository';
 import { createCategory } from '@/domain/category/category.service';
 import { createSqliteExpenseRepository } from '@/domain/expense/expense.repository';
+import { createSqliteRecurrenceRepository } from '@/domain/recurrence/recurrence.repository';
 import { createExpense, updateExpense } from '@/domain/expense/expense.service';
 import { migrate } from '@/storage/database/migrations';
 import { createTestDatabase } from '@/storage/database/testing/createTestDatabase';
@@ -15,7 +16,12 @@ async function phone() {
   const db = createTestDatabase();
   await migrate(db);
   const database = async () => db;
-  return { db, expenses: createSqliteExpenseRepository(database), categories: createSqliteCategoryRepository(database) };
+  return {
+    db,
+    expenses: createSqliteExpenseRepository(database),
+    categories: createSqliteCategoryRepository(database),
+    recurrences: createSqliteRecurrenceRepository(database),
+  };
 }
 
 const coffee = createCategory({ name: 'Coffee', icon: 'coffee', colorToken: 'amber' }, 10, new Date('2026-02-01T00:00:00.000Z'));
@@ -135,3 +141,51 @@ describe('parseBackup', () => {
     if (result.ok) expect(result.backup.expenses[0]).not.toHaveProperty('extra');
   });
 });
+
+describe('backup format 2: repeating expenses', () => {
+  it('carries rules and confirmed / skipped occurrences to another phone', async () => {
+    const first = await phone();
+    await first.categories.add(coffee);
+    const source = expenses[0];
+    await first.recurrences.saveRepeating(source, 'daily');
+    const [, second] = await first.recurrences.pending(new Date('2026-10-04T12:00:00.000Z'));
+    const confirmed = await first.recurrences.confirm(second);
+    const file = JSON.stringify(
+      createBackup({
+        expenses: await first.expenses.search({}),
+        categories: await first.categories.list(),
+        preferences: {},
+        ...(await first.recurrences.all()),
+      }),
+    );
+
+    const target = await phone();
+    await restoreBackup(target.db, parsed(file));
+    expect(await target.expenses.get(confirmed.id)).toEqual(confirmed);
+    expect((await target.recurrences.forExpense(source.id))?.frequency).toBe('daily');
+    // The confirmed occurrence stays handled on the new phone: it is not offered again
+    const pendingIndexes = (await target.recurrences.pending(new Date('2026-10-04T12:00:00.000Z'))).map((o) => o.index);
+    expect(pendingIndexes).not.toContain(second.index);
+  });
+
+  it('still reads format 1 files (no repeating expenses)', async () => {
+    const file = { ...JSON.parse(await backupFromFirstPhone()), format: 1 };
+    delete file.recurrences;
+    delete file.occurrences;
+    const result = parseBackup(JSON.stringify(file));
+    expect(result.ok && result.backup.recurrences).toEqual([]);
+  });
+
+  it('rejects a file whose repeat refers to a rule or category that is missing', async () => {
+    const file = JSON.parse(await backupFromFirstPhone());
+    const reason = (value: unknown) => {
+      const result = parseBackup(JSON.stringify(value));
+      return result.ok ? null : result.reason;
+    };
+    expect(reason({ ...file, occurrences: [{ recurrenceId: 'nowhere', index: 1, outcome: 'skipped', expenseId: null, handledAt: file.createdAt }] })).toMatch(
+      /repeating expenses/,
+    );
+    expect(reason({ ...file, recurrences: [{ id: 'r', frequency: 'hourly' }] })).toMatch(/repeating expenses/);
+  });
+});
+

@@ -15,17 +15,22 @@ import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import type { Expense } from '@/domain/expense/expense.types';
+import type { Occurrence } from '@/domain/recurrence/recurrence.types';
 import type { UndoKind } from '@/features/undo/state/undoStore';
 import { formatMoney } from '@/domain/money/money.format';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { useUndo } from '@/features/undo/hooks/useUndo';
-import { t } from '@/i18n';
+import { t, type MessageKey } from '@/i18n';
 import { useTheme } from '@/theme/ThemeProvider';
 import { EdgeToEdge } from '@/theme/tokens';
 
+import { AgainSwipe } from '../../components/AgainSwipe';
 import { DAY_HEADER_HEIGHT, DayHeader } from '../../components/DayHeader';
 import { EXPENSE_ROW_HEIGHT, ExpenseRow } from '../../components/ExpenseRow';
+import { PendingRow } from '../../components/PendingRow';
+import { useActivityActions } from '../../hooks/useActivityActions';
 import { useExpenseSearch } from '../../hooks/useExpenseSearch';
+import { usePendingOccurrences } from '../../hooks/usePendingOccurrences';
 import { groupByDay, type ActivityItem } from '../../utils/groupByDay';
 import { styles } from './styles';
 
@@ -64,7 +69,10 @@ export function ActivityScreen() {
 
   const { result, failed, retry } = useExpenseSearch({ text, categoryId });
   const filtered = text.trim() !== '' || categoryId !== undefined;
-  const items = result ? groupByDay(result.expenses) : [];
+  // Due repeating expenses show among the rows, except while searching by text; the category filter applies to them
+  const pending = usePendingOccurrences();
+  const visiblePending = text.trim() ? [] : pending.filter((occurrence) => !categoryId || occurrence.template.categoryId === categoryId);
+  const items = result ? groupByDay(result.expenses, visiblePending) : [];
 
   // Fixed row heights: the list can jump anywhere in a long history without measuring
   const offsets: number[] = [];
@@ -75,7 +83,8 @@ export function ActivityScreen() {
   }
 
   // Delete or edit from the edit screen: Undo here (still offered after a restart, within the window)
-  const { action: undoable, undo, error: undoError } = useUndo(['deleted', 'edited']);
+  // Also Again (saved), and Confirm / Skip of repeating expenses
+  const { action: undoable, undo, error: undoError } = useUndo(['saved', 'deleted', 'edited', 'confirmed', 'skipped']);
   const undoLabel = undoable ? describeUndo(undoable.kind, undoable.expense) : '';
 
   const categoryById = new Map(categories.map((category) => [category.id, category]));
@@ -86,11 +95,34 @@ export function ActivityScreen() {
   const layout = useLayoutTransition();
 
   const openExpense = (expense: Expense) => router.push({ pathname: '/expense/[id]', params: { id: expense.id } });
+  const occurrenceName = (occurrence: Occurrence) =>
+    occurrence.template.title ?? categoryById.get(occurrence.template.categoryId)?.name ?? t('activity.row.unknownCategory');
+  const actions = useActivityActions(occurrenceName);
 
   const renderItem = ({ item }: { item: ActivityItem }) => {
     if (item.type === 'day') return <DayHeader day={item.day} totals={item.totals} />;
+    if (item.type === 'pending') {
+      return (
+        <Animated.View entering={fade.entering} exiting={fade.exiting}>
+          <PendingRow
+            occurrence={item.occurrence}
+            category={categoryById.get(item.occurrence.template.categoryId)}
+            onConfirm={actions.confirm}
+            onSkip={actions.skip}
+            onMore={actions.more}
+          />
+        </Animated.View>
+      );
+    }
     const row = (
-      <ExpenseRow expense={item.expense} category={categoryById.get(item.expense.categoryId)} onPress={openExpense} />
+      <AgainSwipe onAgain={() => actions.again(item.expense)}>
+        <ExpenseRow
+          expense={item.expense}
+          category={categoryById.get(item.expense.categoryId)}
+          onPress={openExpense}
+          onAgain={actions.again}
+        />
+      </AgainSwipe>
     );
     return result?.freshIds.has(item.key) ? <Animated.View entering={rowEntering}>{row}</Animated.View> : row;
   };
@@ -216,6 +248,18 @@ export function ActivityScreen() {
             />
           ))}
         </ScrollView>
+        {/* Several due at once (e.g. after time away): handle them together */}
+        {visiblePending.length >= 2 && (
+          <Animated.View {...fade} style={[styles.pendingBar, { backgroundColor: colors.surfaceSecondary }]}>
+            <Text style={[styles.pendingText, { color: colors.textPrimary }]}>
+              {t('activity.pending.batch', { count: visiblePending.length })}
+            </Text>
+            <View style={styles.pendingButtons}>
+              <Button label={t('activity.pending.confirmAll')} variant="secondary" onPress={() => actions.handleAll(visiblePending, 'confirm')} />
+              <Button label={t('activity.pending.skipAll')} variant="secondary" onPress={() => actions.handleAll(visiblePending, 'skip')} />
+            </View>
+          </Animated.View>
+        )}
       </View>
 
       <View style={styles.body}>
@@ -242,7 +286,7 @@ export function ActivityScreen() {
             label={t('activity.undo.button')}
             variant="secondary"
             onPress={undo}
-            accessibilityHint={t(undoable.kind === 'deleted' ? 'activity.undo.deletedHint' : 'activity.undo.editedHint')}
+            accessibilityHint={t(`activity.undo.${undoable.kind}Hint` as MessageKey)}
           />
         </Animated.View>
       )}
@@ -254,6 +298,7 @@ export function ActivityScreen() {
 function describeUndo(kind: UndoKind, expense: Expense) {
   const amount = formatMoney(expense.amountMinor, expense.currencyCode);
   const { title } = expense;
-  if (kind === 'deleted') return title ? t('activity.undo.deletedWithTitle', { amount, title }) : t('activity.undo.deleted', { amount });
-  return title ? t('activity.undo.editedWithTitle', { amount, title }) : t('activity.undo.edited', { amount });
+  return title
+    ? t(`activity.undo.${kind}WithTitle` as MessageKey, { amount, title })
+    : t(`activity.undo.${kind}` as MessageKey, { amount });
 }

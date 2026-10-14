@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View, type AccessibilityActionEvent, type AccessibilityActionInfo } from 'react-native';
-import Animated, { interpolate, interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 
@@ -46,8 +46,8 @@ export function ListRow({
   const pressed = useSharedValue(0);
 
   const rowStyle = useAnimatedStyle(() => ({
+    // No scaling: an icon inside a scaled view is shown stretched (blurry) until it is redrawn
     backgroundColor: interpolateColor(pressed.get(), [0, 1], [colors.surface, colors.surfaceSecondary]),
-    transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.98]) }],
   }));
 
   const content = (

@@ -60,15 +60,12 @@ export function CategoryTile({
   }, [dimmed, staggerIndex, reducedMotion, dim]);
 
   const tileStyle = useAnimatedStyle(() => {
-    const lift = interpolate(selection.get(), [0, 1], [1, 1.05]);
-    const stepBack = interpolate(dim.get(), [0, 1], [1, 0.94]);
-    const press = interpolate(pressed.get(), [0, 1], [1, 0.92]);
+    // Selected: outline and a small lift; others step back by fading; press dims. No scaling: the icon inside a
+    // scaled tile is shown stretched (blurry) until it is redrawn
     return {
-      opacity: interpolate(dim.get(), [0, 1], [1, 0.5]) * (reducedMotion ? interpolate(pressed.get(), [0, 1], [1, 0.7]) : 1),
+      opacity: interpolate(dim.get(), [0, 1], [1, 0.5]) * interpolate(pressed.get(), [0, 1], [1, 0.7]),
       borderColor: interpolateColor(selection.get(), [0, 1], ['transparent', colors.textPrimary]),
-      transform: reducedMotion
-        ? []
-        : [{ translateY: interpolate(selection.get(), [0, 1], [0, -3]) }, { scale: lift * stepBack * press }],
+      transform: reducedMotion ? [] : [{ translateY: interpolate(selection.get(), [0, 1], [0, -3]) }],
     };
   });
 

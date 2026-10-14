@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
-import Animated, { interpolate, interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
 import { settleTo } from '@/animation/transitions';
@@ -21,9 +21,11 @@ type ExpenseRowProps = {
   expense: Expense;
   category: ExpenseCategory | undefined;
   onPress: (expense: Expense) => void;
+  /** "Again" for screen readers (the swipe's alternative). */
+  onAgain?: (expense: Expense) => void;
 };
 
-export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
+export function ExpenseRow({ expense, category, onPress, onAgain }: ExpenseRowProps) {
   const { colors, categoryColors } = useTheme();
   const reducedMotion = useReducedMotion();
   const pressed = useSharedValue(0);
@@ -34,8 +36,8 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
   const tint = category ? categoryColors[category.colorToken] : colors.textSecondary;
 
   const rowStyle = useAnimatedStyle(() => ({
+    // No scaling: an icon inside a scaled view is shown stretched (blurry) until it is redrawn
     backgroundColor: interpolateColor(pressed.get(), [0, 1], [colors.background, colors.surfaceSecondary]),
-    transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.98]) }],
   }));
 
   return (
@@ -47,6 +49,8 @@ export function ExpenseRow({ expense, category, onPress }: ExpenseRowProps) {
           : t('activity.row.label', { category: categoryName, amount, time })
       }
       accessibilityHint={t('activity.row.hint')}
+      accessibilityActions={onAgain ? [{ name: 'again', label: t('activity.row.again') }] : undefined}
+      onAccessibilityAction={(event) => event.nativeEvent.actionName === 'again' && onAgain?.(expense)}
       onPress={() => onPress(expense)}
       onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>

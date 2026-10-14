@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { AccessibilityInfo } from 'react-native';
 
 import { expenseRepository, type ExpenseRepository } from '@/domain/expense/expense.repository';
+import { recurrenceRepository, type RecurrenceRepository } from '@/domain/recurrence/recurrence.repository';
 import { t } from '@/i18n';
 import { writeFailureMessage } from '@/storage/database/errors';
 
@@ -13,13 +14,29 @@ const DONE: Record<UndoKind, string> = {
   saved: t('activity.undo.done.saved'),
   deleted: t('activity.undo.done.deleted'),
   edited: t('activity.undo.done.edited'),
+  confirmed: t('activity.undo.done.confirmed'),
+  skipped: t('activity.undo.done.skipped'),
 };
 
 /** Reverses an action in the database. */
-export async function performUndo(action: UndoAction, repository: ExpenseRepository) {
-  if (action.kind === 'saved') await repository.remove(action.expense.id);
-  else if (action.kind === 'deleted') await repository.restore(action.expense.id);
-  else await repository.update(action.expense);
+export async function performUndo(
+  action: UndoAction,
+  repository: ExpenseRepository,
+  recurrences: RecurrenceRepository = recurrenceRepository,
+) {
+  const { kind, expense, occurrence } = action;
+  if (kind === 'saved') {
+    await repository.remove(expense.id);
+    // A save that started repeating is undone with its rule
+    await recurrences.stopStartedBy(expense.id);
+  } else if (kind === 'deleted') {
+    await repository.restore(expense.id);
+  } else if (kind === 'edited') {
+    await repository.update(expense);
+  } else if (occurrence) {
+    if (kind === 'confirmed') await repository.remove(expense.id);
+    await recurrences.unhandle(occurrence.recurrenceId, occurrence.index);
+  }
 }
 
 /**

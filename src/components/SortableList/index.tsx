@@ -169,7 +169,8 @@ function SortableRow({
     zIndex: lifted.get() > 0.01 ? 1 : 0,
     shadowOpacity: interpolate(lifted.get(), [0, 1], [0, 0.6]),
     elevation: interpolate(lifted.get(), [0, 1], [0, 6]),
-    transform: [{ translateY: y.get() }, { scale: reducedMotion ? 1 : interpolate(lifted.get(), [0, 1], [1, 1.03]) }],
+    // Lifted = shadow, not scale: scaling would show the row's icon stretched (blurry) until it is redrawn
+    transform: [{ translateY: y.get() }],
   }));
 
   return (

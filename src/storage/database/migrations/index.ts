@@ -73,6 +73,41 @@ export const migrations: Migration[] = [
       `);
     },
   },
+  {
+    // Repeating expenses (Stage 2 Phase 2): a rule copied from an expense, and every occurrence the user confirmed or
+    // skipped. Nothing is saved for an occurrence until it is confirmed.
+    version: 3,
+    async up(txn) {
+      await txn.execAsync(`
+        CREATE TABLE recurrences (
+          id TEXT PRIMARY KEY NOT NULL,
+          source_expense_id TEXT NOT NULL,
+          frequency TEXT NOT NULL CHECK (frequency IN ('daily', 'weekly', 'monthly', 'yearly')),
+          anchor_at TEXT NOT NULL,
+          amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+          currency_code TEXT NOT NULL,
+          category_id TEXT NOT NULL REFERENCES categories (id),
+          title TEXT,
+          note TEXT,
+          payment_method TEXT,
+          active INTEGER NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX recurrences_source ON recurrences (source_expense_id);
+
+        CREATE TABLE recurrence_occurrences (
+          recurrence_id TEXT NOT NULL REFERENCES recurrences (id),
+          occurrence INTEGER NOT NULL CHECK (occurrence > 0),
+          outcome TEXT NOT NULL CHECK (outcome IN ('confirmed', 'skipped')),
+          expense_id TEXT,
+          handled_at TEXT NOT NULL,
+          PRIMARY KEY (recurrence_id, occurrence)
+        );
+        CREATE INDEX recurrence_occurrences_expense ON recurrence_occurrences (expense_id);
+      `);
+    },
+  },
 ];
 
 export const LATEST_VERSION = migrations[migrations.length - 1].version;

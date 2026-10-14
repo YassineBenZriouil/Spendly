@@ -22,7 +22,7 @@ import { Screen } from '@/components/Screen';
 import type { ExpenseCategory } from '@/domain/category/category.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { getMoneyPattern } from '@/domain/money/money.pattern';
-import { useCategories } from '@/features/categories/hooks/useCategories';
+import { useCategoryList } from '@/features/categories/hooks/useCategories';
 import { DetailsFields } from '@/features/expense-details/components/DetailsFields';
 import { haptics } from '@/haptics/haptics.service';
 import { usePreferences } from '@/storage/preferences/preferences';
@@ -49,7 +49,7 @@ export function QuickAddScreen() {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const { currencyCode, dragSensitivity, amountIncrement } = usePreferences();
-  const allCategories = useCategories();
+  const { categories: allCategories, loaded: categoriesLoaded } = useCategoryList();
   const categories = allCategories.filter((category) => category.isVisible);
   const todayTotals = useTodayTotal();
   const pattern = getMoneyPattern(currencyCode);
@@ -97,7 +97,7 @@ export function QuickAddScreen() {
     if (phase === 'saved') setPanel('categories');
   }
 
-  const hasDetails = Object.values(draft.details ?? {}).some(Boolean);
+  const hasDetails = Object.values(draft.details ?? {}).some(Boolean) || draft.repeat !== undefined;
 
   const selected = allCategories.find((category) => category.id === draft.categoryId);
   const savedExpense = undoable
@@ -255,17 +255,23 @@ export function QuickAddScreen() {
                     details={draft.details ?? {}}
                     onChange={(changes) => dispatch({ type: 'detailsChanged', changes })}
                     dateResettable
+                    repeat={draft.repeat ?? null}
+                    onRepeatChange={(repeat) => dispatch({ type: 'repeatChanged', repeat })}
                   />
                 </ScrollView>
               </Animated.View>
             ) : (
               <Animated.View key="categories" entering={panelEnter} exiting={panelExit} style={styles.panelLayer}>
-                <CategoryGrid
-                  categories={categories}
-                  selectedId={draft.categoryId}
-                  onSelect={selectCategory}
-                  onLongPress={() => router.push('/categories')}
-                />
+                {/* Shown once the stored order is known: if tiles moved while their entrance animation runs,
+                    some would stay in their first spot (overlapping a neighbour, leaving a gap) */}
+                {categoriesLoaded && (
+                  <CategoryGrid
+                    categories={categories}
+                    selectedId={draft.categoryId}
+                    onSelect={selectCategory}
+                    onLongPress={() => router.push('/categories')}
+                  />
+                )}
               </Animated.View>
             )}
           </View>

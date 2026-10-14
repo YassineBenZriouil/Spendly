@@ -21,8 +21,11 @@ export const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     borderRadius: Radius.pill,
   },
+  // Centered over the resting icon; it is larger, so it overflows the 24pt box evenly
   selectedIcon: {
     ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   item: {
     flex: 1,

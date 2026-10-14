@@ -2,6 +2,7 @@ import Storage from 'expo-sqlite/kv-store';
 
 import { PaymentMethods } from '@/domain/expense/expense.service';
 import type { PaymentMethod } from '@/domain/expense/expense.types';
+import { Frequencies, type Frequency } from '@/domain/recurrence/recurrence.types';
 
 import type { QuickAddDraft } from './quickAddReducer';
 
@@ -15,8 +16,8 @@ export function loadDraft(): QuickAddDraft | null {
     const stored: unknown = JSON.parse(raw);
     if (!isDraft(stored)) return null;
     // The pending-save marker is storage bookkeeping, not part of the draft
-    const { categoryId, amountMinor, details } = stored;
-    return { categoryId, amountMinor, ...(details ? { details } : {}) };
+    const { categoryId, amountMinor, details, repeat } = stored;
+    return { categoryId, amountMinor, ...(details ? { details } : {}), ...(repeat ? { repeat } : {}) };
   } catch {
     return null;
   }
@@ -47,16 +48,17 @@ export function loadPendingExpenseId(): string | undefined {
   }
 }
 
-function isEmpty({ categoryId, amountMinor, details = {} }: QuickAddDraft) {
-  return categoryId === null && amountMinor === 0 && Object.values(details).every((value) => !value);
+function isEmpty({ categoryId, amountMinor, details = {}, repeat }: QuickAddDraft) {
+  return categoryId === null && amountMinor === 0 && !repeat && Object.values(details).every((value) => !value);
 }
 
 const optionalString = (value: unknown) => value === undefined || typeof value === 'string';
 
 function isDraft(value: unknown): value is QuickAddDraft {
   if (!value || typeof value !== 'object') return false;
-  const { categoryId, amountMinor, details } = value as Record<string, unknown>;
+  const { categoryId, amountMinor, details, repeat } = value as Record<string, unknown>;
   return (
+    (repeat === undefined || Frequencies.includes(repeat as Frequency)) &&
     (categoryId === null || typeof categoryId === 'string') &&
     typeof amountMinor === 'number' &&
     Number.isInteger(amountMinor) &&

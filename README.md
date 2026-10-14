@@ -36,6 +36,7 @@ Tap the **details** button to add more, only if you want to:
 - **Note**
 - **Date and time.** Defaults to now. You can pick an earlier moment, but never the future, and reset it back to now with one tap.
 - **Payment method:** Cash, Card, Transfer or Other
+- **Repeat:** daily, weekly, monthly or yearly, for rent, subscriptions and the like (see *Repeating expenses* below)
 
 Your category and amount stay visible while you fill these in, and closing the panel keeps what you typed. Empty fields simply aren't saved.
 
@@ -54,11 +55,22 @@ Everything you've recorded, newest first.
 - **Grouped by day**, with a total for each day.
 - **Search** by title, note or category name.
 - **Filter** by category with one tap.
+- **Again:** swipe an expense to the side and tap **Again** to add the same expense (category, amount and title) dated now, with Undo. Also on the edit screen, and as a screen-reader action.
 - **Tap any expense to edit it:** amount, category, title, note, date and time, payment method. Everything can be changed.
 - **Delete** asks you to confirm, then gives you **Undo** for 5 seconds anyway. Saved changes get an Undo too, which puts back the previous version.
 - Deleted expenses are kept out of sight for 30 days before they're removed for good.
 - Stays smooth even with thousands of expenses.
 - Nothing recorded yet? Activity points you straight back to Add.
+
+### Repeating expenses
+
+Set **Repeat** in an expense's details (when you add it, or later from the edit screen). Spendly never saves a repeat on its own:
+
+- When one is due, it waits in Activity as a **pending row** on its day: dashed outline, "Due" and how often it repeats, with **Confirm** and **Skip** right on the row. Pending rows never count in totals, Insights or exports.
+- **Confirm** saves it as an expense on the day it was due; **Skip** leaves it out. Both can be undone.
+- Away for a while? Each missed one is shown (up to 3 months back), with **Confirm all** / **Skip all** when there are several.
+- A repeat on the 31st falls on the last day of shorter months, then comes back to the 31st.
+- Tap a pending row to stop repeating, or change **Repeat** on the edit screen.
 
 ---
 

@@ -54,6 +54,8 @@ const icons = {
   hidden: { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' },
   backup: { ios: 'archivebox', android: 'archive', web: 'archive' },
   insight: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
+  again: { ios: 'arrow.clockwise', android: 'replay', web: 'replay' },
+  repeat: { ios: 'repeat', android: 'repeat', web: 'repeat' },
   restore: { ios: 'clock.arrow.circlepath', android: 'settings_backup_restore', web: 'settings_backup_restore' },
 } as const;
 

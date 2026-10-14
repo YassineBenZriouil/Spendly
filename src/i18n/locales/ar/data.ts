@@ -44,6 +44,7 @@ export const data: Translation<typeof english> = {
     many: '{count} مصروفًا غير مقروء',
     other: '{count} مصروف غير مقروء',
   },
+  'data.parse.unreadableRepeats': "تتعذر قراءة بعض المصروفات المتكررة",
   'data.parse.duplicates': 'بعض السجلات مكرّرة',
   'data.parse.missingCategories': 'بعض المصروفات تشير إلى فئات مفقودة',
   'data.storageFull': 'مساحة تخزين هاتفك ممتلئة، لذا لم يُحفظ شيء. أفرغ بعض المساحة وحاول مرة أخرى.',

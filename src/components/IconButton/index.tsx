@@ -39,7 +39,6 @@ export function IconButton({ icon, accessibilityLabel, onPress, disabled = false
   const animatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(pressed.get(), [0, 1], [rest, colors.borderSubtle]),
     opacity: interpolate(enabled.get(), [0, 1], [0.35, 1]),
-    transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.9]) }],
   }));
 
   return (

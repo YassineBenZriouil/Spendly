@@ -15,6 +15,17 @@ export const styles = StyleSheet.create({
   chips: {
     gap: Spacing.sm,
   },
+  pendingBar: {
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+  },
+  pendingText: Typography.body,
+  pendingButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
   body: {
     flex: 1,
   },

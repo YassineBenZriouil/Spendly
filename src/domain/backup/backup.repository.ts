@@ -1,5 +1,11 @@
 import { categoryParams, INSERT_CATEGORY_SQL } from '@/domain/category/category.repository';
 import { expenseParams, INSERT_EXPENSE_SQL } from '@/domain/expense/expense.repository';
+import {
+  INSERT_OCCURRENCE_SQL,
+  INSERT_RECURRENCE_SQL,
+  occurrenceParams,
+  recurrenceParams,
+} from '@/domain/recurrence/recurrence.repository';
 import type { Db } from '@/storage/database/db.types';
 
 import type { Backup } from './backup';
@@ -30,6 +36,9 @@ export async function restoreBackup(db: Db, backup: Backup): Promise<RestoreResu
       if (changes > 0) result.expensesAdded += 1;
       else result.expensesAlreadyHere += 1;
     }
+    // Rules before their occurrences; both skip what is already here, like everything else
+    for (const recurrence of backup.recurrences) await txn.runAsync(INSERT_RECURRENCE_SQL, recurrenceParams(recurrence));
+    for (const occurrence of backup.occurrences) await txn.runAsync(INSERT_OCCURRENCE_SQL, occurrenceParams(occurrence));
   });
   return result;
 }

@@ -55,3 +55,9 @@ export function updateExpense(existing: Expense, changes: ExpenseChanges, now = 
   if (error) throw new Error(error);
   return withCleanDetails({ ...next, occurredAt: new Date(next.occurredAt).toISOString() });
 }
+
+/** "Again": a new expense with the same category, amount and title (and currency), dated now. */
+export function againFrom(expense: Expense, now = new Date()): Expense {
+  const { amountMinor, currencyCode, categoryId, title } = expense;
+  return createExpense({ amountMinor, currencyCode, categoryId, ...(title ? { title } : {}) }, now);
+}

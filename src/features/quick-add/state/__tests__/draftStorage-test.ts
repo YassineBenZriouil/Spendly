@@ -40,4 +40,14 @@ describe('draft storage', () => {
     mockStore.set('quickAdd.draft', JSON.stringify({ categoryId: 'food', amountMinor: 5, details: { paymentMethod: 'bitcoin' } }));
     expect(loadDraft()).toBeNull();
   });
+
+  it('keeps Repeat with the draft and rejects unknown frequencies', () => {
+    const draft = { categoryId: 'home', amountMinor: 450000, repeat: 'monthly' as const };
+    saveDraft(draft);
+    expect(loadDraft()).toEqual(draft);
+    saveDraft({ categoryId: null, amountMinor: 0, repeat: 'daily' });
+    expect(loadDraft()).toEqual({ categoryId: null, amountMinor: 0, repeat: 'daily' });
+    mockStore.set('quickAdd.draft', JSON.stringify({ categoryId: 'home', amountMinor: 5, repeat: 'hourly' }));
+    expect(loadDraft()).toBeNull();
+  });
 });

@@ -5,7 +5,6 @@ import Animated, {
   FadeInRight,
   FadeOut,
   FadeOutRight,
-  interpolate,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -58,7 +57,6 @@ export function SaveAction({ phase, canSave, onSave, undoLabel, onUndo }: SaveAc
     const pressedColor = interpolateColor(pressed.get(), [0, 1], [idle, colors.accentPressed]);
     return {
       backgroundColor: interpolateColor(saved.get(), [0, 1], [pressedColor, colors.success]),
-      transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.96]) }],
     };
   });
 

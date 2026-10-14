@@ -13,6 +13,7 @@ text-size rows). Phase 6 of `PHASES-2.md` is done when every cell passes.
 6. **Export** a CSV through the share sheet.
 7. **Back up** and **Restore** (Settings → Data).
 8. **Reorder** a category without dragging (screen reader: Move up / Move down actions).
+9. **Repeat**: set Repeat on an expense; when due, Confirm and Skip it (row buttons, or the row's actions with a screen reader), then Undo each. Use **Again** on an expense without swiping (row action or the edit screen button).
 
 ## Matrix
 
@@ -36,6 +37,7 @@ text-size rows). Phase 6 of `PHASES-2.md` is done when every cell passes.
 | Hold a category tile (opens category management) | Settings → Manage categories. |
 | Hold-and-drag to reorder categories | Screen reader actions "Move up" / "Move down" on each row. |
 | Swipe back | The back button in the header. |
+| Swipe an expense for Again | The row's "Again" action (screen readers) and the Again button on the edit screen. |
 | Tap a chart bar | The breakdown list below it holds the same numbers; each bar is a labelled button. |
 
 ## Haptics are never the only signal

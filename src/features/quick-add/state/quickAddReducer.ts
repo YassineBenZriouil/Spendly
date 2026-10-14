@@ -1,4 +1,5 @@
 import type { ExpenseDetails } from '@/domain/expense/expense.service';
+import type { Frequency } from '@/domain/recurrence/recurrence.types';
 
 export type QuickAddPhase =
   | 'ready'
@@ -14,6 +15,8 @@ export type QuickAddDraft = {
   amountMinor: number;
   /** Optional title, note, date and payment method. Kept while the details panel is closed. */
   details?: ExpenseDetails;
+  /** Repeat this expense (a rule is started when it is saved). */
+  repeat?: Frequency;
 };
 
 export type QuickAddState = {
@@ -29,6 +32,7 @@ export type QuickAddEvent =
   | { type: 'dragEnded'; amountMinor: number }
   | { type: 'amountChanged'; amountMinor: number }
   | { type: 'detailsChanged'; changes: ExpenseDetails }
+  | { type: 'repeatChanged'; repeat: Frequency | null }
   | { type: 'saveRequested' }
   | { type: 'saveSucceeded'; expenseId: string }
   | { type: 'saveFailed'; message: string }
@@ -51,8 +55,9 @@ export function canSave(draft: QuickAddDraft) {
   return draft.categoryId !== null && draft.amountMinor > 0;
 }
 
-function isUntouched({ categoryId, amountMinor, details = {} }: QuickAddDraft) {
-  return categoryId === null && amountMinor === 0 && !Object.values(details).some(Boolean);
+/** Nothing chosen or typed yet. */
+export function isUntouched({ categoryId, amountMinor, details = {}, repeat }: QuickAddDraft) {
+  return categoryId === null && amountMinor === 0 && !repeat && !Object.values(details).some(Boolean);
 }
 
 /** The resting phase a draft implies once nothing is in progress. */
@@ -92,6 +97,10 @@ export function quickAddReducer(state: QuickAddState, event: QuickAddEvent): Qui
       return withDraft(state, { ...state.draft, amountMinor: event.amountMinor });
     case 'detailsChanged':
       return withDraft(state, { ...state.draft, details: { ...state.draft.details, ...event.changes } });
+    case 'repeatChanged': {
+      const { repeat: _previous, ...draft } = state.draft;
+      return withDraft(state, event.repeat ? { ...draft, repeat: event.repeat } : draft);
+    }
     case 'saveRequested':
       return canSave(state.draft) ? { ...state, phase: 'saving', error: null } : state;
     case 'categoryPreset': {

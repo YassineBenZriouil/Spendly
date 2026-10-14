@@ -7,13 +7,23 @@ import type { Expense } from '@/domain/expense/expense.types';
  * - saved: an expense was just added (undo removes it)
  * - deleted: an expense was just deleted (undo restores it)
  * - edited: an expense was just changed; `expense` is the version before the edit (undo puts it back)
+ * - confirmed / skipped: a repeating expense's occurrence was handled (undo makes it pending again; for confirmed,
+ *   `expense` is the expense it created, which undo removes)
  */
-export type UndoKind = 'saved' | 'deleted' | 'edited';
-export type UndoAction = { kind: UndoKind; expense: Expense; expiresAt: number };
+export type UndoKind = 'saved' | 'deleted' | 'edited' | 'confirmed' | 'skipped';
+/** Which occurrence of a repeating expense a confirm / skip handled. */
+export type UndoOccurrence = { recurrenceId: string; index: number };
+export type UndoAction = { kind: UndoKind; expense: Expense; expiresAt: number; occurrence?: UndoOccurrence };
 
 export const UNDO_WINDOW_MS = 5000;
 const KEY = 'undo';
-const KINDS: UndoKind[] = ['saved', 'deleted', 'edited'];
+const KINDS: UndoKind[] = ['saved', 'deleted', 'edited', 'confirmed', 'skipped'];
+
+const isOccurrence = (value: unknown): value is UndoOccurrence =>
+  !!value &&
+  typeof value === 'object' &&
+  typeof (value as UndoOccurrence).recurrenceId === 'string' &&
+  Number.isInteger((value as UndoOccurrence).index);
 
 /** `undefined` until read from disk once. */
 let current: UndoAction | null | undefined;
@@ -25,10 +35,13 @@ function load(): UndoAction | null {
     const raw = Storage.getItemSync(KEY);
     const stored: unknown = raw ? JSON.parse(raw) : null;
     if (!stored || typeof stored !== 'object') return null;
-    const { kind, expense, expiresAt } = stored as Record<string, unknown>;
+    const { kind, expense, expiresAt, occurrence } = stored as Record<string, unknown>;
     const parsed = parseExpense(expense);
     if (!KINDS.includes(kind as UndoKind) || typeof expiresAt !== 'number' || !parsed) return null;
-    return { kind: kind as UndoKind, expense: parsed, expiresAt };
+    // Confirm / skip can only be undone knowing which occurrence they handled
+    const needsOccurrence = kind === 'confirmed' || kind === 'skipped';
+    if (needsOccurrence && !isOccurrence(occurrence)) return null;
+    return { kind: kind as UndoKind, expense: parsed, expiresAt, ...(needsOccurrence ? { occurrence: occurrence as UndoOccurrence } : {}) };
   } catch {
     return null;
   }
@@ -53,8 +66,8 @@ export const undoStore = {
     if (current === undefined) current = load();
     return current && current.expiresAt > now ? current : null;
   },
-  offer(kind: UndoKind, expense: Expense, now = Date.now()) {
-    current = { kind, expense, expiresAt: now + UNDO_WINDOW_MS };
+  offer(kind: UndoKind, expense: Expense, now = Date.now(), occurrence?: UndoOccurrence) {
+    current = { kind, expense, expiresAt: now + UNDO_WINDOW_MS, ...(occurrence ? { occurrence } : {}) };
     write(current);
     notify();
   },

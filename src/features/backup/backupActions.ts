@@ -6,6 +6,7 @@ import { createBackup, parseBackup, type Backup, type BackupParseResult } from '
 import { restoreBackup, type RestoreResult } from '@/domain/backup/backup.repository';
 import { categoryRepository } from '@/domain/category/category.repository';
 import { expenseRepository } from '@/domain/expense/expense.repository';
+import { recurrenceRepository } from '@/domain/recurrence/recurrence.repository';
 import { getDatabase } from '@/storage/database/connection';
 import { t } from '@/i18n';
 import { getPreferences, sanitizePreferences, updatePreferences } from '@/storage/preferences/preferences';
@@ -13,8 +14,12 @@ import { getPreferences, sanitizePreferences, updatePreferences } from '@/storag
 /** Writes a backup of everything and hands it to the share sheet (Files, AirDrop, email…). Returns the expense count. */
 export async function shareBackup(): Promise<number> {
   if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this device');
-  const [expenses, categories] = await Promise.all([expenseRepository.search({}), categoryRepository.list()]);
-  const backup = createBackup({ expenses, categories, preferences: getPreferences() });
+  const [expenses, categories, repeats] = await Promise.all([
+    expenseRepository.search({}),
+    categoryRepository.list(),
+    recurrenceRepository.all(),
+  ]);
+  const backup = createBackup({ expenses, categories, preferences: getPreferences(), ...repeats });
   // Cache directory: the system may clear it later; the kept copy is wherever the user saves it
   const file = new File(Paths.cache, `spendly-backup-${backup.createdAt.slice(0, 10)}.json`);
   file.create({ overwrite: true });
@@ -37,5 +42,6 @@ export async function applyBackup(backup: Backup): Promise<RestoreResult> {
   updatePreferences(sanitizePreferences(backup.preferences));
   expenseRepository.notifyChanged();
   categoryRepository.notifyChanged();
+  recurrenceRepository.notifyChanged();
   return result;
 }

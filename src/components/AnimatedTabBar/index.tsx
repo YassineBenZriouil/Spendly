@@ -21,6 +21,13 @@ import { styles } from './styles';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
+/**
+ * Icon sizes: at rest, and on the selected tab. Each icon is drawn natively at the size it is shown and the two
+ * cross-fade; nothing is scaled, because a scaled icon stays a stretched (blurry) image until it is redrawn.
+ */
+const ICON_SIZE = 24;
+const SELECTED_ICON_SIZE = 27;
+
 /** Tab bar with a sliding selection pill and animated icons/labels. */
 export function AnimatedTabBar({ state, descriptors, navigation, insets }: TabBarProps) {
   const { colors } = useTheme();
@@ -86,9 +93,9 @@ export function AnimatedTabBar({ state, descriptors, navigation, insets }: TabBa
               focused={focused}
               onPress={onPress}
               onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
-              icon={options.tabBarIcon?.({ focused: false, color: colors.textPrimary, size: 24 })}
+              icon={options.tabBarIcon?.({ focused: false, color: colors.textPrimary, size: ICON_SIZE })}
               // Drawn on the accent pill: the same icon in the on-accent color, cross-faded in
-              selectedIcon={options.tabBarIcon?.({ focused: true, color: colors.onAccent, size: 24 })}
+              selectedIcon={options.tabBarIcon?.({ focused: true, color: colors.onAccent, size: SELECTED_ICON_SIZE })}
             />
           );
         })}
@@ -116,19 +123,17 @@ function TabItem({ label, focused, icon, selectedIcon, onPress, onLongPress }: T
     progress.set(settleTo(focused ? 1 : 0, reducedMotion));
   }, [focused, reducedMotion, progress]);
 
+  // Press feedback dims instead of shrinking: no scaling anywhere near the icons
   const itemStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.92]) }],
-    opacity: reducedMotion ? interpolate(pressed.get(), [0, 1], [1, 0.6]) : 1,
+    opacity: interpolate(pressed.get(), [0, 1], [1, 0.6]),
   }));
 
+  // The resting icon fades out as the larger selected one fades in: the icon appears to grow, sharp throughout
   const iconStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.get(), [0, 1], [0.5, 1]),
-    transform: reducedMotion
-      ? []
-      : [
-          { scale: interpolate(progress.get(), [0, 1], [1, 1.12]) },
-          { translateY: interpolate(progress.get(), [0, 1], [0, -1]) },
-        ],
+    opacity: interpolate(progress.get(), [0, 1], [0.5, 0]),
+  }));
+  const liftStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: reducedMotion ? 0 : interpolate(progress.get(), [0, 1], [0, -1]) }],
   }));
 
   const labelStyle = useAnimatedStyle(() => ({
@@ -147,8 +152,8 @@ function TabItem({ label, focused, icon, selectedIcon, onPress, onLongPress }: T
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}
       style={styles.item}>
       <Animated.View style={[styles.itemContent, itemStyle]}>
-        <Animated.View style={iconStyle}>
-          {icon}
+        <Animated.View style={liftStyle}>
+          <Animated.View style={iconStyle}>{icon}</Animated.View>
           <Animated.View style={[styles.selectedIcon, selectedIconStyle]}>{selectedIcon}</Animated.View>
         </Animated.View>
         <Animated.Text maxFontSizeMultiplier={FontScaleCap.tight} style={[styles.label, labelStyle]}>{label}</Animated.Text>

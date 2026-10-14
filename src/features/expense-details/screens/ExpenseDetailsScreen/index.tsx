@@ -13,10 +13,12 @@ import { ErrorBanner } from '@/components/ErrorBanner';
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { expenseRepository } from '@/domain/expense/expense.repository';
-import { updateExpense, type ExpenseDetails } from '@/domain/expense/expense.service';
+import { againFrom, type ExpenseDetails, updateExpense } from '@/domain/expense/expense.service';
 import type { Expense } from '@/domain/expense/expense.types';
 import { formatMoney } from '@/domain/money/money.format';
 import { getMoneyPattern } from '@/domain/money/money.pattern';
+import { recurrenceRepository } from '@/domain/recurrence/recurrence.repository';
+import type { Frequency, Recurrence } from '@/domain/recurrence/recurrence.types';
 import { t } from '@/i18n';
 import { useCategories } from '@/features/categories/hooks/useCategories';
 import { CategoryGrid } from '@/features/quick-add/components/CategoryGrid';
@@ -52,17 +54,21 @@ export function ExpenseDetailsScreen() {
   const [keypadOpen, setKeypadOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** The repeat rule this expense belongs to (undefined while loading) and the Repeat choice on screen. */
+  const [rule, setRule] = useState<Recurrence | null | undefined>(undefined);
+  const [repeat, setRepeat] = useState<Frequency | null>(null);
   // Synchronous guard against double taps on Save / Delete
   const busyRef = useRef(false);
 
   useEffect(() => {
     let active = true;
-    expenseRepository
-      .get(id)
-      .then((stored) => {
+    Promise.all([expenseRepository.get(id), recurrenceRepository.forExpense(id)])
+      .then(([stored, storedRule]) => {
         if (!active) return;
         setExpense(stored);
         if (stored) setForm(toForm(stored));
+        setRule(storedRule);
+        setRepeat(storedRule?.frequency ?? null);
       })
       .catch(() => active && setLoadFailed(true));
     return () => {
@@ -100,13 +106,14 @@ export function ExpenseDetailsScreen() {
     paymentMethod: form.details.paymentMethod,
   };
   const original = toForm(expense);
-  const dirty =
+  const repeatChanged = rule !== undefined && repeat !== (rule?.frequency ?? null);
+  const fieldsChanged =
     form.amountMinor !== original.amountMinor ||
     form.categoryId !== original.categoryId ||
     (['title', 'note', 'occurredAt', 'paymentMethod'] as const).some(
       (key) => (form.details[key] ?? '').toString().trim() !== (original.details[key] ?? ''),
     );
-  const canSave = dirty && form.amountMinor > 0 && !busy;
+  const canSave = (fieldsChanged || repeatChanged) && form.amountMinor > 0 && !busy;
 
   const run = async (task: () => Promise<void>, failure: string) => {
     if (busyRef.current) return;
@@ -127,12 +134,32 @@ export function ExpenseDetailsScreen() {
   const save = () => {
     Keyboard.dismiss();
     run(async () => {
-      await expenseRepository.update(updateExpense(expense, changes));
-      // The version before the edit, so Activity can offer Undo (even after a restart)
-      undoStore.offer('edited', expense);
+      const updated = fieldsChanged ? updateExpense(expense, changes) : expense;
+      if (fieldsChanged) {
+        await expenseRepository.update(updated);
+        // The version before the edit, so Activity can offer Undo (even after a restart)
+        undoStore.offer('edited', expense);
+      }
+      if (repeatChanged) {
+        // A new choice starts a new rule from this expense (replacing the old one); "Doesn't repeat" stops it
+        if (repeat) await recurrenceRepository.repeat(updated, repeat);
+        else if (rule) await recurrenceRepository.stop(rule.id);
+      }
       AccessibilityInfo.announceForAccessibility(t('expense.save.done'));
       router.back();
     }, t('expense.save.failed'));
+  };
+
+  // "Again": the same category, amount and title, dated now; Activity offers Undo
+  const addAgain = () => {
+    Keyboard.dismiss();
+    run(async () => {
+      const again = againFrom(expense);
+      await expenseRepository.save(again);
+      undoStore.offer('saved', again);
+      AccessibilityInfo.announceForAccessibility(t('expense.again.done'));
+      router.back();
+    }, t('expense.again.failed'));
   };
 
   const confirmDelete = () => {
@@ -206,6 +233,8 @@ export function ExpenseDetailsScreen() {
             <DetailsFields
               details={form.details}
               onChange={(detailChanges) => setForm({ ...form, details: { ...form.details, ...detailChanges } })}
+              repeat={repeat}
+              onRepeatChange={rule === undefined ? undefined : setRepeat}
             />
 
             {error && (
@@ -214,6 +243,7 @@ export function ExpenseDetailsScreen() {
 
             <View style={styles.actions}>
               <Button label={t('expense.save')} disabled={!canSave} onPress={save} />
+              <Button label={t('expense.again')} variant="secondary" disabled={busy} onPress={addAgain} accessibilityHint={t('expense.again.hint')} />
               <Button label={t('expense.delete')} variant="secondary" disabled={busy} onPress={confirmDelete} />
             </View>
           </Animated.View>

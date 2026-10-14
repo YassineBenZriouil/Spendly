@@ -122,4 +122,19 @@ describe('quickAddReducer', () => {
       expect(quickAddReducer(presetWhileSaved, { type: 'savedAcknowledged' }).phase).toBe('categorySelected');
     });
   });
+
+  it('sets and clears Repeat, keeps it through errors, and resets it after saving', () => {
+    const withRepeat = run([{ type: 'repeatChanged', repeat: 'monthly' }], readyToSave);
+    expect(withRepeat.draft.repeat).toBe('monthly');
+    expect(run([{ type: 'repeatChanged', repeat: null }], withRepeat).draft).not.toHaveProperty('repeat');
+    const failed = run([{ type: 'saveRequested' }, { type: 'saveFailed', message: 'x' }], withRepeat);
+    expect(failed.draft.repeat).toBe('monthly');
+    const saved = run([{ type: 'saveRequested' }, { type: 'saveSucceeded', expenseId: 'e1' }], withRepeat);
+    expect(saved.draft).not.toHaveProperty('repeat');
+  });
+
+  it('a draft with only Repeat set is not untouched (no preselection over it)', () => {
+    const state = run([{ type: 'repeatChanged', repeat: 'weekly' }, { type: 'categoryPreset', categoryId: 'food' }]);
+    expect(state.draft.categoryId).toBeNull();
+  });
 });

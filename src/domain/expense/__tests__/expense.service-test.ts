@@ -1,4 +1,4 @@
-import { createExpense, updateExpense, validateNewExpense } from '../expense.service';
+import { againFrom, createExpense, updateExpense, validateNewExpense } from '../expense.service';
 
 const valid = { amountMinor: 1250, currencyCode: 'EUR', categoryId: 'food' };
 
@@ -72,5 +72,20 @@ describe('expense details', () => {
 
   it('rejects an invalid date', () => {
     expect(() => createExpense({ ...valid, occurredAt: 'yesterday' })).toThrow('Date is invalid');
+  });
+});
+
+describe('againFrom', () => {
+  it('copies category, amount, currency and title into a new expense dated now', () => {
+    const source = createExpense(
+      { amountMinor: 450, currencyCode: 'EUR', categoryId: 'food', title: 'Coffee', note: 'oat milk', paymentMethod: 'card' },
+      new Date('2026-10-01T08:00:00.000Z'),
+    );
+    const now = new Date('2026-10-14T09:30:00.000Z');
+    const again = againFrom(source, now);
+    expect(again).toMatchObject({ amountMinor: 450, currencyCode: 'EUR', categoryId: 'food', title: 'Coffee', occurredAt: now.toISOString() });
+    expect(again.id).not.toBe(source.id);
+    expect(again).not.toHaveProperty('note');
+    expect(again).not.toHaveProperty('paymentMethod');
   });
 });

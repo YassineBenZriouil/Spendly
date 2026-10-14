@@ -30,6 +30,7 @@ export const data = {
   'data.parse.dateUnreadable': 'its date is unreadable',
   'data.parse.unreadableCategories': { one: '{count} unreadable category', other: '{count} unreadable categories' },
   'data.parse.unreadableExpenses': { one: '{count} unreadable expense', other: '{count} unreadable expenses' },
+  'data.parse.unreadableRepeats': "some repeating expenses can't be read",
   'data.parse.duplicates': 'some records appear twice',
   'data.parse.missingCategories': 'some expenses refer to categories that are missing',
   'data.storageFull': "Your phone's storage is full, so nothing was saved. Free up some space and try again.",

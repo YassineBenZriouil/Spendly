@@ -142,12 +142,32 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 - Swipe direction and how swipe coexists with the list's scroll and the back gesture (see Stage 1 gesture rules).
 - Missed occurrences: how far back to show them (proposal: last 3 months).
 
+**Decisions made while building it**
+
+- Swipe: an expense row swipes to reveal **Again** (tap it; no full-swipe trigger, so a scroll can't add an expense
+  by accident). Alternatives: the screen-reader action on the row and an **Again** button on the edit screen.
+  Again copies category, amount, title and currency, dated now.
+- Rules: `recurrences` (template copied from the expense, anchored at its date and time) and
+  `recurrence_occurrences` (confirmed / skipped, one row per occurrence; the primary key rejects a double tap).
+  Occurrence n is computed from the anchor, so months ending on the 31st clamp and come back.
+- Pending: due, unhandled occurrences from the last 3 months (same date 3 months back); older ones are simply no
+  longer offered, nothing is saved for them. Hidden while searching by text; the category filter applies.
+- Pending row: dashed outline, repeat icon, "Due {day} · {frequency}", quieter amount; Confirm and Skip on the
+  row; tapping it lists Confirm / Skip / Stop repeating. Confirm all / Skip all appear when 2 or more are due,
+  after a confirmation with the count (no Undo for a batch; each item is its own transaction).
+- Repeat lives in the shared details panel (Quick Add and edit screen). Quick Add saves the expense and its rule in
+  one transaction. On the edit screen, a new choice starts a new rule from that expense; "Doesn't repeat" stops it.
+  The rule's template is fixed when it starts (editing one occurrence doesn't change later ones).
+- Undo: `confirmed` (removes the expense, makes it due again), `skipped` (makes it due again), and undoing a save
+  that started a repeat stops it.
+- Backup format 2 adds rules and occurrences; format 1 files still restore.
+
 **Done when**
 
-- [ ] Recurrence date math is a pure, tested function: month ends, leap years, DST, long gaps.
-- [ ] Pending rows never count in totals, highlights or exports until confirmed (tests).
+- [x] Recurrence date math is a pure, tested function: month ends, leap years, DST, long gaps.
+- [x] Pending rows never count in totals, highlights or exports until confirmed (tests).
 - [ ] Again + Undo, Confirm + Undo, Skip all work with a screen reader and without swiping. *Device.*
-- [ ] Migration v3 tested from a frozen v2 database; backup round-trip includes recurrences.
+- [x] Migration v3 tested from a frozen v2 database; backup round-trip includes recurrences.
 
 ---
 

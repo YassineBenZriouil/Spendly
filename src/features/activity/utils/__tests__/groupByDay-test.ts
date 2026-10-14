@@ -29,4 +29,22 @@ describe('groupByDay', () => {
   it('returns nothing for no expenses', () => {
     expect(groupByDay([])).toEqual([]);
   });
+
+  it('puts due repeating expenses first on their day and never counts them in totals', () => {
+    const occurrence = {
+      recurrenceId: 'r1',
+      index: 2,
+      dueAt: '2026-10-13T13:00:00.000Z',
+      frequency: 'monthly' as const,
+      template: { amountMinor: 450000, currencyCode: 'MAD', categoryId: 'home' },
+    };
+    const older = { ...occurrence, index: 1, dueAt: '2026-10-11T13:00:00.000Z' };
+    const lunch = createExpense({ amountMinor: 1200, currencyCode: 'MAD', categoryId: 'food' }, new Date('2026-10-13T16:00:00.000Z'));
+    const items = groupByDay([lunch], [occurrence, older]);
+
+    expect(items.map((item) => item.type)).toEqual(['day', 'pending', 'expense', 'day', 'pending']);
+    const [today, , , earlier] = items;
+    expect(today.type === 'day' && today.totals).toEqual([{ currencyCode: 'MAD', totalMinor: 1200 }]);
+    expect(earlier.type === 'day' && earlier.totals).toEqual([]);
+  });
 });

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
-  interpolate,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -75,7 +74,6 @@ function Key({ keyName, pattern, onPress }: { keyName: KeypadKey; pattern: Money
 
   const animatedStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(pressed.get(), [0, 1], [colors.surfaceSecondary, colors.borderSubtle]),
-    transform: [{ scale: reducedMotion ? 1 : interpolate(pressed.get(), [0, 1], [1, 0.94]) }],
   }));
 
   const label =

@@ -79,6 +79,44 @@ describe('migrate', () => {
     });
   });
 
+  it('upgrades a database created by v2 (frozen schema snapshot) to repeating expenses without losing data', async () => {
+    // Snapshot of what version 2 shipped. Never update it.
+    const db = createTestDatabase();
+    await db.execAsync(`
+      CREATE TABLE categories (
+        id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, icon TEXT NOT NULL, color_token TEXT NOT NULL,
+        is_built_in INTEGER NOT NULL, is_visible INTEGER NOT NULL, sort_order INTEGER NOT NULL, created_at TEXT NOT NULL
+      );
+      CREATE TABLE expenses (
+        id TEXT PRIMARY KEY NOT NULL, amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+        currency_code TEXT NOT NULL, category_id TEXT NOT NULL REFERENCES categories (id),
+        title TEXT, note TEXT, occurred_at TEXT NOT NULL, payment_method TEXT,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL, deleted_at TEXT
+      );
+      CREATE INDEX expenses_occurred_at ON expenses (occurred_at);
+      CREATE INDEX expenses_deleted_at ON expenses (deleted_at);
+      CREATE VIEW live_expenses AS SELECT * FROM expenses WHERE deleted_at IS NULL;
+      INSERT INTO categories VALUES ('home', 'Home', 'home', 'slate', 1, 1, 7, '2026-01-01T00:00:00.000Z');
+      INSERT INTO expenses VALUES ('e1', 450000, 'MAD', 'home', 'Rent', NULL, '2026-07-01T13:00:00.000Z', NULL,
+        '2026-07-01T13:00:00.000Z', '2026-07-01T13:00:00.000Z', NULL);
+      PRAGMA user_version = 2;
+    `);
+
+    await migrate(db);
+
+    expect(await version(db)).toBe(LATEST_VERSION);
+    expect(await db.getAllAsync('SELECT id, amount_minor FROM live_expenses', [])).toEqual([{ id: 'e1', amount_minor: 450000 }]);
+    // The new tables exist, start empty and accept a rule for the old expense
+    expect(await db.getAllAsync('SELECT * FROM recurrences', [])).toEqual([]);
+    await db.runAsync(
+      `INSERT INTO recurrences VALUES ('r1', 'e1', 'monthly', '2026-07-01T13:00:00.000Z', 450000, 'MAD', 'home',
+        'Rent', NULL, NULL, 1, 'x', 'x')`,
+      [],
+    );
+    await db.runAsync(`INSERT INTO recurrence_occurrences VALUES ('r1', 1, 'skipped', NULL, 'x')`, []);
+    await expect(db.runAsync(`INSERT INTO recurrence_occurrences VALUES ('r1', 1, 'confirmed', NULL, 'x')`, [])).rejects.toThrow();
+  });
+
   it('rolls a failing migration back completely and retries it on the next launch', async () => {
     const db = createTestDatabase();
     await migrate(db);

@@ -4,6 +4,7 @@ import { AccessibilityInfo } from 'react-native';
 import { categoryRepository } from '@/domain/category/category.repository';
 import { expenseRepository, type ExpenseRepository } from '@/domain/expense/expense.repository';
 import { createExpense } from '@/domain/expense/expense.service';
+import { recurrenceRepository, type RecurrenceRepository } from '@/domain/recurrence/recurrence.repository';
 import { formatMoney } from '@/domain/money/money.format';
 import { useUndo } from '@/features/undo/hooks/useUndo';
 import { undoStore } from '@/features/undo/state/undoStore';
@@ -16,9 +17,9 @@ import { loadDraft, loadPendingExpenseId, saveDraft } from '../state/draftStorag
 import {
   canSave,
   initialQuickAddState,
+  isUntouched,
   quickAddReducer,
   restoreDraft,
-  type QuickAddDraft,
   type QuickAddEvent,
 } from '../state/quickAddReducer';
 import { SMART_DEFAULT_HISTORY_DAYS, smartDefaultCategory } from '../utils/smartDefault';
@@ -27,10 +28,12 @@ import { SMART_DEFAULT_HISTORY_DAYS, smartDefaultCategory } from '../utils/smart
 const SAVED_CONFIRMATION_MS = 1200;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const isUntouched = ({ categoryId, amountMinor, details = {} }: QuickAddDraft) =>
-  categoryId === null && amountMinor === 0 && !Object.values(details).some(Boolean);
 
-export function useQuickAdd(currencyCode: string, repository: ExpenseRepository = expenseRepository) {
+export function useQuickAdd(
+  currencyCode: string,
+  repository: ExpenseRepository = expenseRepository,
+  recurrences: RecurrenceRepository = recurrenceRepository,
+) {
   const [state, dispatch] = useReducer(quickAddReducer, initialQuickAddState, (initial) => {
     const draft = loadDraft();
     return draft ? restoreDraft(draft) : initial;
@@ -99,7 +102,7 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
   }, [state.phase]);
 
   const save = async () => {
-    const { categoryId, amountMinor, details } = state.draft;
+    const { categoryId, amountMinor, details, repeat } = state.draft;
     if (savingRef.current || !canSave(state.draft) || !categoryId) return;
     savingRef.current = true;
     dispatch({ type: 'saveRequested' });
@@ -108,7 +111,13 @@ export function useQuickAdd(currencyCode: string, repository: ExpenseRepository 
       // Written before the database so a kill between the two can be detected on the next launch
       saveDraft(state.draft, id);
       const expense = createExpense({ ...details, amountMinor, currencyCode, categoryId }, new Date(), id);
-      await repository.save(expense);
+      if (repeat) {
+        // The expense and its rule are stored together, or not at all
+        await recurrences.saveRepeating(expense, repeat);
+        repository.notifyChanged();
+      } else {
+        await repository.save(expense);
+      }
       // The composer resets only now, after the record is stored
       dispatch({ type: 'saveSucceeded', expenseId: expense.id });
       if (__DEV__ && entryStartedAt.current !== null) {
