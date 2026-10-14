@@ -101,13 +101,15 @@ export function QuickAddScreen() {
     ? `${formatMoney(undoable.amountMinor, undoable.currencyCode)}, ${allCategories.find((c) => c.id === undoable.categoryId)?.name ?? ''}`
     : null;
 
-  // A draft recovered on launch has no tapped tile: show its chip once the anchor can be measured
+  // A draft recovered on launch has no tapped tile: show its chip once the anchor can be measured and its
+  // category has loaded (custom categories arrive from the database after the first layout)
   const restorePending = useRef(draft.categoryId !== null);
-  const onAnchorLayout = () => {
-    if (!restorePending.current) return;
+  const [anchorLaidOut, setAnchorLaidOut] = useState(false);
+  useEffect(() => {
+    if (!restorePending.current || !anchorLaidOut || !selected) return;
     restorePending.current = false;
-    if (selected && chips.length === 0) show(selected, null);
-  };
+    if (chips.length === 0) show(selected, null);
+  }, [anchorLaidOut, selected, chips.length, show]);
 
   const todayLabel =
     todayTotals.length > 0
@@ -134,7 +136,7 @@ export function QuickAddScreen() {
         <Animated.Text
           key={todayLabel}
           entering={panelEnter}
-          exiting={FadeOut.duration(ReducedTiming.duration)}
+          exiting={FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion)}
           accessibilityLabel={todayLabel.replace(' · ', ', spent ')}
           style={[styles.date, { color: colors.textSecondary }]}>
           {todayLabel}
@@ -148,7 +150,7 @@ export function QuickAddScreen() {
           <View
             ref={anchorRef}
             collapsable={false}
-            onLayout={onAnchorLayout}
+            onLayout={() => setAnchorLaidOut(true)}
             accessible
             accessibilityLabel={selected ? `Category: ${selected.name}` : 'No category selected'}
             style={[styles.anchor, { borderColor: colors.borderSubtle }]}>

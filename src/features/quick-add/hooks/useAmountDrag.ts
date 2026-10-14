@@ -10,7 +10,7 @@ import {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
-import { Springs } from '@/animation/tokens';
+import { Duration, Springs } from '@/animation/tokens';
 import { haptics } from '@/haptics/haptics.service';
 
 import { amountFromDrag, type DragConfig } from '../utils/dragMapping';
@@ -53,7 +53,7 @@ export function useAmountDrag({ amount, config, enabled, onDragStart, onDragEnd 
       const next = amountFromDrag(startAmount.get(), event.translationY, config);
       if (next === amount.get()) return;
       amount.set(next);
-      if (!reducedMotion) pulse.set(withSequence(withTiming(1.04, { duration: 40 }), withSpring(1, Springs.press)));
+      if (!reducedMotion) pulse.set(withSequence(withTiming(1.04, { duration: Duration.tick }), withSpring(1, Springs.press)));
       const tick = Math.floor(next / tickSize);
       if (tick !== lastTick.get()) {
         lastTick.set(tick);

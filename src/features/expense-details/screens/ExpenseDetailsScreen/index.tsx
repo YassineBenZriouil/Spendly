@@ -2,9 +2,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Alert, Keyboard, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
-import { ReducedTiming } from '@/animation/tokens';
+import { useReducedMotion } from '@/animation/reducedMotion';
+import { Duration, ReducedTiming } from '@/animation/tokens';
 import { useEnterTransition } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
@@ -43,6 +44,7 @@ export function ExpenseDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const entering = useEnterTransition();
+  const reducedMotion = useReducedMotion();
   const allCategories = useCategories();
 
   /** undefined: loading, null: not found (or deleted elsewhere). */
@@ -193,33 +195,38 @@ export function ExpenseDetailsScreen() {
             </Animated.View>
           )}
 
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Category</Text>
-          <CategoryGrid
-            categories={categories}
-            selectedId={form.categoryId}
-            onSelect={(category) => setForm({ ...form, categoryId: category.id })}
-          />
+          {/* Slides to make room as the keypad opens and closes; under reduced motion the keypad fade is enough */}
+          <Animated.View
+            layout={reducedMotion ? undefined : LinearTransition.duration(Duration.standard)}
+            style={styles.sections}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Category</Text>
+            <CategoryGrid
+              categories={categories}
+              selectedId={form.categoryId}
+              onSelect={(category) => setForm({ ...form, categoryId: category.id })}
+            />
 
-          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Details</Text>
-          <DetailsFields
-            details={form.details}
-            onChange={(detailChanges) => setForm({ ...form, details: { ...form.details, ...detailChanges } })}
-          />
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Details</Text>
+            <DetailsFields
+              details={form.details}
+              onChange={(detailChanges) => setForm({ ...form, details: { ...form.details, ...detailChanges } })}
+            />
 
-          {error && (
-            <Animated.View
-              {...fade}
-              accessibilityLiveRegion="polite"
-              style={[styles.error, { backgroundColor: colors.surfaceSecondary }]}>
-              <Icon name="error" color={colors.danger} size={18} />
-              <Text style={[styles.errorText, { color: colors.textPrimary }]}>{error}</Text>
-            </Animated.View>
-          )}
+            {error && (
+              <Animated.View
+                {...fade}
+                accessibilityLiveRegion="polite"
+                style={[styles.error, { backgroundColor: colors.surfaceSecondary }]}>
+                <Icon name="error" color={colors.danger} size={18} />
+                <Text style={[styles.errorText, { color: colors.textPrimary }]}>{error}</Text>
+              </Animated.View>
+            )}
 
-          <View style={styles.actions}>
-            <Button label="Save changes" disabled={!canSave} onPress={save} />
-            <Button label="Delete expense" variant="secondary" disabled={busy} onPress={confirmDelete} />
-          </View>
+            <View style={styles.actions}>
+              <Button label="Save changes" disabled={!canSave} onPress={save} />
+              <Button label="Delete expense" variant="secondary" disabled={busy} onPress={confirmDelete} />
+            </View>
+          </Animated.View>
         </Animated.View>
       </KeyboardAwareScrollView>
     </Screen>

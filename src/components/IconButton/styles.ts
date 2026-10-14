@@ -10,4 +10,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  icon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

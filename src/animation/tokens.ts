@@ -2,6 +2,8 @@ import { Easing, ReduceMotion, type WithSpringConfig, type WithTimingConfig } fr
 
 /** Durations in ms. Starting values from IDENTITY.md §4 — tune on device. */
 export const Duration = {
+  /** Per-step pulse while dragging the amount: must finish before the next step lands. */
+  tick: 40,
   micro: 130,
   quick: 190,
   standard: 270,

@@ -1,6 +1,6 @@
 import { BuiltInCategories } from '@/domain/category/builtInCategories';
 
-import { LATEST_VERSION, migrate } from '../migrations';
+import { LATEST_VERSION, migrate, migrations } from '../migrations';
 import { createTestDatabase } from '../testing/createTestDatabase';
 
 const version = async (db: ReturnType<typeof createTestDatabase>) =>
@@ -75,5 +75,30 @@ describe('migrate', () => {
       is_visible: 0,
     });
   });
-});
 
+  it('rolls a failing migration back completely and retries it on the next launch', async () => {
+    const db = createTestDatabase();
+    await migrate(db);
+    let fail = true;
+    migrations.push({
+      version: LATEST_VERSION + 1,
+      async up(txn) {
+        await txn.execAsync('ALTER TABLE expenses ADD COLUMN tags TEXT');
+        if (fail) throw new Error('disk full');
+      },
+    });
+    try {
+      await expect(migrate(db)).rejects.toThrow('disk full');
+      // Half-applied schema change is gone and the version did not move
+      expect(await version(db)).toBe(LATEST_VERSION);
+      const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(expenses)', []);
+      expect(columns.map((c) => c.name)).not.toContain('tags');
+
+      fail = false;
+      await migrate(db);
+      expect(await version(db)).toBe(LATEST_VERSION + 1);
+    } finally {
+      migrations.pop();
+    }
+  });
+});

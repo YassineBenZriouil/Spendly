@@ -77,7 +77,11 @@ export function OnboardingScreen() {
         <Text accessibilityRole="header" style={[styles.title, { color: colors.textPrimary }]}>
           Welcome to Spendly
         </Text>
-        {!saved && <Button label="Skip" variant="secondary" onPress={finish} accessibilityHint="Closes the introduction" />}
+        {!saved && (
+          <Animated.View exiting={fade.exiting}>
+            <Button label="Skip" variant="secondary" onPress={finish} accessibilityHint="Closes the introduction" />
+          </Animated.View>
+        )}
       </View>
 
       <Animated.View entering={entering} style={styles.body}>

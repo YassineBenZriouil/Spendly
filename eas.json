@@ -12,6 +12,12 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "unsigned": {
+      "withoutCredentials": true,
+      "ios": {
+        "config": "unsigned-ios.yml"
+      }
     }
   }
 }

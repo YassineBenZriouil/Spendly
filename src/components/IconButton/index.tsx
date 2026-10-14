@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import Animated, {
+  FadeIn,
+  FadeOut,
   interpolate,
   interpolateColor,
   useAnimatedStyle,
@@ -8,11 +10,18 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
+import { ReducedTiming } from '@/animation/tokens';
 import { settleTo } from '@/animation/transitions';
 import { Icon, type IconName } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { styles } from './styles';
+
+// Opacity only, so it is also the reduced-motion version
+const iconFade = {
+  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
+  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
+};
 
 type IconButtonProps = {
   icon: IconName;
@@ -52,7 +61,14 @@ export function IconButton({ icon, accessibilityLabel, onPress, disabled = false
       onPressIn={() => pressed.set(settleTo(1, reducedMotion))}
       onPressOut={() => pressed.set(settleTo(0, reducedMotion))}>
       <Animated.View style={[styles.button, animatedStyle]}>
-        <Icon name={icon} color={colors.textPrimary} size={22} />
+        {/* Keyed and stacked so a swapped icon (e.g. keypad -> close) cross-fades in place */}
+        <Animated.View
+          key={icon}
+          entering={iconFade.entering}
+          exiting={iconFade.exiting}
+          style={[StyleSheet.absoluteFill, styles.icon]}>
+          <Icon name={icon} color={colors.textPrimary} size={22} />
+        </Animated.View>
       </Animated.View>
     </Pressable>
   );

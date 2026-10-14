@@ -1,13 +1,19 @@
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Animated, { interpolate, interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, interpolate, interpolateColor, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { useReducedMotion } from '@/animation/reducedMotion';
+import { ReducedTiming } from '@/animation/tokens';
 import { settleTo } from '@/animation/transitions';
 import { Icon, type IconName } from '@/components/Icon';
 import { useTheme } from '@/theme/ThemeProvider';
 
 import { styles } from './styles';
+
+const fade = {
+  entering: FadeIn.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
+  exiting: FadeOut.duration(ReducedTiming.duration).reduceMotion(ReducedTiming.reduceMotion),
+};
 
 type ListRowProps = {
   label: string;
@@ -47,12 +53,17 @@ export function ListRow({ label, caption, value, icon, iconColor, onPress, acces
           {label}
         </Text>
         {caption && (
-          <Text numberOfLines={2} style={[styles.caption, { color: colors.textSecondary }]}>
+          <Animated.Text {...fade} numberOfLines={2} style={[styles.caption, { color: colors.textSecondary }]}>
             {caption}
-          </Text>
+          </Animated.Text>
         )}
       </View>
-      {value && <Text style={[styles.value, { color: colors.textSecondary }]}>{value}</Text>}
+      {/* Keyed so a changed value (e.g. a new currency) fades in */}
+      {value && (
+        <Animated.Text key={value} entering={fade.entering} style={[styles.value, { color: colors.textSecondary }]}>
+          {value}
+        </Animated.Text>
+      )}
       {accessory}
       {onPress && <Icon name="chevronRight" color={colors.textSecondary} size={14} />}
     </Animated.View>

@@ -1,0 +1,41 @@
+# Unsigned iOS build: compiles in the EAS cloud without Apple credentials and packages Payload/*.app as an .ipa.
+# The result must be re-signed by a sideloading tool (e.g. Sideloadly) before an iPhone will install it.
+build:
+  name: Unsigned iOS IPA
+  steps:
+    - eas/checkout
+    - eas/install_node_modules
+    - eas/resolve_build_config
+    - eas/prebuild
+    - run:
+        name: Install pods
+        working_directory: ./ios
+        command: pod install
+    - run:
+        name: Build without code signing
+        working_directory: ./ios
+        command: |
+          set -eo pipefail
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+    - run:
+        name: Package IPA
+        working_directory: ./ios
+        command: |
+          set -eo pipefail
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/*.app Payload/
+          zip -qry Spendly-unsigned.ipa Payload
+    - eas/upload_artifact:
+        name: Upload IPA
+        inputs:
+          path: ios/Spendly-unsigned.ipa

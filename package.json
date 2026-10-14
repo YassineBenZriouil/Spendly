@@ -45,8 +45,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "build:preview": "npx eas-cli@latest build --profile preview --platform all",
-    "build:preview:android": "npx eas-cli@latest build --profile preview --platform android"
+    "build:android": "npx eas-cli@latest build --profile preview --platform android",
+    "build:ios:unsigned": "npx eas-cli@latest build --profile unsigned --platform ios"
   },
   "private": true,
   "jest": {

@@ -205,7 +205,10 @@ function InsightsContent({ insights, kind, offset, categories }: InsightsContent
             currencyCode={currencyCode}
           />
         ) : (
-          <Text style={[styles.note, { color: colors.textSecondary }]}>No spending in this period.</Text>
+          // In flow (the card sizes to it), so it fades in rather than cross-fading over the breakdown
+          <Animated.Text entering={fade.entering} style={[styles.note, { color: colors.textSecondary }]}>
+            No spending in this period.
+          </Animated.Text>
         )}
       </Card>
 
