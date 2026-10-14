@@ -7,7 +7,7 @@ end of Phase 7 the app is feature-complete and installable for testing.
 > **Status:** all 7 phases are built in code. Still open: the Phase 7 acceptance
 > checklist on an installed build (device testing is done by the user). The follow-up
 > plan is [`PHASES-2.md`](./PHASES-2.md); where it changed something specified here,
-> it wins (e.g. the *Default category: None / Last used* setting was replaced by a
+> it wins (e.g. the _Default category: None / Last used_ setting was replaced by a
 > time-of-day preselection in PHASES-2 Phase 1).
 
 ---
@@ -25,18 +25,19 @@ end of Phase 7 the app is feature-complete and installable for testing.
    `AGENTS.md` mandates that. Expo dev builds give the same native access
    (Reanimated, Gesture Handler, SQLite), so we keep Expo. Mapping:
 
-   | IDENTITY.md says | We use |
-   | --- | --- |
-   | React Navigation | Expo Router (`src/app/`) |
-   | SQLite | `expo-sqlite` |
-   | MMKV | `expo-sqlite/kv-store` (preferences) |
-   | Haptics library | `expo-haptics` |
-   | Export / share | `expo-file-system` + `expo-sharing` |
-   | Locale | `expo-localization` + `Intl` |
+   | IDENTITY.md says             | We use                                |
+   | ---------------------------- | ------------------------------------- |
+   | React Navigation             | Expo Router (`src/app/`)              |
+   | SQLite                       | `expo-sqlite`                         |
+   | MMKV                         | `expo-sqlite/kv-store` (preferences)  |
+   | Haptics library              | `expo-haptics`                        |
+   | Export / share               | `expo-file-system` + `expo-sharing`   |
+   | Locale                       | `expo-localization` + `Intl`          |
    | Reanimated / Gesture Handler | same (re-add with `npx expo install`) |
 
    Install only what a phase needs, always via `npx expo install`, and check
    the SDK 57 docs before using an API.
+
 4. **Money is integer minor units.** Never floats.
 5. **Business logic never depends on animation state.** A finished spring is not
    a saved expense.
@@ -87,7 +88,7 @@ built. Storage is an in-memory mock.
   Drag up = increase. Visible hint. Reset control.
 - **Numeric keypad fallback** + increment/decrement buttons (accessibility).
 - Quick Add state machine (`ready → categorySelected → adjustingAmount →
-  readyToSave → saving → saved → ready`, plus `error`) as a pure reducer.
+readyToSave → saving → saved → ready`, plus `error`) as a pure reducer.
 - `SaveAction`: disabled until valid, explicit tap, double-tap guarded,
   saved confirmation (State E), composer reset (State F), **Undo** toast.
 - Reduced-motion variant: morphs become short fades.
@@ -155,7 +156,7 @@ stays smooth with seeded bulk data.
   - Theme: System / Light / Dark
   - Haptics on/off
   - Reduced motion: System / On / Off
-  - Default category: None / Last used *(replaced in PHASES-2 Phase 1)*
+  - Default category: None / Last used _(replaced in PHASES-2 Phase 1)_
   - Drag sensitivity (precise / balanced / fast) and increment (currency-aware)
   - **Data** section: Export (wired in Phase 5) and **Sync data — disabled,
     "Coming soon"**
