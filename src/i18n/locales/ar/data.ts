@@ -58,4 +58,13 @@ export const data: Translation<typeof english> = {
   'data.backUp.largeMessage': "مع صور الإيصالات، يبلغ حجم هذه النسخة نحو {size} ميغابايت. قد تستغرق مشاركتها بعض الوقت، وبعض التطبيقات تحدّ من حجم المرفقات.",
   'data.backUp.largeContinue': "النسخ على أي حال",
   'data.backUp.largeCancel': "إلغاء",
+  'data.autoBackup.label': "النسخ الاحتياطي التلقائي",
+  'data.autoBackup.caption': "أسبوعيًا، يُحفظ على هذا الهاتف (آخر {keep}) ويُضمَّن في النسخ الاحتياطي لهاتفك. يظل النسخ اليدوي متاحًا.",
+  'data.autoBackup.last': "آخر نسخة: {date}",
+  'data.autoBackup.none': "تُنشأ النسخة الأولى الآن ثم كل أسبوع.",
+  'data.autoBackup.shareLatest': "مشاركة أحدث نسخة",
+  'data.autoBackup.failed': "تعذّرت كتابة النسخة الاحتياطية.",
+  'data.autoBackup.failedWith': "فشل آخر نسخ تلقائي: {reason}",
+  'data.autoBackup.on': "النسخ الاحتياطي التلقائي مُفعّل",
+  'data.autoBackup.off': "النسخ الاحتياطي التلقائي متوقف. تبقى النسخ الموجودة.",
 };

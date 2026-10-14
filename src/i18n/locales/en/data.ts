@@ -44,4 +44,13 @@ export const data = {
   'data.backUp.largeMessage': "With receipt photos, this backup is about {size} MB. It may take a while to share, and some apps limit attachment size.",
   'data.backUp.largeContinue': "Back up anyway",
   'data.backUp.largeCancel': "Cancel",
+  'data.autoBackup.label': "Auto-backup",
+  'data.autoBackup.caption': "Weekly, kept on this phone (the last {keep}) and included in your phone's own backup. Manual backups still work.",
+  'data.autoBackup.last': "Last backup: {date}",
+  'data.autoBackup.none': "The first backup is made now and then every week.",
+  'data.autoBackup.shareLatest': "Share latest backup",
+  'data.autoBackup.failed': "The backup couldn't be written.",
+  'data.autoBackup.failedWith': "Last auto-backup failed: {reason}",
+  'data.autoBackup.on': "Auto-backup on",
+  'data.autoBackup.off': "Auto-backup off. Existing backups are kept.",
 } as const satisfies Record<`data.${string}`, Message>;

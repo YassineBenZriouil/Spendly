@@ -38,12 +38,27 @@ export type AppPreferences = {
   reminder?: ReminderTime;
   /** The expense `spendly://add?quick=1` saves (Siri / Shortcuts, the Android tile). Absent: not set up. */
   quickLog?: QuickLog;
+  /** Weekly backup file kept on the phone. Off by default; this phone only. */
+  autoBackup: boolean;
+  /** When the last auto-backup was written, and the last failure (shown in Settings). This phone only. */
+  autoBackupStatus?: AutoBackupStatus;
+  /** The month ("2026-10") whose recap card was dismissed in Insights. */
+  recapDismissed?: string;
+};
+
+export type AutoBackupStatus = { lastAt?: string; failedAt?: string; error?: string };
+
+const isAutoBackupStatus = (v: unknown): v is AutoBackupStatus => {
+  if (!v || typeof v !== 'object') return false;
+  const { lastAt, failedAt, error } = v as Record<string, unknown>;
+  const optionalString = (value: unknown) => value === undefined || typeof value === 'string';
+  return optionalString(lastAt) && optionalString(failedAt) && optionalString(error);
 };
 
 export type LockGraceSeconds = 0 | 60;
 
 /** Settings that belong to this phone: a restored backup never changes them (nothing turns on by surprise). */
-export const DEVICE_ONLY_PREFERENCES = ['appLock', 'lockGraceSeconds', 'reminder'] as const;
+export const DEVICE_ONLY_PREFERENCES = ['appLock', 'lockGraceSeconds', 'reminder', 'autoBackup', 'autoBackupStatus'] as const;
 
 const KEY = 'preferences';
 
@@ -60,6 +75,7 @@ function defaults(): AppPreferences {
     onboardingSeen: false,
     appLock: false,
     lockGraceSeconds: 0,
+    autoBackup: false,
   };
 }
 
@@ -78,6 +94,9 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   lockGraceSeconds: (v) => v === 0 || v === 60,
   reminder: isReminderTime,
   quickLog: isQuickLog,
+  autoBackup: (v) => typeof v === 'boolean',
+  autoBackupStatus: isAutoBackupStatus,
+  recapDismissed: (v) => typeof v === 'string' && /^\d{4}-\d{2}$/.test(v),
 };
 
 /** Only the known, valid preference values in `value` (from disk or a backup file); anything else is dropped. */
@@ -88,7 +107,7 @@ export function sanitizePreferences(value: unknown): Partial<AppPreferences> {
   ) as Partial<AppPreferences>;
 }
 
-/** Preferences from a backup file that may be applied here: valid ones, minus this phone's own (lock, reminder). */
+/** Preferences from a backup file that may be applied here: valid ones, minus this phone's own (lock, reminder, auto-backup). */
 export function restorablePreferences(value: unknown): Partial<AppPreferences> {
   const preferences = sanitizePreferences(value);
   for (const key of DEVICE_ONLY_PREFERENCES) delete preferences[key];

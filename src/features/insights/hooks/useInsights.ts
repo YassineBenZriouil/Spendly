@@ -20,13 +20,14 @@ expenseRepository.subscribe(() => {
 });
 
 /** Insights for one period, re-queried after every expense write and when the app returns (the day may have changed). */
-export function useInsights(kind: PeriodKind, offset: number, preferredCurrency: string) {
+export function useInsights(kind: PeriodKind, offset: number, preferredCurrency: string, enabled = true) {
   const [insights, setInsights] = useState<Insights | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const reloadKey = useReloadKey(RELOAD_ON);
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     const firstWeekday = deviceFirstWeekday();
     // The day is part of the key: the current period changes at midnight
@@ -46,7 +47,7 @@ export function useInsights(kind: PeriodKind, offset: number, preferredCurrency:
     return () => {
       active = false;
     };
-  }, [kind, offset, preferredCurrency, attempt, reloadKey]);
+  }, [kind, offset, preferredCurrency, attempt, reloadKey, enabled]);
 
   return { insights, failed, retry: () => setAttempt((n) => n + 1) };
 }

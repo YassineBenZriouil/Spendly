@@ -14,6 +14,7 @@ import { useAppLock } from '@/features/lock/hooks/useAppLock';
 import { cleanUpPhotos } from '@/features/photos/cleanUpPhotos';
 import { useReminder } from '@/features/reminder/useReminder';
 import { useWidgetSync } from '@/features/widget/useWidgetSync';
+import { useAutoBackupCheck } from '@/features/backup/autoBackup';
 import { databaseHealth } from '@/storage/database/health';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -53,6 +54,7 @@ function ThemedNavigation() {
   const lockStatus = useAppLock();
   useReminder();
   useWidgetSync();
+  useAutoBackupCheck();
 
   // Housekeeping once per launch: photo files nothing refers to any more
   useEffect(() => {

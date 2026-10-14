@@ -350,6 +350,19 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 
 **Goal:** a moment of reflection each month, and backups that happen by themselves.
 
+> **Status (2026-10-14): built in code**; device checks pending. **Decided:** auto-backup files stay in the app's
+> own documents folder (`backups/`) on both platforms, **not** shown in the Files app (that would also expose the
+> database and photos folders to being moved or deleted by hand). They are covered by the phone's own backup (iOS
+> iCloud / computer backup; Android Auto Backup, `allowBackup` on), and Settings → Data → **Share latest backup**
+> saves one anywhere. The last **4** are kept. Weekly runs: `expo-background-task` asks the system to wake the app
+> every ~12 h to check (iOS decides when, if at all); every launch and return to the app also backs up when one is
+> due. Recap: `domain/insights/recap.ts` (pure, from a finished month's Insights; tested with DST and no-data days),
+> `RecapCard` (Share = `react-native-view-shot` image of the card), shown for any finished month in month view and,
+> the first 7 days of a month, on the current period until dismissed (`recapDismissed`). Auto-backup settings are
+> device-only. **Known limits:** each auto-backup holds every receipt photo, so 4 copies take 4× the photos' space;
+> Android Auto Backup skips an app whose data passes 25 MB, so with many photos Google's copy may stop (the files on
+> the phone and Share latest backup still work).
+
 **Today:** Insights has highlights; backup is manual through the share sheet.
 
 **Work**
@@ -373,11 +386,12 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 
 **Done when**
 
-- [ ] Recap numbers match hand-calculated values (tests), including months with DST changes and no-data days.
+- [x] Recap numbers match hand-calculated values (tests), including months with DST changes and no-data days.
+      (`domain/insights/__tests__/recap-test.ts`; when a backup is due and which files go: `autoBackup-test.ts`.)
 - [ ] Recap image renders in every theme (B&W / Color, light / dark) and in Arabic. *Device.*
 - [ ] Auto-backup runs weekly without opening the app every day (as far as the OS allows), keeps the last N files,
       and a file restores on another phone. *Device.*
-- New native modules: `react-native-view-shot`, possibly a background-task module (new build).
+- New native modules: `react-native-view-shot`, `expo-background-task`, `expo-task-manager` (new build).
 
 ---
 

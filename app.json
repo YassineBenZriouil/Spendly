@@ -94,7 +94,8 @@
           ]
         }
       ],
-      "./plugins/withQuickLogTile"
+      "./plugins/withQuickLogTile",
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

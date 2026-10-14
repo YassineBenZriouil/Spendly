@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { fade, useEnterTransition } from '@/animation/transitions';
+import { fade, useEnterTransition, useLayoutTransition } from '@/animation/transitions';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { EmptyState } from '@/components/EmptyState';
 import { Icon } from '@/components/Icon';
@@ -14,10 +14,11 @@ import { budgetProgress, type Budget } from '@/domain/budget/budget';
 import { buildHighlights, MIN_BASELINE_PERIODS, usualByCategory, type Highlight, type HighlightKind } from '@/domain/insights/highlights';
 import type { Insights } from '@/domain/insights/insights.service';
 import type { PeriodKind } from '@/domain/insights/period';
+import { buildRecap, monthKey, RECAP_DAYS } from '@/domain/insights/recap';
 import { deviceLocale, formatMoney } from '@/domain/money/money.format';
 import { t } from '@/i18n';
 import { useCategories } from '@/features/categories/hooks/useCategories';
-import { usePreferences } from '@/storage/preferences/preferences';
+import { updatePreferences, usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
 import { addLocalDays } from '@/utils/dates';
 import { formatDayRange, formatMonth } from '@/utils/dateFormat';
@@ -25,6 +26,7 @@ import { EdgeToEdge } from '@/theme/tokens';
 
 import { BudgetBar, budgetText } from '../../components/BudgetBar';
 import { CategoryBreakdown } from '../../components/CategoryBreakdown';
+import { RecapCard } from '../../components/RecapCard';
 import { TrendChart } from '../../components/TrendChart';
 import { useInsights } from '../../hooks/useInsights';
 import { styles } from './styles';
@@ -42,6 +44,13 @@ export function InsightsScreen() {
   /** A currency picked here; otherwise the Settings currency. */
   const [currency, setCurrency] = useState<string | null>(null);
   const { insights, failed, retry } = useInsights(kind, offset, currency ?? preferences.currencyCode);
+
+  // The first days of a month, the current period shows a recap of the month that just ended, until dismissed
+  const [today] = useState(() => new Date());
+  const lastMonthKey = monthKey(new Date(today.getFullYear(), today.getMonth() - 1, 1));
+  const showRecapPrompt = offset === 0 && today.getDate() <= RECAP_DAYS && preferences.recapDismissed !== lastMonthKey;
+  const lastMonth = useInsights('month', -1, currency ?? preferences.currencyCode, showRecapPrompt).insights;
+  const recapPrompt = showRecapPrompt && lastMonth ? buildRecap(lastMonth) : null;
 
   const periodLabel = (() => {
     if (offset === 0) return kind === 'week' ? t('insights.period.thisWeek') : t('insights.period.thisMonth');
@@ -92,7 +101,17 @@ export function InsightsScreen() {
     const budget = kind === 'month' && preferences.budget?.currencyCode === insights.currencyCode ? preferences.budget : null;
     return {
       key: 'content',
-      node: <InsightsContent insights={insights} kind={kind} offset={offset} categories={categories} budget={budget} />,
+      node: (
+        <InsightsContent
+          insights={insights}
+          kind={kind}
+          offset={offset}
+          categories={categories}
+          budget={budget}
+          recapPrompt={recapPrompt}
+          onDismissRecap={() => updatePreferences({ recapDismissed: lastMonthKey })}
+        />
+      ),
     };
   })();
 
@@ -162,9 +181,12 @@ type InsightsContentProps = {
   offset: number;
   categories: ReturnType<typeof useCategories>;
   budget: Budget | null;
+  /** Last month's recap, offered on the current period early in a new month. */
+  recapPrompt: ReturnType<typeof buildRecap>;
+  onDismissRecap: () => void;
 };
 
-function InsightsContent({ insights, kind, offset, categories, budget }: InsightsContentProps) {
+function InsightsContent({ insights, kind, offset, categories, budget, recapPrompt, onDismissRecap }: InsightsContentProps) {
   const { colors } = useTheme();
   const { currencyCode, totalMinor, previousTotalMinor, incomeMinor } = insights;
   const overall = budget?.monthlyMinor ? budgetProgress(totalMinor, budget.monthlyMinor) : null;
@@ -187,6 +209,8 @@ function InsightsContent({ insights, kind, offset, categories, budget }: Insight
   const usual = insights.baseline.length >= MIN_BASELINE_PERIODS ? usualByCategory(insights.baseline) : null;
   // Tap through to the expenses behind a highlight or a category
   const openCategory = (categoryId: string) => router.navigate({ pathname: '/activity', params: { categoryId } });
+  // A finished month always shows its recap (past recaps: step back a month)
+  const recap = kind === 'month' && offset < 0 ? buildRecap(insights) : null;
   // Charts restart (bars grow from the baseline) when the period or currency changes
   const chartKey = `${insights.period.start.toISOString()}-${currencyCode}`;
 
@@ -195,6 +219,12 @@ function InsightsContent({ insights, kind, offset, categories, budget }: Insight
         showsVerticalScrollIndicator={false}
         style={EdgeToEdge.scroll}
         contentContainerStyle={[styles.content, EdgeToEdge.content]}>
+      {recap ? (
+        <RecapCard key={monthKey(recap.month)} recap={recap} categoryName={nameOf} />
+      ) : (
+        recapPrompt && <RecapCard key={monthKey(recapPrompt.month)} recap={recapPrompt} categoryName={nameOf} onDismiss={onDismissRecap} />
+      )}
+
       <Card>
         <Text style={[styles.cardTitle, { color: colors.textSecondary }]}>{t('insights.card.highlights')}</Text>
         <View style={styles.highlights}>
@@ -371,7 +401,13 @@ function NetCard({ incomeMinor, spentMinor, currencyCode }: { incomeMinor: numbe
   );
 }
 
+// Cards slide (or cross-fade) when one above them appears or goes, e.g. the recap
 function Card({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
-  return <View style={[styles.card, { backgroundColor: colors.surface }]}>{children}</View>;
+  const layout = useLayoutTransition();
+  return (
+    <Animated.View layout={layout} style={[styles.card, { backgroundColor: colors.surface }]}>
+      {children}
+    </Animated.View>
+  );
 }

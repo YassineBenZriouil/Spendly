@@ -13,9 +13,8 @@ import { t } from '@/i18n';
 import { getPreferences, restorablePreferences, updatePreferences } from '@/storage/preferences/preferences';
 import { photoBytes, readPhotoBase64, writePhotoBase64 } from '@/storage/photos/photoFiles';
 
-/** Writes a backup of everything and hands it to the share sheet (Files, AirDrop, email…). Returns the expense count. */
-export async function shareBackup(): Promise<number> {
-  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this device');
+/** Everything, as the backup file's text (manual and automatic backups are the same file). */
+export async function buildBackup(): Promise<{ backup: Backup; text: string }> {
   const [expenses, categories, repeats] = await Promise.all([
     expenseRepository.search({}),
     categoryRepository.list(),
@@ -26,14 +25,27 @@ export async function shareBackup(): Promise<number> {
     photoNamesOf(expenses).map(async (name) => ({ name, data: await readPhotoBase64(name) })),
   );
   const backup = createBackup({ expenses, categories, preferences: getPreferences(), ...repeats, photos });
-  // Cache directory: the system may clear it later; the kept copy is wherever the user saves it
-  const file = new File(Paths.cache, `spendly-backup-${backup.createdAt.slice(0, 10)}.json`);
-  file.create({ overwrite: true });
-  file.write(JSON.stringify(backup));
+  return { backup, text: JSON.stringify(backup) };
+}
+
+/** Hands a backup file to the share sheet (Files, AirDrop, email…). */
+export async function shareBackupFile(file: File) {
+  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this device');
   await lockStore.withoutLock(() =>
     Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: t('data.backUp.shareTitle') }),
   );
-  return expenses.length;
+}
+
+/** Writes a backup of everything and hands it to the share sheet. Returns the expense count. */
+export async function shareBackup(): Promise<number> {
+  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available on this device');
+  const { backup, text } = await buildBackup();
+  // Cache directory: the system may clear it later; the kept copy is wherever the user saves it
+  const file = new File(Paths.cache, `spendly-backup-${backup.createdAt.slice(0, 10)}.json`);
+  file.create({ overwrite: true });
+  file.write(text);
+  await shareBackupFile(file);
+  return backup.expenses.length;
 }
 
 const photoNamesOf = (expenses: { photo?: string }[]) => expenses.flatMap((expense) => (expense.photo ? [expense.photo] : []));

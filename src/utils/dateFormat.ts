@@ -46,6 +46,11 @@ export function formatDayRange(start: Date, endInclusive: Date, locale = deviceL
   return `${format.format(start)} – ${format.format(endInclusive)}`;
 }
 
+/** "Saturday, March 8": a day named in full, without "today" / "yesterday" (recaps, shared images). */
+export function formatFullDay(date: Date, locale = deviceLocale()): string {
+  return new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'long', day: 'numeric' }).format(date);
+}
+
 export function formatMonth(date: Date, locale = deviceLocale()): string {
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
 }

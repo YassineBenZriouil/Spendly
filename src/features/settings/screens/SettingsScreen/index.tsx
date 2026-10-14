@@ -17,6 +17,7 @@ import { sampleExpenses } from '@/domain/expense/sampleExpenses';
 import type { Backup } from '@/domain/backup/backup';
 import { formatMoney } from '@/domain/money/money.format';
 import { applyBackup, backupPhotoBytes, pickBackup, shareBackup } from '@/features/backup/backupActions';
+import { AutoBackupSettings } from '@/features/backup/components/AutoBackupSettings';
 import { AppLockSettings } from '@/features/lock/components/AppLockSettings';
 import { ReminderSettings } from '@/features/reminder/components/ReminderSettings';
 import { baseStepMinor } from '@/features/quick-add/utils/dragMapping';
@@ -334,6 +335,7 @@ export function SettingsScreen() {
               caption={t('data.restore.caption')}
               onPress={restore}
             />
+            <AutoBackupSettings />
             <ListRow
               icon="export"
               label={t('data.export.label')}
