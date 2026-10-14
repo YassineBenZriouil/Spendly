@@ -18,6 +18,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { addLocalMonths, startOfLocalMonth, type IsoRange } from '@/utils/dates';
 import { formatDay } from '@/utils/dateFormat';
 import { EdgeToEdge } from '@/theme/tokens';
+import { lockStore } from '@/features/lock/state/lockStore';
 
 import { styles } from './styles';
 
@@ -76,11 +77,14 @@ export function ExportScreen() {
       const file = new File(Paths.cache, `spendly-${new Date().toISOString().slice(0, 10)}.csv`);
       file.create({ overwrite: true });
       file.write(expensesToCsv(expenses, withDisplayNames(categories)));
-      await Sharing.shareAsync(file.uri, {
-        mimeType: 'text/csv',
-        UTI: 'public.comma-separated-values-text',
-        dialogTitle: t('exportCsv.shareTitle'),
-      });
+      // The share sheet is a system screen opened here: coming back from it doesn't lock the app
+      await lockStore.withoutLock(() =>
+        Sharing.shareAsync(file.uri, {
+          mimeType: 'text/csv',
+          UTI: 'public.comma-separated-values-text',
+          dialogTitle: t('exportCsv.shareTitle'),
+        }),
+      );
       setMessage({ error: false, text: t('exportCsv.success', { count: expenses.length }) });
     } catch {
       setMessage({ error: true, text: t('exportCsv.error') });

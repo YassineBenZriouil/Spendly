@@ -21,6 +21,7 @@ const icons = {
   search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
   delete: { ios: 'trash', android: 'delete', web: 'delete' },
   calendar: { ios: 'calendar', android: 'calendar_today', web: 'calendar_today' },
+  lock: { ios: 'lock', android: 'lock', web: 'lock' },
 
   // Category icons (keys match CategoryIcon)
   food: { ios: 'fork.knife', android: 'restaurant', web: 'restaurant' },

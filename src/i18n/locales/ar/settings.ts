@@ -78,4 +78,6 @@ export const settings: Translation<typeof english> = {
   'settings.developer.samplesAddedTitle10k': 'تمت إضافة 10000 مصروف تجريبي',
   'settings.developer.samplesAddedMessage': 'ملاحظتها "Sample data"، لذا يمكنك البحث عنها.',
   'settings.developer.samplesFailed': 'تعذّرت إضافة المصروفات التجريبية',
+  'settings.section.security': "الأمان",
+  'settings.section.reminder': "التذكير",
 };

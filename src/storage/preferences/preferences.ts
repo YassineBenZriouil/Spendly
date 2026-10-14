@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 
 import { parseBudget, type Budget } from '@/domain/budget/budget';
 import { deviceCurrency } from '@/domain/money/money.format';
+import { isReminderTime, type ReminderTime } from '@/domain/reminder/reminder';
 import { t } from '@/i18n';
 import { isStorageFull } from '@/storage/database/errors';
 import { AccentNames, type AccentName, type ThemeStyle } from '@/theme/tokens';
@@ -28,7 +29,18 @@ export type AppPreferences = {
   amountIncrement: AmountIncrement;
   /** The first-launch introduction has been shown (it can be replayed from Settings). */
   onboardingSeen: boolean;
+  /** App lock (Face ID, fingerprint or passcode). Off by default; this phone only, never restored from a backup. */
+  appLock: boolean;
+  /** How long the app may stay in the background before it locks again: 0 (immediately) or 60 seconds. */
+  lockGraceSeconds: LockGraceSeconds;
+  /** Daily reminder time; absent: off (the default). This phone only, never restored from a backup. */
+  reminder?: ReminderTime;
 };
+
+export type LockGraceSeconds = 0 | 60;
+
+/** Settings that belong to this phone: a restored backup never changes them (nothing turns on by surprise). */
+export const DEVICE_ONLY_PREFERENCES = ['appLock', 'lockGraceSeconds', 'reminder'] as const;
 
 const KEY = 'preferences';
 
@@ -43,6 +55,8 @@ function defaults(): AppPreferences {
     dragSensitivity: 'balanced',
     amountIncrement: 1,
     onboardingSeen: false,
+    appLock: false,
+    lockGraceSeconds: 0,
   };
 }
 
@@ -57,6 +71,9 @@ const allowed: { [K in keyof AppPreferences]-?: (value: unknown) => boolean } = 
   dragSensitivity: (v) => v === 'precise' || v === 'balanced' || v === 'fast',
   amountIncrement: (v) => v === 1 || v === 5 || v === 10 || v === 50,
   onboardingSeen: (v) => typeof v === 'boolean',
+  appLock: (v) => typeof v === 'boolean',
+  lockGraceSeconds: (v) => v === 0 || v === 60,
+  reminder: isReminderTime,
 };
 
 /** Only the known, valid preference values in `value` (from disk or a backup file); anything else is dropped. */
@@ -65,6 +82,13 @@ export function sanitizePreferences(value: unknown): Partial<AppPreferences> {
   return Object.fromEntries(
     Object.entries(value).filter(([key, entry]) => allowed[key as keyof AppPreferences]?.(entry)),
   ) as Partial<AppPreferences>;
+}
+
+/** Preferences from a backup file that may be applied here: valid ones, minus this phone's own (lock, reminder). */
+export function restorablePreferences(value: unknown): Partial<AppPreferences> {
+  const preferences = sanitizePreferences(value);
+  for (const key of DEVICE_ONLY_PREFERENCES) delete preferences[key];
+  return preferences;
 }
 
 /** Only what the user changed is stored; everything else falls back to defaults (e.g. device currency). */

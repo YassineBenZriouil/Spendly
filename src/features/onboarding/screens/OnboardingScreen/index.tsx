@@ -16,6 +16,7 @@ import { AmountSurface } from '@/features/quick-add/components/AmountSurface';
 import { CategoryGrid } from '@/features/quick-add/components/CategoryGrid';
 import { useAmountDrag } from '@/features/quick-add/hooks/useAmountDrag';
 import { clampAmount, dragConfigFor } from '@/features/quick-add/utils/dragMapping';
+import { useLockStatus } from '@/features/lock/state/lockStore';
 import { haptics } from '@/haptics/haptics.service';
 import { updatePreferences, usePreferences } from '@/storage/preferences/preferences';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -50,6 +51,12 @@ export function OnboardingScreen() {
     onDragStart: () => {},
     onDragEnd: setAmountMinor,
   });
+
+  // A native full-screen modal sits above the lock screen: close it when the app locks (it saves nothing)
+  const lockStatus = useLockStatus();
+  useEffect(() => {
+    if (lockStatus === 'locked') router.back();
+  }, [lockStatus]);
 
   // Shown once: opening it counts, even if the user leaves straight away
   useEffect(() => {

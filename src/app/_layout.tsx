@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useSyncExternalStore } from 'react';
-import { Alert } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
@@ -9,7 +9,10 @@ import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
 import { useReducedMotion } from '@/animation/reducedMotion';
 
 import { ThemeFade } from '@/components/ThemeFade';
+import { LockScreen } from '@/features/lock/components/LockScreen';
+import { useAppLock } from '@/features/lock/hooks/useAppLock';
 import { cleanUpPhotos } from '@/features/photos/cleanUpPhotos';
+import { useReminder } from '@/features/reminder/useReminder';
 import { databaseHealth } from '@/storage/database/health';
 import { usePreferences } from '@/storage/preferences/preferences';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -46,6 +49,9 @@ function ThemedNavigation() {
       ],
     );
   }, [damaged]);
+  const lockStatus = useAppLock();
+  useReminder();
+
   // Housekeeping once per launch: photo files nothing refers to any more
   useEffect(() => {
     cleanUpPhotos().catch(() => {
@@ -67,21 +73,29 @@ function ThemedNavigation() {
   return (
     <NavigationThemeProvider value={navigationTheme}>
       <StatusBar animated style={scheme === 'dark' ? 'light' : 'dark'} />
-      {/* Pushes slide normally; reduced motion swaps the slide for a fade. Back is a bare chevron: the
-          previous screen is often the tabs group, whose route name ("(tabs)") would otherwise show as its title */}
-      <Stack screenOptions={{ animation: reducedMotion ? 'fade' : 'default', headerBackButtonDisplayMode: 'minimal' }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="settings/index" options={{ title: t('common.screen.settings') }} />
-        <Stack.Screen name="settings/currency" options={{ title: t('common.screen.currency') }} />
-        <Stack.Screen name="settings/budget" options={{ title: t('common.screen.budget') }} />
-        <Stack.Screen name="settings/export" options={{ title: t('common.screen.export') }} />
-        <Stack.Screen name="categories/index" options={{ title: t('common.screen.categories') }} />
-        <Stack.Screen name="categories/[id]" options={{ title: t('common.screen.category') }} />
-        <Stack.Screen name="expense/[id]" options={{ title: t('common.screen.expense') }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
-        <Stack.Screen name="photo/[name]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
-      </Stack>
+      {/* While locked, screen readers reach only the lock screen */}
+      <View
+        style={styles.app}
+        importantForAccessibility={lockStatus === 'unlocked' ? 'auto' : 'no-hide-descendants'}
+        accessibilityElementsHidden={lockStatus !== 'unlocked'}>
+        {/* Pushes slide normally; reduced motion swaps the slide for a fade. Back is a bare chevron: the
+            previous screen is often the tabs group, whose route name ("(tabs)") would otherwise show as its title */}
+        <Stack screenOptions={{ animation: reducedMotion ? 'fade' : 'default', headerBackButtonDisplayMode: 'minimal' }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="settings/index" options={{ title: t('common.screen.settings') }} />
+          <Stack.Screen name="settings/currency" options={{ title: t('common.screen.currency') }} />
+          <Stack.Screen name="settings/budget" options={{ title: t('common.screen.budget') }} />
+          <Stack.Screen name="settings/export" options={{ title: t('common.screen.export') }} />
+          <Stack.Screen name="categories/index" options={{ title: t('common.screen.categories') }} />
+          <Stack.Screen name="categories/[id]" options={{ title: t('common.screen.category') }} />
+          <Stack.Screen name="expense/[id]" options={{ title: t('common.screen.expense') }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+          {/* A pushed screen, not a native modal: the lock screen must be able to cover it */}
+          <Stack.Screen name="photo/[name]" options={{ headerShown: false, animation: 'fade' }} />
+        </Stack>
+      </View>
       <ThemeFade />
+      {lockStatus !== 'unlocked' && <LockScreen status={lockStatus} />}
       {/* Settings override: Reanimated's own default (springs, layout animations) follows the choice too.
           Our reduced-motion fades use ReduceMotion.Never, so they still play under "On". */}
       {motionPreference !== 'system' && (
@@ -90,3 +104,7 @@ function ThemedNavigation() {
     </NavigationThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  app: { flex: 1 },
+});

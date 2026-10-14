@@ -7,9 +7,10 @@ import { restoreBackup, type RestoreResult } from '@/domain/backup/backup.reposi
 import { categoryRepository } from '@/domain/category/category.repository';
 import { expenseRepository } from '@/domain/expense/expense.repository';
 import { recurrenceRepository } from '@/domain/recurrence/recurrence.repository';
+import { lockStore } from '@/features/lock/state/lockStore';
 import { getDatabase } from '@/storage/database/connection';
 import { t } from '@/i18n';
-import { getPreferences, sanitizePreferences, updatePreferences } from '@/storage/preferences/preferences';
+import { getPreferences, restorablePreferences, updatePreferences } from '@/storage/preferences/preferences';
 import { photoBytes, readPhotoBase64, writePhotoBase64 } from '@/storage/photos/photoFiles';
 
 /** Writes a backup of everything and hands it to the share sheet (Files, AirDrop, email…). Returns the expense count. */
@@ -29,7 +30,9 @@ export async function shareBackup(): Promise<number> {
   const file = new File(Paths.cache, `spendly-backup-${backup.createdAt.slice(0, 10)}.json`);
   file.create({ overwrite: true });
   file.write(JSON.stringify(backup));
-  await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: t('data.backUp.shareTitle') });
+  await lockStore.withoutLock(() =>
+    Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: t('data.backUp.shareTitle') }),
+  );
   return expenses.length;
 }
 
@@ -43,7 +46,9 @@ export async function backupPhotoBytes(): Promise<number> {
 /** Lets the user pick a backup file and checks all of it. `null` if they cancelled. */
 export async function pickBackup(): Promise<BackupParseResult | null> {
   // Any type: file managers label JSON inconsistently; parseBackup rejects anything that isn't a backup
-  const picked = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: false });
+  const picked = await lockStore.withoutLock(() =>
+    DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, multiple: false }),
+  );
   if (picked.canceled) return null;
   return parseBackup(await new File(picked.assets[0].uri).text());
 }
@@ -54,7 +59,7 @@ export async function applyBackup(backup: Backup): Promise<RestoreResult> {
   // removed by the next launch's cleanup; an expense never points to a photo that isn't there
   for (const photo of backup.photos) writePhotoBase64(photo.name, photo.data);
   const result = await restoreBackup(await getDatabase(), backup);
-  updatePreferences(sanitizePreferences(backup.preferences));
+  updatePreferences(restorablePreferences(backup.preferences));
   expenseRepository.notifyChanged();
   categoryRepository.notifyChanged();
   recurrenceRepository.notifyChanged();

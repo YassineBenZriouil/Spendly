@@ -258,6 +258,19 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 
 **Goal:** privacy and a gentle habit nudge, both opt-in.
 
+> **Status (2026-10-14): built in code**; device checks pending. **Decided** (the proposals): the lock engages
+> immediately, with an optional 1 minute (`lockGraceSeconds`); the reminder fires unless something was logged that
+> day, rescheduled at each launch, return to the app and write. It schedules the next **7** days (not one), so it
+> still comes on days the app isn't opened. Lock: `features/lock` (`lockStore` rules, `LockScreen` over the whole app,
+> `authenticate` falls back to the passcode; no passcode or biometrics left → the lock turns itself off, with an
+> alert). System screens the app opens (camera, photo library, share sheet, file picker, permission prompts) never
+> lock it (`lockStore.withoutLock`). The photo viewer is now a pushed screen (a native modal would sit above the
+> lock screen) and onboarding closes when the app locks. Reminder: `domain/reminder` (pure, tested),
+> `features/reminder`. Lock and reminder settings are never restored from a backup (`restorablePreferences`).
+> **Known limits:** Android's app switcher can show the last screen (hiding it needs FLAG_SECURE, which also blocks
+> screenshots); Android may deliver the reminder a few minutes late (no exact-alarm permission); a time-zone change
+> takes effect the next time the app is opened.
+
 **Today:** no lock; no notifications.
 
 **Work**
@@ -281,7 +294,8 @@ Theme is System / Light / Dark. Contrast is tested (`contrast-test.ts`); color i
 
 - [ ] Lock: on/off, background → foreground, cold start, failed biometrics, biometrics removed. *Device.*
 - [ ] Reminder: fires at the chosen time, not after a save that day, survives restart and timezone change. *Device.*
-- [ ] Scheduling logic is a pure, tested function (which day to schedule next, given saves and the time).
+- [x] Scheduling logic is a pure, tested function (which day to schedule next, given saves and the time).
+      (`domain/reminder/__tests__/reminder-test.ts`, incl. both DST changes; lock rules in `lockStore-test.ts`.)
 - New native modules: `expo-local-authentication`, `expo-notifications` (new build).
 
 ---

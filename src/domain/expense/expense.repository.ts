@@ -43,6 +43,8 @@ export type ExpenseRepository = {
   amountSuggestions(categoryId: string, currencyCode: string, since: string): Promise<number[]>;
   /** Category and time of every expense since `since` (for time-of-day defaults). */
   categoryTimes(since: string): Promise<CategoryTime[]>;
+  /** When the most recent entry (expense or income) was recorded, or null if there are none (daily reminder). */
+  lastLoggedAt(): Promise<string | null>;
   /** Photo file names of every stored expense, deleted ones included (their photos are kept until the purge). */
   photoNames(): Promise<string[]>;
   /** Tells subscribers that expenses changed outside this repository (e.g. a restored backup). */
@@ -157,6 +159,12 @@ export function createSqliteExpenseRepository(database: () => Promise<Db>): Expe
       const db = await database();
       await db.runAsync('UPDATE expenses SET deleted_at = NULL WHERE id = ?', [id]);
       changed();
+    },
+
+    async lastLoggedAt() {
+      const db = await database();
+      const row = await db.getFirstAsync<{ last: string | null }>('SELECT MAX(created_at) AS last FROM live_expenses', []);
+      return row?.last ?? null;
     },
 
     async photoNames() {

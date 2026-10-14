@@ -77,4 +77,6 @@ export const settings = {
   'settings.developer.samplesAddedTitle10k': 'Added 10,000 sample expenses',
   'settings.developer.samplesAddedMessage': 'Their note is "Sample data", so you can search for them.',
   'settings.developer.samplesFailed': "Couldn't add sample expenses",
+  'settings.section.security': "Security",
+  'settings.section.reminder': "Reminder",
 } as const satisfies Record<`settings.${string}`, Message>;

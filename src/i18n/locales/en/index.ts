@@ -8,6 +8,8 @@ import { exportCsv } from './exportCsv';
 import { settings } from './settings';
 import { categories } from './categories';
 import { data } from './data';
+import { lock } from './lock';
+import { reminder } from './reminder';
 
 /** English: the source catalog. Every key lives here first; other languages translate it. */
 export const en = {
@@ -21,6 +23,8 @@ export const en = {
   ...settings,
   ...categories,
   ...data,
+  ...lock,
+  ...reminder,
 };
 
 export type MessageKey = keyof typeof en;

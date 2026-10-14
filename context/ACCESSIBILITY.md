@@ -15,6 +15,8 @@ text-size rows). Phase 6 of `PHASES-2.md` is done when every cell passes.
 8. **Reorder** a category without dragging (screen reader: Move up / Move down actions).
 9. **Repeat**: set Repeat on an expense; when due, Confirm and Skip it (row buttons, or the row's actions with a screen reader), then Undo each. Use **Again** on an expense without swiping (row action or the edit screen button).
 10. **Receipt photo**: in the details (Quick Add or edit screen), Add receipt photo → Take photo and → Choose from library; open the thumbnail full screen and close it; Replace it; Remove it, then Undo. Each outcome is announced ("Photo added", "Photo removed", "Photo put back"); the thumbnail reads "Receipt photo, image button". With camera access denied, the alert offers Open Settings.
+11. **App lock**: Settings → Security → turn App lock on (the unlock prompt appears first), set Lock to After 1 minute and back. Leave the app and return: the lock screen reads "Spendly is locked", header, then the Unlock button; the app behind it can't be reached. Cancel the prompt, then unlock with the button. "Unlocked" is announced.
+12. **Daily reminder**: Settings → Reminder → turn it on (our explanation, then the system prompt), change the time (iOS: the time control; Android: the "Reminder time" button opens the clock). "Daily reminder on, at …" is announced. Tap a reminder notification: the app opens on Add.
 
 ## Matrix
 

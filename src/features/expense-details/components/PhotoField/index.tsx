@@ -8,6 +8,7 @@ import { useReducedMotion } from '@/animation/reducedMotion';
 import { fade, settleTo } from '@/animation/transitions';
 import { Button } from '@/components/Button';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { lockStore } from '@/features/lock/state/lockStore';
 import { t } from '@/i18n';
 import { photoUri, storePhoto } from '@/storage/photos/photoFiles';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -46,7 +47,7 @@ export function PhotoField({ photo, onChange }: PhotoFieldProps) {
 
   const pick = async (source: 'camera' | 'library') => {
     if (source === 'camera') {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      const permission = await lockStore.withoutLock(() => ImagePicker.requestCameraPermissionsAsync());
       if (!permission.granted) {
         Alert.alert(t('expense.photo.cameraDeniedTitle'), t('expense.photo.cameraDeniedMessage'), [
           { text: t('expense.photo.cancel'), style: 'cancel' },
@@ -56,8 +57,10 @@ export function PhotoField({ photo, onChange }: PhotoFieldProps) {
       }
     }
     const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 1 };
-    const result =
-      source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
+    // The camera and library are system screens the user opened here: coming back from them doesn't lock the app
+    const result = await lockStore.withoutLock(() =>
+      source === 'camera' ? ImagePicker.launchCameraAsync(options) : ImagePicker.launchImageLibraryAsync(options),
+    );
     if (result.canceled) return;
     setBusy(true);
     setFailed(false);

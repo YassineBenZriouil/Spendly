@@ -17,6 +17,8 @@ import { sampleExpenses } from '@/domain/expense/sampleExpenses';
 import type { Backup } from '@/domain/backup/backup';
 import { formatMoney } from '@/domain/money/money.format';
 import { applyBackup, backupPhotoBytes, pickBackup, shareBackup } from '@/features/backup/backupActions';
+import { AppLockSettings } from '@/features/lock/components/AppLockSettings';
+import { ReminderSettings } from '@/features/reminder/components/ReminderSettings';
 import { baseStepMinor } from '@/features/quick-add/utils/dragMapping';
 import { haptics } from '@/haptics/haptics.service';
 import {
@@ -234,6 +236,14 @@ export function SettingsScreen() {
                 />
               }
             />
+          </Section>
+
+          <Section title={t('settings.section.security')}>
+            <AppLockSettings />
+          </Section>
+
+          <Section title={t('settings.section.reminder')}>
+            <ReminderSettings />
           </Section>
 
           <Section title={t('settings.section.appearance')}>

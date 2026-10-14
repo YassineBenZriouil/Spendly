@@ -11,6 +11,8 @@ import { exportCsv } from './exportCsv';
 import { settings } from './settings';
 import { categories } from './categories';
 import { data } from './data';
+import { lock } from './lock';
+import { reminder } from './reminder';
 
 /** Arabic (right-to-left). Missing keys fall back to English; `i18n-test` checks that none are missing. */
 export const ar: Record<MessageKey, Message> = {
@@ -24,4 +26,6 @@ export const ar: Record<MessageKey, Message> = {
   ...settings,
   ...categories,
   ...data,
+  ...lock,
+  ...reminder,
 };

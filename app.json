@@ -65,7 +65,14 @@
           "photosPermission": "Spendly opens your photos so you can attach a receipt to an expense. Photos stay on this phone.",
           "microphonePermission": false
         }
-      ]
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Spendly uses Face ID to unlock the app when App lock is on."
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
