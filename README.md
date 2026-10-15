@@ -1,212 +1,322 @@
+<div align="center">
+
 # Spendly
 
-**Log an expense in two seconds: tap a category, drag the amount, save.**
+### Log an expense in two seconds.
+**Tap a category. Drag the amount. Save.**
 
-Spendly is a small, fast expense tracker that lives entirely on your phone. No account, no sign-up, no internet needed. Open it, record what you spent, and get on with your day.
+A fast, private expense tracker that lives entirely on your phone.
+No account. No sign-up. No internet. Nothing tracked.
+
+<br>
+
+[**⬇️ Download for Android (APK)**](https://expo.dev/artifacts/eas/78Lwef2Ki2ICTnfaE5KKtVorAYvsS2iO-QFsmATP_4E.apk)
+&nbsp;&nbsp;·&nbsp;&nbsp;
+[**⬇️ Download for iPhone (IPA)**](https://expo.dev/artifacts/eas/1suZErq_LDu6WaYx4trSeIcmflm9b2XrogLfa_WReqo.ipa)
+
+<br>
+
+<img src="src/media/IMG_1171.PNG" width="230" alt="Add screen with Shopping selected and 1,480.00 MAD">
+&nbsp;
+<img src="src/media/IMG_1172.PNG" width="230" alt="Activity list grouped by day">
+&nbsp;
+<img src="src/media/IMG_1174.PNG" width="230" alt="Insights with weekly total and daily chart">
+
+<br>
+
+🎬 [**Watch the app in action (screen recording)**](src/media/demo.mp4)
+
+</div>
+
+---
+
+## Contents
+
+- [Install it](#install-it)
+- [Adding an expense](#adding-an-expense)
+- [Activity](#activity)
+- [Repeating expenses](#repeating-expenses)
+- [Income and budgets](#income-and-budgets)
+- [Insights](#insights)
+- [Monthly recap](#monthly-recap)
+- [Receipt photos](#receipt-photos)
+- [Categories](#categories)
+- [Shortcuts, widget and quick tile](#shortcuts-widget-and-quick-tile)
+- [App lock and daily reminder](#app-lock-and-daily-reminder)
+- [Make it look your way](#make-it-look-your-way)
+- [Settings at a glance](#settings-at-a-glance)
+- [Your data stays yours](#your-data-stays-yours)
+- [Back up, restore and export](#back-up-restore-and-export)
+- [Feel: haptics and animation](#feel-haptics-and-animation)
+- [For everyone](#for-everyone)
+
+---
+
+## Install it
+
+| | Download | How to install |
+| --- | --- | --- |
+| 🤖 **Android** | [Spendly.apk](https://expo.dev/artifacts/eas/78Lwef2Ki2ICTnfaE5KKtVorAYvsS2iO-QFsmATP_4E.apk) | Open the link on your phone, download, and tap the file. If asked, allow installing apps from your browser. |
+| 🍏 **iPhone** | [Spendly.ipa](https://expo.dev/artifacts/eas/1suZErq_LDu6WaYx4trSeIcmflm9b2XrogLfa_WReqo.ipa) | This file isn't from the App Store, so it has to be *sideloaded* with a tool like **AltStore** or **Sideloadly** and your own Apple ID. |
 
 ---
 
 ## Adding an expense
 
-Spendly opens straight onto the Add screen, so you're always one tap away from logging something.
+<img src="src/media/IMG_1170.PNG" width="230" align="right" alt="Add screen with Home category selected">
 
-1. **Tap a category.** The category flies up into place above the amount, so you can see what you picked. You'll feel a light tap.
-2. **Set the amount.** Drag the number **up to increase** it and down to decrease it. Move slowly and it changes one step at a time, exactly the same every time; flick and it races ahead, then slows back to single steps the moment you slow down. You'll feel a soft tick as it passes each step, and at zero or the maximum the number gently resists with a firmer tap, so you never overshoot by accident.
-3. **Tap Save.** You'll feel a short confirmation buzz, the button briefly says **Saved**, and you can start the next expense right away.
+Spendly opens straight onto the **Add** screen, so you're always one tap away from logging something.
 
-**Your usual amounts, one tap away.** Once you've logged a category a few times, Spendly shows up to three amounts you use most for it, right under the number. Tap one and you're ready to save.
+1. **Tap a category.** It flies up into place above the amount so you can see what you picked, with a light tap you can feel.
+2. **Set the amount.** Drag the number **up to increase** it and down to decrease it. Move slowly for exact steps; flick to race ahead. A soft tick marks each step, and at zero or the maximum the number gently resists.
+3. **Tap Save.** A short buzz, the button says **Saved**, and you're ready for the next one.
 
-**Your usual category, already picked.** If you log the same thing at the same time of day (coffee every morning, lunch at noon), Spendly selects that category for you when you open the app. It only does this when the habit is clear, it's always shown on screen, and tapping another category changes it instantly.
+**Prefer not to drag?** Use the **− / +** buttons, the **#** keypad to type an amount, or **reset** to go back to zero.
 
-Prefer not to drag? You don't have to:
+**Your usual amounts, one tap away.** After a few entries in a category, Spendly shows the amounts you use most for it, right under the number.
 
-- **− and +** buttons step the amount down and up.
-- The **keypad** button opens a number pad to type the amount.
-- The **reset** button sets the amount back to zero.
+**Your usual category, already picked.** Coffee every morning? Lunch at noon? When the habit is clear, Spendly picks that category for you when you open the app. Tap another one to change it.
 
-**Made a mistake?** An **Undo** button appears for 5 seconds after every save. Even if the app closes in those seconds, Undo is still there when you reopen it.
+**Made a mistake?** An **Undo** button appears for 5 seconds after every save, and it's still there even if the app closes in between.
 
-**Today's total** is always shown at the top of the screen. If you've spent in more than one currency today, each one is shown.
+**Today's total** is always at the top of the screen, per currency.
+
+<br clear="right">
 
 ### Optional details
 
-Tap the **details** button to add more, only if you want to:
+Tap the **details** button (✎) to add more, only if you want to:
 
-- **Title or merchant** (e.g. "Corner café")
-- **Note**
-- **Date and time.** Defaults to now. You can pick an earlier moment, but never the future, and reset it back to now with one tap.
+- **Title or merchant** (e.g. "Corner café") and a **note**
+- **Date and time:** defaults to now; pick an earlier moment if you forgot to log it
 - **Payment method:** Cash, Card, Transfer or Other
-- **Repeat:** daily, weekly, monthly or yearly, for rent, subscriptions and the like (see *Repeating expenses* below)
-
-Your category and amount stay visible while you fill these in, and closing the panel keeps what you typed. Empty fields simply aren't saved.
+- **Expense or Income**
+- **Receipt photo**
+- **Repeat:** daily, weekly, monthly or yearly
 
 ### Your entry is never lost
 
-- Half-finished an expense and left the app? It's still there when you come back, even if your phone closed the app in the background.
-- If saving ever fails, your entry stays on screen with a clear message so you can try again.
-- If the app is closed at the exact moment you save, Spendly notices on the next launch and won't create a duplicate.
+- Half-finished an expense and left the app? It's still there when you come back.
+- If saving ever fails, your entry stays on screen with a clear message.
+- If the app closes at the exact moment you save, Spendly won't create a duplicate.
 
 ---
 
 ## Activity
 
+<img src="src/media/IMG_1172.PNG" width="230" align="right" alt="Activity list with search and category filters">
+
 Everything you've recorded, newest first.
 
 - **Grouped by day**, with a total for each day.
-- **Search** by title, note or category name.
+- **Search** by title, note or category.
 - **Filter** by category with one tap.
-- **Again:** swipe an expense to the side and tap **Again** to add the same expense (category, amount and title) dated now, with Undo. Also on the edit screen, and as a screen-reader action.
-- **Income:** switch an entry to **Income** in its details. Income rows show a "+" and the word "Income", and never count as spending.
-- **Tap any expense to edit it:** amount, category, title, note, date and time, payment method, expense or income. Everything can be changed.
-- **Delete** asks you to confirm, then gives you **Undo** for 5 seconds anyway. Saved changes get an Undo too, which puts back the previous version.
-- Deleted expenses are kept out of sight for 30 days before they're removed for good.
-- Stays smooth even with thousands of expenses.
-- Nothing recorded yet? Activity points you straight back to Add.
+- **Tap any expense to edit it.** Every detail can be changed.
+- **Again:** swipe an expense to the side and tap **Again** to log the same thing right now.
+- **Delete** asks first, then still gives you **Undo**. Deleted items stay recoverable for 30 days before they're removed for good.
+- Stays smooth even with **10,000+ expenses**.
 
-### Repeating expenses
+<br clear="right">
 
-Set **Repeat** in an expense's details (when you add it, or later from the edit screen). Spendly never saves a repeat on its own:
+<img src="src/media/IMG_1173.PNG" width="230" align="right" alt="Edit expense screen with details">
 
-- When one is due, it waits in Activity as a **pending row** on its day: dashed outline, "Due" and how often it repeats, with **Confirm** and **Skip** right on the row. Pending rows never count in totals, Insights or exports.
-- **Confirm** saves it as an expense on the day it was due; **Skip** leaves it out. Both can be undone.
-- Away for a while? Each missed one is shown (up to 3 months back), with **Confirm all** / **Skip all** when there are several.
+### Editing an expense
+
+Change the amount, category, title, note, date and time, payment method, photo, or whether it's an expense or income. Saving a change gives you an **Undo** that puts back the previous version.
+
+<br clear="right">
+
+---
+
+## Repeating expenses
+
+Rent, subscriptions, the gym: set **Repeat** in an expense's details. **Spendly never saves a repeat on its own.**
+
+- When one is due, it waits in Activity as a **pending row** (dashed outline, marked "Due") with **Confirm** and **Skip** right on it.
+- Pending rows never count in totals, Insights or exports until you confirm them.
+- Away for a while? Each missed one is shown (up to 3 months back), with **Confirm all** / **Skip all**.
 - A repeat on the 31st falls on the last day of shorter months, then comes back to the 31st.
-- Tap a pending row to stop repeating, or change **Repeat** on the edit screen.
+
+---
+
+## Income and budgets
+
+<img src="src/media/IMG_1176.PNG" width="230" align="right" alt="Budget screen with monthly and per-category amounts">
+
+**Income:** switch any entry to **Income**. It shows a "+" and never counts as spending. When you've logged income, Insights shows a **Net** card: what's left over, or how much more you spent than you earned.
+
+**Budgets** (Settings → Budget): set a monthly amount for all spending and, if you like, for each category. In the month view of Insights, a thin bar tells you in plain words how you're doing, like *"€120 left of €500"*. No nagging popups.
+
+<br clear="right">
 
 ---
 
 ## Insights
 
+<img src="src/media/IMG_1174.PNG" width="230" align="right" alt="Insights screen with highlights, total and daily chart">
+
 A quick, honest look at where your money goes.
 
-**Highlights come first:** up to three short sentences about what's different, like *"Food is up 45% compared with your usual week"*, *"You haven't spent on Transport this week"* or *"Biggest day: Saturday, €82.00"*. Tap one about a category to see those expenses in Activity.
+**Highlights come first:** up to three short sentences about what's different, like *"Food is up 45% compared with your usual week"* or *"Biggest day: Saturday, €82.00"*. Tap one to see those expenses.
 
-- **"Usual" means your usual,** not just last week: it's your typical spending over your last eight weeks or months, counted over the same days. One odd week doesn't throw it off.
-- **No drama over small amounts.** A change is mentioned only when it's both big in percent and big enough in money: going from €2 to €4 is not "up 100%".
-- **Honest when there's nothing to say:** a normal week is called a normal week. Until you have a few weeks of history, Spendly doesn't claim anything is unusual.
+- **"Usual" means *your* usual:** your typical spending over the last 8 weeks or months, not just last week.
+- **No drama over small amounts.** Going from €2 to €4 is not "up 100%".
+- **Honest when there's nothing to say.** Until you have a few weeks of history, Spendly doesn't call anything unusual.
 
-- Switch between **Week** and **Month**, and step back through earlier weeks and months.
-- **Total spent** for the period.
-- **Comparison with the previous period.** For the current week or month, it compares against the same days last time, so it's a fair comparison even halfway through.
-- **Daily spending chart.** Tap a day to see its exact amount. Days you spent nothing look different from days before you started using Spendly or still in the future, so "I spent nothing" is never confused with "no data yet".
-- **Spending by category**, with each category's share of the total and whether it's up, down or about usual (always in words, not just color). Tap a category to see its expenses.
-- **Your most frequent category** shows up as a highlight when one category clearly dominates.
-- **Multiple currencies?** Totals are kept separate per currency and never converted. Pick which currency to look at.
-- **Net:** if you logged income in the period, a Net card shows income minus spending, in words ("Left over" or "Spent more than you earned"). No income, no card.
-- **Budgets** (Settings → Budget): an overall monthly amount and optional amounts per category, in your main currency. In month view, a thin bar with words ("€120 left of €500") sits under the total and on budgeted categories. Never a popup.
+Also on this screen:
+
+- **Week** or **Month**, and step back through earlier periods.
+- **Total spent**, and a fair **comparison** with the same days last time.
+- **Daily spending chart:** tap a day for its amount. "Spent nothing" and "no data yet" look different, so they're never confused.
+- **Spending by category**, with each share and whether it's up, down or about usual.
+- **Several currencies?** Kept separate, never converted.
+
+<br clear="right">
+
+---
+
+## Monthly recap
+
+At the start of each month, Insights shows a **recap card** for the month that just ended: total, top category, biggest day and how it compared with usual. Tap **Share** to send it as an image. Past recaps are one step back in the month view.
+
+---
+
+## Receipt photos
+
+Keep the proof with the expense. In the details, tap **Add receipt photo** and take a picture or pick one from your gallery. Tap the thumbnail to see it full screen. Photos stay on your phone and are included in your backups.
 
 ---
 
 ## Categories
 
-Spendly comes with 10 categories: **Food, Transport, Groceries, Shopping, Bills, Health, Entertainment, Home, Travel and Other**.
+<img src="src/media/IMG_1175.PNG" width="230" align="right" alt="Categories screen with drag to reorder">
 
-Open **Settings → Categories**, or press and hold any category on the Add screen, to make them yours:
+Spendly comes with 10 categories: **Food, Transport, Groceries, Shopping, Bills, Health, Entertainment, Home, Travel and Other.**
 
-- **Reorder:** press and hold a category, then drag it where you want it. It lifts off the list, the others slide out of the way, and you'll feel a tick each time it passes one.
+Open **Settings → Categories**, or press and hold a category on the Add screen, to make them yours:
+
+- **Reorder:** hold a category and drag it. The others slide out of the way.
 - **Add your own** with a name, one of 20 icons and one of 10 colors.
 - **Rename and restyle** any category, built-in ones included.
-- **Hide** categories you don't use. They disappear from the Add screen, but past expenses in them still show their category. At least one category always stays visible.
-- **Restore defaults** brings the built-in categories back to their original names, looks and order. Your own categories are kept.
+- **Hide** the ones you don't use. Past expenses keep showing their category.
+- **Restore defaults** any time. Your own categories are kept.
+
+<br clear="right">
 
 ---
 
-## Settings
+## Shortcuts, widget and quick tile
+
+Log something without hunting for the app.
+
+- **Quick log** (Settings → Quick log and shortcuts): set your most common expense once, like *"20 Food"*, then log it in a single tap.
+- **Siri and Shortcuts (iPhone):** add a Spendly shortcut to log an amount and category, or just open Add ready to go.
+- **Home-screen widget (Android):** today's total at a glance; tap it to add an expense.
+- **Quick settings tile (Android):** pull down your notification shade and tap **Quick log**.
+
+Everything logged this way appears in Activity with **Undo**, just like a normal save.
+
+---
+
+## App lock and daily reminder
+
+Both are **off by default**.
+
+- **App lock:** protect Spendly with Face ID, fingerprint or your phone's passcode. The app locks when you leave it, with an optional 1-minute grace period. If biometrics stop working, your passcode always gets you in. You're never locked out of your own data.
+- **Daily reminder:** a gentle nudge at the time you choose, **skipped on days you've already logged something**. Tap it to go straight to Add.
+
+---
+
+## Make it look your way
+
+<img src="src/media/IMG_1177.PNG" width="230" align="right" alt="Settings: language, style, mode, reduce motion and data">
+
+- **Style:** **Black & White** (the default, only black, white and grays) or **Color** (category colors plus an accent: lime, blue, violet, coral, teal or amber).
+- **Mode:** System, Light or Dark, for either style. Every change fades smoothly.
+- **Language:** System, English or **العربية**. In Arabic the whole app reads right to left.
+- **Reduce motion:** movement is replaced by soft fades.
+
+<br clear="right">
+
+---
+
+## Settings at a glance
+
+| Setting | What's there |
+| --- | --- |
+| **Categories** | Reorder, hide, rename or add your own |
+| **Money** | Currency (starts as your region's), budget, drag sensitivity (Precise / Balanced / Fast), amount step (1, 5, 10 or 50) |
+| **Quick Add** | Haptics on or off |
+| **Quick log and shortcuts** | Your one-tap expense, and links for Siri / Shortcuts |
+| **App lock** | Face ID, fingerprint or passcode |
+| **Daily reminder** | On or off, and its time |
+| **Appearance** | Language, style, accent, light/dark mode, reduce motion |
+| **Data** | Back up, restore, auto-backup, export to CSV, *Sync data (coming soon)* |
+| **About** | Replay the introduction, version |
 
 Every setting applies instantly and is remembered.
-
-**Money**
-- **Currency:** starts as your phone's region currency, and is used for new expenses. Expenses you already recorded keep their own currency. Each option shows a preview of how amounts will look.
-- **Drag sensitivity:** Precise, Balanced or Fast.
-- **Amount step:** how much each step of the drag and the − / + buttons is worth (1, 5, 10 or 50 in your currency).
-
-**Quick Add**
-- **Haptics:** turn the vibration feedback on or off. You'll feel a small tap when you switch it on.
-
-**Appearance**
-- **Language:** System (follows your phone), English or العربية. Spendly restarts to switch; nothing you entered is lost.
-- **Style:** **Black & White** (the default for new installs: only black, white and grays) or **Color** (category colors and an accent).
-- **Accent** (Color style): lime, blue, violet, coral, teal or amber.
-- **Mode:** System, Light or Dark, for either style. Every change fades smoothly instead of flashing.
-- **Reduce motion:** System, On or Off. With it on, movement and zooming are replaced by gentle fades.
-
-**Data**
-- **Back up** and **Restore from backup** (see *Back up and restore* below).
-- **Export to CSV** (see below).
-- **Sync data:** coming soon.
-
-**About**
-- **Replay introduction** to see the first-launch tutorial again.
-
----
-
-## Exporting your data
-
-**Settings → Export to CSV** turns your expenses into a spreadsheet file.
-
-- Choose a range: **This month, Last 3 months, This year** or **All time**.
-- The file includes the date, time, amount, currency, category, title, note, payment method, an exact timestamp and the type (Expense or Income).
-- It opens your phone's share sheet, so you can save it to Files, send it to yourself or open it in Excel, Numbers or Google Sheets.
-- Anything you typed is exported as plain text, so it can never act as a formula inside a spreadsheet.
-
----
-
-## Feel: haptics and animation
-
-Spendly is meant to feel good to use. You'll feel:
-
-| When you… | You feel |
-| --- | --- |
-| Pick a category | A light tap |
-| Drag the amount | A soft tick as it passes each step (spaced out when you drag fast) |
-| Reach zero or the maximum while dragging | A firmer tap |
-| Save an expense | A short success buzz |
-| Lift a category to reorder it | A light tap |
-| Move it past another category | A soft tick |
-| Turn haptics on | A light tap, so you know it's working |
-
-Turn them all off in **Settings → Haptics**.
-
-Everything on screen moves smoothly rather than jumping: buttons respond when pressed, lists slide when items move, each digit of an amount rolls to its new value while the rest stay still, and screens glide in and out. If you prefer less motion, **Reduce motion** keeps everything just as clear with simple fades.
-
----
-
-## First launch
-
-The first time you open Spendly, a short, hands-on introduction shows you the three steps (tap a category, set the amount, save) on a practice screen. Nothing is saved during practice. You can **Skip** it at any time and replay it later from Settings.
-
----
-
-## For everyone
-
-- Works with **VoiceOver** (iPhone) and **TalkBack** (Android). Every control has a clear spoken name.
-- **Nothing requires dragging.** The amount has − / + buttons and a keypad, and categories can be moved with screen-reader "Move up / Move down" actions.
-- Saving, deleting and undoing are **announced out loud**.
-- Supports **large text sizes** without cutting off amounts or buttons.
-- Buttons and controls are **large enough to tap comfortably**.
-- **Color is never the only signal.** Selections and states also use shapes, labels or icons, which is why Black & White loses nothing: categories keep their icon and name (with a gray of their own), and the chart uses black, gray and stripes.
-- **English and Arabic.** Spendly follows your phone's language (or the one you pick in Settings), and in Arabic the whole layout reads right to left (amounts stay left to right, as digits are written).
-- **Speaks your format.** Currency symbols, decimal separators, dates, and the first day of the week always follow your phone's region settings.
-- **Follows your phone by default.** Language, light/dark mode and Reduce motion start on *System* and can each be changed in Settings.
 
 ---
 
 ## Your data stays yours
 
-- **No account, no sign-up.**
-- **Works fully offline.** Airplane mode changes nothing.
-- **Nothing is uploaded or tracked.** Every expense, category and setting is stored only on your phone.
-- Your data leaves the device only when you export it yourself.
-
-### Back up and restore
-
-**Settings → Back up** saves all your expenses, categories and settings to a single file. Keep it in Files, iCloud Drive, Google Drive or email it to yourself. On a new phone, **Settings → Restore from backup** brings everything back.
-
-- Restoring **adds** what's in the file. Nothing already on your phone is changed or removed, and restoring the same file twice doesn't create duplicates. The settings saved in the backup replace your current ones.
-- The whole file is checked first. If any part of it is damaged, nothing is restored and Spendly tells you why.
+- 🔒 **No account, no sign-up.**
+- ✈️ **Works fully offline.** Airplane mode changes nothing.
+- 🙈 **Nothing is uploaded or tracked.** Every expense, photo and setting is stored only on your phone.
+- 📤 Your data leaves the device **only when you share it yourself.**
 
 ### Built not to lose anything
 
-- Your expenses are written safely: if the app or your phone shuts down mid-save, you never end up with half an expense or a duplicate.
-- If your phone's storage is full, Spendly says so clearly instead of failing silently, and keeps what you typed.
-- Every time it opens, Spendly checks its data file. If it ever finds a problem, it leaves the file untouched and tells you, so you can restore a backup.
+- If the app or phone shuts down mid-save, you never get half an expense or a duplicate.
+- If your storage is full, Spendly says so clearly and keeps what you typed.
+- Every time it opens, Spendly checks its data. If something's wrong, it leaves the file untouched and tells you, so you can restore a backup.
+
+---
+
+## Back up, restore and export
+
+- **Back up:** saves all your expenses, categories, photos and settings to one file. Keep it in Files, iCloud Drive, Google Drive, or email it to yourself.
+- **Restore from backup:** on a new phone, brings everything back. It only **adds** what's missing: nothing on your phone is changed or removed, and restoring twice never creates duplicates. The whole file is checked first; if any part is damaged, nothing is restored.
+- **Auto-backup** (off by default): a weekly backup kept on your phone (the last 4), included in your phone's own iCloud or Google backup. Settings shows the date of the last one, and you can share the latest at any time.
+- **Export to CSV:** a spreadsheet of your expenses for **this month, the last 3 months, this year or all time**. Open it in Excel, Numbers or Google Sheets.
+
+---
+
+## First launch
+
+A short, hands-on introduction shows you the three steps (tap a category, set the amount, save) on a practice screen. Nothing is saved while you practise. **Skip** it any time, and replay it from Settings → About.
+
+---
+
+## Feel: haptics and animation
+
+| When you… | You feel |
+| --- | --- |
+| Pick a category | A light tap |
+| Drag the amount | A soft tick at each step |
+| Hit zero or the maximum | A firmer tap |
+| Save an expense | A short success buzz |
+| Reorder a category | A tick as it passes each one |
+
+Everything on screen moves smoothly instead of jumping: each digit of an amount rolls to its new value, lists slide when items move, and screens glide in and out. Turn haptics off in Settings, or turn on **Reduce motion** for gentle fades.
+
+---
+
+## For everyone
+
+- Works with **VoiceOver** and **TalkBack**: every control has a clear spoken name, and saving, deleting and undoing are announced out loud.
+- **Nothing requires dragging.** Every drag has a button alternative.
+- Supports **large text sizes** without cutting anything off.
+- **Color is never the only signal.** States use shapes, labels and icons too, so Black & White loses nothing.
+- **Speaks your format:** currency symbols, decimals, dates and the first day of the week follow your phone's region.
+- **English and Arabic**, with a full right-to-left layout in Arabic.
+
+---
+
+<div align="center">
+
+**Spendly** · made to be the quickest way to know where your money goes.
+
+[⬇️ Android APK](https://expo.dev/artifacts/eas/78Lwef2Ki2ICTnfaE5KKtVorAYvsS2iO-QFsmATP_4E.apk) &nbsp;·&nbsp; [⬇️ iPhone IPA](https://expo.dev/artifacts/eas/1suZErq_LDu6WaYx4trSeIcmflm9b2XrogLfa_WReqo.ipa)
+
+</div>
